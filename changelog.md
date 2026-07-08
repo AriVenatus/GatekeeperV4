@@ -1,3 +1,16 @@
+__**Update 4.8.0**__
+- Added a Discord Role \<-> Whitelist Sync system (new `whitelist_sync_cog.py`):
+    - `/server settings whitelist_role_add/remove/list` lets Staff configure one or more Discord Roles per Server that grant Whitelist access; the same Role can gate multiple Servers.
+    - `/whitelist_sync enabled` turns the sync on/off bot-wide; `/whitelist_sync interval` controls a periodic reconciliation pass that catches any Role/Whitelist drift missed while the bot was offline.
+    - Members gaining a configured Role are automatically Whitelisted (if they've linked a game account); losing the Role, or leaving the Guild, removes them again.
+    - Added the `ServerWhitelistRoles` table and `Whitelist_Role_Sync`/`Whitelist_Role_Sync_Interval` settings (DB version 3.0 -> 3.1).
+- Added self-service account linking via `/link minecraft (ign)` and `/link steam (steam)`:
+    - Both resolve the account (Mojang API for Minecraft, official Steam Web API for Steam) and show a Confirm/Deny preview (skin face / Steam avatar, name, ID) before saving anything, so Staff no longer need to run `/user add` on a player's behalf.
+    - `/link steam` accepts a vanity name, full profile URL, or raw SteamID64; requires a Steam Web API Key (`SteamAPIKey` in `tokens.py`) to be configured.
+    - `/link show` displays your currently linked accounts; `/link remove` clears one, refusing to claim success if there was nothing to remove, and proactively removing you from any role-synced Minecraft Whitelist before clearing the identity that was gating it.
+- Merged `/user lookup` into `/user info`: it now takes an `identifier_type` (Discord/Minecraft/Steam) plus either the native Discord Member picker or a free-text `identifier`, so Staff can find a Database entry by Discord Member, Minecraft IGN/UUID, or SteamID from one command.
+- Updated `COMMANDS.md`, `PERMISSIONS.md`, `README.md`, and wrote `WHITELIST.md` to document all of the above.
+
 __**Update 4.7.5**__
 - Ported the banner timestamp timezone/time-format feature from upstream:
     - Added `/bot banner_settings timezone` (with IANA timezone autocomplete) and `/bot banner_settings timeformat` (12h/24h) commands.

@@ -23,6 +23,9 @@ This is a fork of [Leon Breidenbach's GatekeeperV3](https://github.com/leonbreid
 - Banner timestamps now support a configurable timezone and 12h/24h format via `/bot banner_settings timezone` (with IANA autocomplete) and `/bot banner_settings timeformat`. This ports a feature that was merged into upstream GatekeeperV2 after Leon's fork had already diverged, and fixes it up to work with this fork's banner code.
 - Fixed inconsistent "Edited at ..." banner timestamps left over from Leon's fork (missing entirely on embed banners, hardcoded to German text and raw UTC on image banners) so both banner types now show the same, timezone-aware timestamp.
 - Fixed a broken `pyproject.toml` (an unterminated string in the `authors` table) that prevented `pip install .` and `python -m build` from working.
+- Added Discord Role \<-> Whitelist syncing: configure one or more Discord Roles per Server via `/server settings whitelist_role_add`, and Members automatically gain or lose Whitelist access as they gain or lose that Role (plus a periodic reconciliation pass as a safety net). Toggle it with `/whitelist_sync enabled`. See [Whitelist Sync Commands](/COMMANDS.md#whitelist-sync-commands).
+- Added self-service account linking via `/link minecraft`/`/link steam`, so players can link their own Minecraft or Steam account (with a Confirm/Deny preview showing the skin face or Steam avatar) instead of needing Staff to run `/user add` for them. See [Link Commands](/COMMANDS.md#link-commands).
+- Merged `/user lookup` into `/user info`, which can now find a Database entry by Discord Member, Minecraft IGN/UUID, or SteamID.
 
 See [changelog.md](/changelog.md) for the full version history.
 
@@ -45,6 +48,8 @@ ___
 - Supports custom Banner images for displaying AMP Server specific information.
 - Supports Regex Patterns for custom filtering of your AMP Console to Discord Channel output
     - This also works on Events such as Disconnect, Deaths and Kills.
+- Supports syncing AMP Whitelist access to Discord Roles, plus self-service account linking so players can link their own Minecraft/Steam account.
+    - See [Whitelist Sync Commands](/COMMANDS.md#whitelist-sync-commands) and [Link Commands](/COMMANDS.md#link-commands).
    
 
 ### **Requirements**
@@ -155,6 +160,15 @@ ___
     - **TIP**: You can enable `Donators` to bypass the wait time after setting the `/bot donator` role.
 - Use `/whitelist wait_time (time)` to adjust the Bot's wait time after a whitelist request.
     - **TIP**: You can set this value to `0` to allow the bot to instantly approve the users whitelist request..
+
+### **Setting up Discord Role Whitelist Syncing**
+- Have your players link their game account first via `/link minecraft (ign)` or `/link steam (steam)`.
+    - **TIP**: Both show a preview (skin face / Steam avatar) with Confirm/Deny buttons before saving anything, so there's no need for Staff to run `/user add` on their behalf anymore.
+- Use `/server settings whitelist_role_add (server, role)` to pick which Discord Role(s) grant Whitelist access to a Server.
+    - **TIP**: You can add more than one Role per Server, and reuse the same Role across multiple Servers.
+- Use `/whitelist_sync enabled true` to turn the sync on bot-wide.
+    - **ATTENTION**: Gaining a configured Role Whitelists the Member automatically (as long as they've linked their account); losing the Role, or leaving the Guild, removes them again.
+    - **TIP**: Use `/whitelist_sync interval (minutes)` to control how often the safety-net reconciliation pass runs (default `15` minutes), which catches any Role/Whitelist drift that happened while the bot was offline.
 
 ### **Setting up your Server Banner Displays**
 - First, set all your servers settings/information. See [Server Commands](/COMMANDS.md#server-commands)

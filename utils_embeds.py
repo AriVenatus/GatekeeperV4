@@ -342,9 +342,17 @@ class botEmbeds():
 
         return embed
 
-    def user_info_embed(self, db_user: DB.DBUser, discord_user: discord.User) -> discord.Embed:
-        embed = discord.Embed(title=f'{discord_user.name}', description=f'**Discord ID**: {discord_user.id}', color=discord_user.color)
-        embed.set_thumbnail(url=discord_user.avatar.url)
+    def user_info_embed(self, db_user: DB.DBUser, discord_user: discord.User = None) -> discord.Embed:
+        if discord_user != None:
+            embed = discord.Embed(title=f'{discord_user.name}', description=f'**Discord ID**: {discord_user.id}', color=discord_user.color)
+            if discord_user.avatar != None:
+                embed.set_thumbnail(url=discord_user.avatar.url)
+        else:
+            # Fallback for when the Discord Account can no longer be resolved (eg. they left/deleted their Account).
+            title = db_user.DiscordName if db_user != None and db_user.DiscordName != None else 'Unknown User'
+            discord_id = db_user.DiscordID if db_user != None else 'Unknown'
+            embed = discord.Embed(title=title, description=f'**Discord ID**: {discord_id}\n*(Discord Account no longer resolvable)*', color=0x808000)
+
         embed.add_field(name='In Database:', value=f'{"True" if db_user != None else "False"}')
         if db_user != None:
             if db_user.MC_IngameName != None:

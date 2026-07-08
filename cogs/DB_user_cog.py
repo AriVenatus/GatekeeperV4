@@ -26,6 +26,8 @@ from typing import Union
 import sqlite3
 
 import discord
+from discord import app_commands
+from discord.app_commands import Choice
 from discord.ext import commands
 
 import utils
@@ -86,11 +88,38 @@ class DB_User(commands.Cog):
 
     @user.command(name='info')
     @utils.role_check()
-    async def user_info(self, context: commands.Context, user: Union[discord.Member, discord.User]):
-        """Displays the Discord Users Database information"""
+    @app_commands.choices(identifier_type=[
+        Choice(name='Discord', value='discord'),
+        Choice(name='Minecraft', value='minecraft'),
+        Choice(name='Steam', value='steam'),
+    ])
+    async def user_info(self, context: commands.Context, identifier_type: Choice[str], user: Union[discord.Member, discord.User] = None, identifier: str = None):
+        """Displays a Users Database information. Search by Discord Member, Minecraft IGN/UUID, or SteamID."""
         self.logger.command(f'{context.author.name} used User Information')
-        db_user = self.DB.GetUser(user.id)
-        await context.send(embed=self.eBot.user_info_embed(db_user, user), ephemeral=True, delete_after=self._client.Message_Timeout)
+
+        if identifier_type.value == 'discord':
+            if user == None:
+                return await context.send('Please select a Discord `user` to search for.', ephemeral=True, delete_after=self._client.Message_Timeout)
+
+            db_user = self.DB.GetUser(user.id)
+            discord_user = user
+
+        else:
+            if identifier == None:
+                return await context.send(f'Please provide a `{identifier_type.name}` `identifier` to search for.', ephemeral=True, delete_after=self._client.Message_Timeout)
+
+            db_user = self.DB.GetUser(identifier)
+            if db_user == None:
+                return await context.send(f'I was unable to find anyone in the Database matching **{identifier}**.', ephemeral=True, delete_after=self._client.Message_Timeout)
+
+            discord_user = self._client.get_user(int(db_user.DiscordID))
+            if discord_user == None:
+                try:
+                    discord_user = await self._client.fetch_user(int(db_user.DiscordID))
+                except discord.NotFound:
+                    discord_user = None
+
+        await context.send(embed=self.eBot.user_info_embed(db_user, discord_user), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @user.command(name='add')
     @utils.role_check()

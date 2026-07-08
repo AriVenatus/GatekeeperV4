@@ -44,7 +44,7 @@ def dump_to_json(data):
 
 Handler = None
 #!DB Version
-DB_Version = 3.0
+DB_Version = 3.1
 
 
 class DBHandler:
@@ -160,6 +160,14 @@ class Database:
                         UNIQUE(ServerID, RegexPatternID)
                         )""")
 
+        cur.execute("""create table ServerWhitelistRoles (
+                        ID integer primary key,
+                        ServerID integer not null,
+                        Discord_Role_ID text not null collate nocase,
+                        foreign key (ServerID) references Servers(ID)
+                        UNIQUE(ServerID, Discord_Role_ID)
+                        )""")
+
         cur.execute("""create table Users (
                         ID integer primary key,
                         DiscordID text not null unique collate nocase,
@@ -243,6 +251,8 @@ class Database:
         self._AddConfig("Whitelist_Request_Channel", None)
         self._AddConfig("WhiteList_Wait_Time", 5)
         self._AddConfig("Auto_Whitelist", False)
+        self._AddConfig("Whitelist_Role_Sync", False)
+        self._AddConfig("Whitelist_Role_Sync_Interval", 15)
         # self._AddConfig('Whitelist_Emoji_Pending', ':arrows_counterclockwise:')
         # self._AddConfig('Whitelist_Emoji_Done', ':ballot_box_with_check:')
         self._AddConfig("Banner_Auto_Update", True)
@@ -470,6 +480,27 @@ class Database:
         SQLArgs.append(ID)  # Need to append ID last.
         self._execute(SQL, tuple(SQLArgs))
         return True
+
+    def AddServerWhitelistRole(self, ServerID: int, RoleID: int) -> bool:
+        """Adds a Discord Role to a Server's Whitelist Role gate list."""
+        try:
+            self._execute("INSERT into ServerWhitelistRoles(ServerID, Discord_Role_ID) values(?, ?)", (ServerID, RoleID))
+        except Exception as e:
+            print(e)
+            return False
+        return True
+
+    def RemoveServerWhitelistRole(self, ServerID: int, RoleID: int) -> bool:
+        """Removes a Discord Role from a Server's Whitelist Role gate list."""
+        self._execute("DELETE FROM ServerWhitelistRoles WHERE ServerID=? and Discord_Role_ID=?", (ServerID, RoleID))
+        return True
+
+    def GetServersByWhitelistRole(self, RoleID: int) -> list[int]:
+        """Returns all ServerIDs that the provided Discord Role ID gates Whitelist access for."""
+        (rows, cur) = self._fetchall("SELECT ServerID FROM ServerWhitelistRoles WHERE Discord_Role_ID=?", (RoleID,))
+        ret = [entry["ServerID"] for entry in rows]
+        cur.close()
+        return ret
 
     def GetAllRegexPatterns(self):
         """Gets all Regex Patterns from the RegexPatterns Table. \n
@@ -1199,6 +1230,21 @@ class DBServer:
 
         cur.close()
         return regex_patterns
+
+    def AddWhitelistRole(self, RoleID: int) -> bool:
+        """Adds a Discord Role ID to this Server's Whitelist Role gate list. Any one of these roles grants Whitelist access."""
+        return self._db.AddServerWhitelistRole(self.ID, RoleID)
+
+    def DelWhitelistRole(self, RoleID: int) -> bool:
+        """Removes a Discord Role ID from this Server's Whitelist Role gate list."""
+        return self._db.RemoveServerWhitelistRole(self.ID, RoleID)
+
+    def GetWhitelistRoles(self) -> list[int]:
+        """Gets all Discord Role IDs gating Whitelist access for this Server."""
+        (rows, cur) = self._db._fetchall("SELECT Discord_Role_ID FROM ServerWhitelistRoles WHERE ServerID=?", (self.ID,))
+        ret = [int(entry["Discord_Role_ID"]) for entry in rows]
+        cur.close()
+        return ret
 
 
 class DBConfig:

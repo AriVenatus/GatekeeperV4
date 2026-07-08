@@ -7,7 +7,8 @@ ___
 - Gatekeeperv2 has the ability to set permissions *per command* or *globally* across a command tree.
     - *See below for [How to use!](#using-your-permission-nodes)*
 - You can make as many "Roles" as you want and can assign them to Discord users however you want! 
-    - The only restriction is that **ANY ROLE** you give a Discord User via the `/user role` command **MUST EXIST** in the `bot_perms` file or it won't work.
+    - The only restriction is that **ANY ROLE** you give a Discord User via the `/role (user, role)` command **MUST EXIST** in the `bot_perms` file or it won't work.
+        - **TIP**: `role` autocompletes with the Role names currently defined in your `bot_perms.json`.
 
 ## **Enabling Custom Permissons**
 - After configuring your `bot_perms.json` file, simply restart Gatekeeper and use the command `/bot permissions` and select `Custom`
@@ -169,6 +170,9 @@ server.settings.donator
 server.settings.info
 server.settings.hidden
 server.settings.displayname
+server.settings.whitelist_role_add
+server.settings.whitelist_role_remove
+server.settings.whitelist_role_list
 
 server.whitelist.*
 server.whitelist.add
@@ -194,7 +198,13 @@ bot.whitelist_reply.list
 bot.whitelist_reply.add
 bot.whitelist_reply.remove
 
+whitelist_sync.*
+whitelist_sync.enabled
+whitelist_sync.interval
+
 whitelist_request
+
+link #No permission node, same as whitelist_request; any Guild Member can use `/link` to self-service link their own account.
 
 dbserver.*
 dbserver.cleanup

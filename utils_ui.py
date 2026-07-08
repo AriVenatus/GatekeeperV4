@@ -2,6 +2,8 @@ from __future__ import annotations
 import logging
 import re
 import io
+import sqlite3
+from typing import Callable
 from PIL import Image
 import random
 
@@ -393,6 +395,78 @@ class Deny_Whitelist_Button(Button):
             await self._view._whitelist_message.channel.send(content=f'**{interaction.user.name}** Denied {self._view._whitelist_message.author.mention} whitelist request. Please contact a Staff Member.')
             self._client.Whitelist_wait_list.pop(self._view._whitelist_message.id)
             self.disabled = True
+
+
+class LinkConfirmView(View):
+    """Generic confirmation View shown after a `/link` lookup, so the user can confirm the resolved Account is theirs.\n
+    `apply` is called with the caller's `DB.DBUser` once they hit Confirm, and should set whichever fields on it are needed."""
+
+    def __init__(self, invoker_id: int, apply: Callable[[DB.DBUser], None], confirm_message: str, timeout: float = 60):
+        self.logger = logging.getLogger()
+        self.DB = DB.getDBHandler().DB
+        self._invoker_id = invoker_id
+        self._apply = apply
+        self._confirm_message = confirm_message
+        self.message: discord.Message | None = None
+
+        super().__init__(timeout=timeout)
+        self.add_item(Confirm_Link_Button(view=self))
+        self.add_item(Deny_Link_Button(view=self))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self._invoker_id:
+            await interaction.response.send_message('This confirmation is not for you.', ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self):
+        for child in self.children:
+            child.disabled = True
+        if self.message != None:
+            try:
+                await self.message.edit(content='This confirmation has timed out, please use `/link` again.', embed=None, view=self)
+            except discord.HTTPException:
+                pass
+
+
+class Confirm_Link_Button(Button):
+    """Confirms an Account Link"""
+
+    def __init__(self, view: LinkConfirmView, style=discord.ButtonStyle.green):
+        super().__init__(label="Yes, that's me", style=style, custom_id='Confirm_Link')
+        self._view = view
+
+    async def callback(self, interaction: discord.Interaction):
+        db_user = self._view.DB.GetUser(interaction.user.id)
+        if db_user == None:
+            db_user = self._view.DB.AddUser(DiscordID=interaction.user.id, DiscordName=interaction.user.name)
+
+        for child in self._view.children:
+            child.disabled = True
+
+        try:
+            self._view._apply(db_user)
+        except sqlite3.IntegrityError as e:
+            if 'UNIQUE constraint failed' in e.args[0]:
+                await interaction.response.edit_message(content='That account is already linked to a different Discord user.', embed=None, view=self._view)
+                return
+            raise
+
+        self._view.logger.info(f'Linked {interaction.user.name} via /link confirmation')
+        await interaction.response.edit_message(content=self._view._confirm_message, embed=None, view=self._view)
+
+
+class Deny_Link_Button(Button):
+    """Cancels an Account Link"""
+
+    def __init__(self, view: LinkConfirmView, style=discord.ButtonStyle.red):
+        super().__init__(label='No, cancel', style=style, custom_id='Deny_Link')
+        self._view = view
+
+    async def callback(self, interaction: discord.Interaction):
+        for child in self._view.children:
+            child.disabled = True
+        await interaction.response.edit_message(content="Okay, cancelled. Feel free to try `/link` again.", embed=None, view=self._view)
 
 
 class DB_Instance_ID_Swap(View):
