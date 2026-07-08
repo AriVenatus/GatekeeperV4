@@ -13,3 +13,8 @@ AMPUser = ''
 AMPPassword = ''
 AMPurl = ''
 
+#Steam Web API Key, used for `/link steam` account previews (avatar/name lookup).
+#Get a free key at https://steamcommunity.com/dev/apikey
+#Leave blank to disable Steam account linking.
+SteamAPIKey = ''
+

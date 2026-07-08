@@ -140,6 +140,14 @@ class DB_Update:
             self.add_bannergroupmessages_table()
             self.DBConfig.SetSetting('DB_Version', '3.0')
 
+        if 3.1 > Version:
+            """Adds support for Discord Role Synced Whitelisting."""
+            self.logger.info('**ATTENTION** Updating DB to Version 3.1')
+            self.server_whitelist_roles_table_creation()
+            self.DBConfig.AddSetting('Whitelist_Role_Sync', False)
+            self.DBConfig.AddSetting('Whitelist_Role_Sync_Interval', 15)
+            self.DBConfig.SetSetting('DB_Version', '3.1')
+
 
     def user_roles(self):
         try:
@@ -331,6 +339,14 @@ class DB_Update:
             self.DB._execute(SQL, ())
         except Exception as e:
             self.logger.critical(f'server_regex_pattern_table_creation {e}')
+            sys.exit(-1)
+
+    def server_whitelist_roles_table_creation(self):
+        try:
+            SQL = 'create table ServerWhitelistRoles (ID integer primary key, ServerID integer not null, Discord_Role_ID text not null collate nocase, foreign key (ServerID) references Servers(ID) UNIQUE(ServerID, Discord_Role_ID))'
+            self.DB._execute(SQL, ())
+        except Exception as e:
+            self.logger.critical(f'server_whitelist_roles_table_creation {e}')
             sys.exit(-1)
 
     def server_console_filter_type(self):

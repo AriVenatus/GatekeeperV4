@@ -60,10 +60,10 @@ ___
     - `filter_type` dictates where the match will be sent. (eg. `Event` would send all matches to the `Event Channel` for said Server - See [Regex](/README.md) for examples.)
 
 ### <u>Bot Whitelist Commands</u>:
+- See [Whitelist How-to](/WHITELIST.md) for full documentation.
 - `/bot whitelist auto (flag)` - Allows the bot to automatically Whitelist a Users request.
     - **ATTENTION**: `flag` must be *True or False*. Default is False.
         - **TIP**: This will not instantly whitelist the user if whitelist waittime is not set to zero.
-- `/bot whitelist channel (channel)` - Sets the Discord channel for the bot to monitor for whitelist requests.
 - `/bot whitelist wait_time (time)` -  Sets the wait time for whitelist request after the message is received. *(eg. time = `5`)*
     - **REMINDER**: All time values are in **Minutes**! Please keep that in mind.
         - **TIP**: Set the value to zero to have the bot instantly whitelist users. Default value is 5 minutes!
@@ -83,15 +83,31 @@ ___
 - `/whitelist_request (server, ign)` - Allows a user to request Whitelist for a specific Server.
     - **TIP**: `ign` is optional if the Discord User has done this before and or already in the Database.
 
+### <u>Link Commands</u>:
+- `/link minecraft (ign)` - Links your Discord account to a Minecraft in-game name.
+    - **TIP**: Looks up the account via the official Mojang API and shows you a preview (name, UUID and skin face) with Confirm/Deny buttons before saving anything.
+    - **ATTENTION**: Only you can respond to your own confirmation prompt.
+- `/link steam (steam)` - Links your Discord account to a Steam account.
+    - **TIP**: Accepts a vanity name, a full profile URL (`steamcommunity.com/id/...` or `/profiles/...`), or a raw SteamID64.
+    - **ATTENTION**: Requires Staff to have configured a Steam Web API Key in `tokens.py` first, otherwise the command will let you know it isn't set up yet.
+    - Shows a preview (persona name, avatar, profile link) with Confirm/Deny buttons before saving anything, same as `/link minecraft`.
+- `/link show` - Shows your currently linked Minecraft/Steam accounts.
+- `/link remove (identity)` - Removes one of your linked accounts. `identity` is either `Minecraft` or `Steam`.
+
 ### <u>User/Member Group Commands</u>: 
-- `/user info (user)` - Displays a Discord Users information and their Database information.
+- `/user info (identifier_type, user, identifier)` - Displays a Users Database information overview.
+    - `identifier_type` is required and is one of `Discord`, `Minecraft`, or `Steam` - it decides which of `user`/`identifier` below gets used.
+    - Set `identifier_type` to `Discord` and fill in `user` (the native Discord Member picker) if you already know who they are.
+    - Set `identifier_type` to `Minecraft` or `Steam` and fill in `identifier` (free text) to look someone up by their Minecraft IGN/UUID or SteamID instead - handy when you don't know who the Discord User is yet.
+        - **TIP**: `identifier` also matches against Discord ID/Name, in case typing it is easier than using the picker.
+    - **ATTENTION**: If the matching Discord Account can no longer be resolved (they left/deleted their account), still shows their stored Database info with a note instead of failing.
 - `/user add (user, mc_ign, mc_uuid, steamid)` - Adds a User to the Database with the provided arguments.
     - **ATTENTION**: `user` is the **only required paramater**. 
         - **TIP**: Supports Discord Name/ID or Discord Display Name/Nickname's.
     - `mc_ign` and `mc_uuid` are optional.
         - **TIP**: When providing `mc_ign`, the bot will fetch the `mc_uuid` and set it for you in the Database if not provided.
     - `steamid` is optional. 
-        - **TIP**: You can get someones `steamid` via their name at [Steam Finder](https://www.steamidfinder.com) or use `/user steamid (name)`
+        - **TIP**: If the player has already self-linked via `/link steam`, you don't need this at all - use `/user info` (identifier_type = `Steam`) to find their account instead of entering it manually here.
 - `/user update (user, mc_ign, steamid)` - Updates the Users Database information with the provided arguments.
 
 ### <u>AMP Server Database Commands</u>: 
@@ -129,6 +145,12 @@ ___
 - `/server settings role (server, role)` - Sets the role of the AMP Dedicated Server in the Database.
     - **ATTENTION**: This is the Discord Role the bot will give the User when requesting whitelist on said AMP Dedicated Server.
     - **TIP**: `role` can be a Discord Role ID or Discord Role Name.
+- `/server settings whitelist_role_add (server, role)` - Adds a Discord Role that automatically grants Whitelist access to the specified Server.
+    - **ATTENTION**: This is separate from `/server settings role` above; a Server can have multiple Whitelist Sync Roles, and the same Role can gate multiple Servers.
+    - **TIP**: Requires `/whitelist_sync enabled True` to actually take effect. See [Whitelist Sync Commands](#whitelist-sync-commands).
+- `/server settings whitelist_role_remove (server, role)` - Removes a Discord Role from a Server's Whitelist Sync gate list.
+    - **TIP**: `role` autocompletes with only the Roles currently configured for the selected `server`.
+- `/server settings whitelist_role_list (server)` - Lists all Discord Roles currently gating Whitelist access for the specified Server.
 - `/server settings whitelist (server, flag)` - Sets the whitelist to `flag` for the AMP Dedicated server.
     - Using the flag `Disabled` hides the `Whitelist Open/Closed` from the Banner. 
         - Simply set the flag to `True` or `False` for the Banner to show `Whitelist Open/Closed` respectively.
@@ -164,10 +186,18 @@ ___
     - **ATTENTION**: This is events such as join/leave and achievements. Currently experimental, some may be missed.
 
 ### <u>AMP Server Whitelist Commands</u>: 
+- See [Whitelist How-to](/WHITELIST.md) for full documentation.
 - `/server whitelist add (server, user)` - Adds the IGN to the AMP Dedicated server whitelist.
     - `user` only supports in-game names.
 - `/server whitelist remove (server, user)` - Removes the IGN from the AMP Dedicated server whitelist.
     - `user` only supports in-game names.
+
+### <u>Whitelist Sync Commands</u>:
+- `/whitelist_sync enabled (flag)` - Turns Discord Role Whitelist Syncing `ON` or `OFF` bot-wide.
+    - **ATTENTION**: When `True`, any Member gaining a configured Whitelist Sync Role (see `/server settings whitelist_role_add`) is automatically Whitelisted on the matching Server(s); losing the role removes them. Leaving the Guild also removes them from any Server their Roles were gating.
+    - **TIP**: A Member needs a linked game account first (via `/link`), otherwise the bot will DM them asking to link before it can Whitelist them.
+- `/whitelist_sync interval (minutes)` - Sets how often (in minutes) the Whitelist Sync reconciliation pass runs.
+    - **TIP**: This is a safety-net pass that re-checks every configured Role against the live Whitelist, catching any drift missed while the bot was offline. Default is `15` minutes.
 
 ### <u>AMP Server Banner Commands</u>:
 - `/server banner settings (server)` - Prompts the Banner Editor View.
