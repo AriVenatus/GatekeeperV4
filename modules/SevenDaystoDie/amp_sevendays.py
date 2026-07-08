@@ -38,7 +38,7 @@ class AMPSevendays(AMP.AMPInstance):
         self.default_background_banner_path = 'resources/banners/7Days_Banner_2.jpg'
 
         if self.Avatar_url == None:
-            self.DB_Server.Avatar_url = 'https://github.com/k8thekat/GatekeeperV2/blob/main/resources/avatars/7days_avatar.png?raw=true'
+            self.DB_Server.Avatar_url = 'https://github.com/AriVenatus/GatekeeperV3.1/blob/main/resources/avatars/7days_avatar.png?raw=true'
 
         self.SenderFilterList.append('Server')
 

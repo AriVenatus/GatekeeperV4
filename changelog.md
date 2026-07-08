@@ -1,3 +1,12 @@
+__**Update 4.7.5**__
+- Ported the banner timestamp timezone/time-format feature from upstream:
+    - Added `/bot banner_settings timezone` (with IANA timezone autocomplete) and `/bot banner_settings timeformat` (12h/24h) commands.
+    - Added `Banner_Timezone` (default `UTC`) and `Banner_Use_12Hour` (default `True`) settings.
+    - Fixed the "Edited at ..." banner timestamp being missing on embed-based banners and hardcoded to German/UTC on image-based banners; both now show a consistent, timezone-aware timestamp.
+- Fixed `pyproject.toml` failing to parse due to a missing closing quote in the `authors` table.
+- Updated `pyproject.toml` to reflect this fork: renamed package to `GatekeeperV3.1`, added Ari as an author, and pointed `project.urls` at this repo.
+- Repointed hardcoded avatar image and `PERMISSIONS.md` links (`discordBot.py` and the `modules/*` server type files) from `k8thekat/GatekeeperV2` to this fork's repo.
+
 __**Update 4.7.4**__
 # Hotfix for issue #102
 - Added a TypedDict for Console entries.

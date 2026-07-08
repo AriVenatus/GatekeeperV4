@@ -39,7 +39,7 @@ class AMPTerraria(AMP.AMPInstance):
         self.SenderFilterList.append('Server')
 
         if self.Avatar_url == None:
-            self.DB_Server.Avatar_url = 'https://github.com/k8thekat/GatekeeperV2/blob/main/resources/avatars/terraria_avatar.jpg?raw=true'
+            self.DB_Server.Avatar_url = 'https://github.com/AriVenatus/GatekeeperV3.1/blob/main/resources/avatars/terraria_avatar.jpg?raw=true'
 
     def Chat_Message(self, message: str, author: str = None, author_prefix: str = None, server_prefix: str = None):
         """Sends a customized message via say through the console."""

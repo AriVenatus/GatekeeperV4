@@ -29,6 +29,7 @@ import pathlib
 import sqlite3
 from datetime import datetime
 from importlib.resources import is_resource
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError, available_timezones
 
 import discord
 from discord import MessageType, app_commands
@@ -72,6 +73,11 @@ class Banner(commands.Cog):
         self.uBot.sub_command_handler('bot', self.banner_settings)
         self.uBot.sub_command_handler('bot', self.banner_group_group)
 
+        if not self.DBConfig.GetSetting('Banner_Timezone'):
+            self.DBConfig.SetSetting('Banner_Timezone', "UTC")
+        if self.DBConfig.GetSetting('Banner_Use_12Hour') is None:
+            self.DBConfig.SetSetting('Banner_Use_12Hour', True)
+
         if self.DBConfig.GetSetting('Banner_Auto_Update') == True:
             self.server_display_update.start()
             self.banner_loop_time_control.start()
@@ -82,6 +88,34 @@ class Banner(commands.Cog):
     @property
     def _Message_Timeout(self):
         return self.DBConfig.Message_timeout
+
+    def _get_current_timezone_time(self) -> datetime:
+        """Return the current time using the configured `Banner_Timezone` setting.
+
+        Falls back to UTC if the stored timezone is missing or invalid.
+        """
+        tz_name = self.DBConfig.GetSetting('Banner_Timezone')
+        if not tz_name:
+            tz_name = "UTC"
+            self.DBConfig.SetSetting('Banner_Timezone', tz_name)
+        try:
+            return datetime.now(ZoneInfo(tz_name))
+        except ZoneInfoNotFoundError:
+            self.logger.error(f"Invalid timezone '{tz_name}' in Banner_Timezone setting. Falling back to UTC.")
+            return datetime.now(ZoneInfo("UTC"))
+
+    def _get_time_format(self) -> str:
+        """Return the strftime format string based on the `Banner_Use_12Hour` setting."""
+        use_12h = self.DBConfig.GetSetting('Banner_Use_12Hour')
+        if use_12h is None or use_12h == True:
+            return '%Y-%m-%d | %I:%M %p %Z'
+        return '%Y-%m-%d | %H:%M %Z'
+
+    async def autocomplete_timezones(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+        """Autocomplete for IANA timezone names, filtered by what the user has typed so far."""
+        all_zones = sorted(available_timezones())
+        matches = [tz for tz in all_zones if current.lower() in tz.lower()]
+        return [app_commands.Choice(name=tz, value=tz) for tz in matches[:25]]
 
     @commands.Cog.listener('on_message_delete')
     async def on_message_delete(self, message: discord.Message):
@@ -171,8 +205,9 @@ class Banner(commands.Cog):
             for curpos in range(0, len(message_list)):
                 try:
                     # 0*10 = 0 : (0+1)*10 = 10 / 1*10 = 10 : (1+1)*10 = 20 / 2 *10 = 20 : (2+1)*10 = 30
-                    # await message_list[curpos].edit(content= f"*Edited at {discord.utils.utcnow().strftime('%Y-%m-%d | %H:%M')}*", embeds=embed_list[curpos*10:(curpos+1)*10], attachments= [])
-                    await message_list[curpos].edit(embeds=embed_list[curpos * 10:(curpos + 1) * 10], attachments=[])
+                    now = self._get_current_timezone_time()
+                    time_str = now.strftime(self._get_time_format())
+                    await message_list[curpos].edit(content=f"*Edited at {time_str}*", embeds=embed_list[curpos * 10:(curpos + 1) * 10], attachments=[])
 
                 except discord.errors.Forbidden:
                     self.logger.error(f'{self._client.user.name} lacks permissions to edit messages in {discord_channel.name}, removing the Channel from {banner_name}.')
@@ -248,7 +283,9 @@ class Banner(commands.Cog):
             for curpos in range(0, len(message_list)):
                 try:
                     if first_msg:
-                        await message_list[curpos].edit(content=f"*Zuletzt aktualisiert: {discord.utils.utcnow().strftime('%Y-%m-%d | %H:%M')}*", attachments=[banner_image_list[curpos]], embed=None)
+                        now = self._get_current_timezone_time()
+                        time_str = now.strftime(self._get_time_format())
+                        await message_list[curpos].edit(content=f"*Edited at {time_str}*", attachments=[banner_image_list[curpos]], embed=None)
                         first_msg = False
                     else:
                         await message_list[curpos].edit(attachments=[banner_image_list[curpos]], embed=None)
@@ -566,6 +603,50 @@ class Banner(commands.Cog):
         if flag.value == 1:
             self.DBConfig.SetSetting('Auto_BG_Remove', 1)
             return await context.send('We will be removing Servers from Banner groups when they are removed from AMP.', ephemeral=True, delete_after=self._client.Message_Timeout)
+
+    @banner_settings.command(name='timeformat')
+    @utils.role_check()
+    @app_commands.choices(format=[Choice(name='12 Hour (AM/PM)', value=1), Choice(name='24 Hour', value=0)])
+    async def banner_timeformat(self, context: commands.Context, format: Choice[int]):
+        """Switch between 12-hour (AM/PM) and 24-hour time format for banner timestamps."""
+        self.logger.command(f'{context.author.name} changed banner time format to {"12h" if format.value == 1 else "24h"}')
+
+        self.DBConfig.SetSetting('Banner_Use_12Hour', bool(format.value))
+
+        mode = "12-hour (AM/PM)" if format.value == 1 else "24-hour"
+        now = self._get_current_timezone_time()
+        time_str = now.strftime(self._get_time_format())
+
+        await context.send(
+            content=f"Time format set to `{mode}`.\nExample: `{time_str}`",
+            ephemeral=True,
+            delete_after=self._client.Message_Timeout
+        )
+
+    @banner_settings.command(name='timezone')
+    @utils.role_check()
+    @app_commands.autocomplete(timezone=autocomplete_timezones)
+    async def banner_timezone(self, context: commands.Context, timezone: str):
+        """Set the timezone for banner timestamps (e.g. America/New_York)."""
+        self.logger.command(f'{context.author.name} changed banner timezone to {timezone}')
+
+        try:
+            ZoneInfo(timezone)
+        except ZoneInfoNotFoundError:
+            return await context.send(
+                content=f"Invalid timezone: `{timezone}`. Use a valid IANA name (autocomplete helps!).",
+                ephemeral=True,
+                delete_after=self._client.Message_Timeout * 2
+            )
+
+        self.DBConfig.SetSetting('Banner_Timezone', timezone)
+        now = self._get_current_timezone_time()
+        time_str = now.strftime(self._get_time_format())
+        await context.send(
+            content=f"Timezone set to `{timezone}`.\nCurrent time: `{time_str}`",
+            ephemeral=True,
+            delete_after=self._client.Message_Timeout
+        )
 
 
 async def setup(client):

@@ -10,6 +10,23 @@ Need Support or have questions? Please visit my Discord and post in the respecti
 Come Join my Discord - **[Neko Neko Cafe](https://discord.gg/BtNyU8DFtt)**
 
 
+## **Why use this fork?**
+___
+This is a fork of [Leon Breidenbach's GatekeeperV3](https://github.com/leonbreidenbach-pc/GatekeeperV3), which is itself a fork of the original [k8thekat/GatekeeperV2](https://github.com/k8thekat/GatekeeperV2). Compared to the original GatekeeperV2:
+
+**From Leon's GatekeeperV3:**
+- More defensive handling of malformed/unexpected AMP API responses in `AMP.py` (`getStatus`, `getUserList`, `getActiveUsers`).
+- A `threading.Event`-based shutdown mechanism for the AMP background thread, with try/except wrapping so one bad polling iteration doesn't kill the thread, and daemon-thread behavior so the process doesn't hang on exit.
+- Per-server/per-group error handling in the banner auto-update loop, so one broken server, guild, or channel no longer takes down the whole banner refresh.
+
+**New in this fork (v3.1):**
+- Banner timestamps now support a configurable timezone and 12h/24h format via `/bot banner_settings timezone` (with IANA autocomplete) and `/bot banner_settings timeformat`. This ports a feature that was merged into upstream GatekeeperV2 after Leon's fork had already diverged, and fixes it up to work with this fork's banner code.
+- Fixed inconsistent "Edited at ..." banner timestamps left over from Leon's fork (missing entirely on embed banners, hardcoded to German text and raw UTC on image banners) so both banner types now show the same, timezone-aware timestamp.
+- Fixed a broken `pyproject.toml` (an unterminated string in the `authors` table) that prevented `pip install .` and `python -m build` from working.
+
+See [changelog.md](/changelog.md) for the full version history.
+
+
 ## **Features**
 ___
 - User friendly with very basic setup required by the User. **Gatekeeperv2** can manage its own permissions inside of AMP.

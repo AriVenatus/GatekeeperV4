@@ -3,12 +3,13 @@ requires      = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "GatekeeperV3"
+name = "GatekeeperV3.1"
 dynamic = ["version"]
 authors = [
-    { name = "Leon Breidenbach", email = "gatekeeperv3@gta-5.de },
+    { name = "Ari", email = "arivenatus@gmail.com" },
+    { name = "Leon Breidenbach", email = "gatekeeperv3@gta-5.de" },
     { name = "k8thekat (previous dev)", email = "Cadwalladerkatelynn+Gatekeeper@gmail.com" }
-    
+
 ]
 description = "A Discord Bot for Cube Coders AMP"
 readme = { file = "README", content-type = "text/markdown" }
@@ -28,8 +29,8 @@ classifiers = [
 ]
 
 [project.urls]
-GitHub    = "https://github.com/k8thekat/GatekeeperV2"
-Changelog = "https://github.com/k8thekat/GatekeeperV2/blob/main/changelog"
+GitHub    = "https://github.com/AriVenatus/GatekeeperV3.1"
+Changelog = "https://github.com/AriVenatus/GatekeeperV3.1/blob/main/changelog"
 
 [tool.setuptools.dynamic]
 dependencies = { file = "requirements.txt" }
