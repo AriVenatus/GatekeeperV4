@@ -37,7 +37,7 @@ import AMP_Handler
 import DB
 from typing import Union
 
-Version = 'beta-4.7.4'
+Version = 'beta-4.7.5'
 
 
 class Gatekeeper(commands.Bot):
@@ -179,7 +179,7 @@ async def bot_permissions(context: commands.Context, permission: Choice[int]):
     # If we set to 1; we are using `Custom` Permissions.
     elif permission.value == 1:
         await context.send(f'You have selected `Custom` permissions, validating `bot_perms.json`', ephemeral=True, delete_after=client.Message_Timeout)
-        await context.send(f'Visit https://github.com/k8thekat/GatekeeperV2/blob/main/PERMISSIONS.md', ephemeral=True, delete_after=client.Message_Timeout)
+        await context.send(f'Visit https://github.com/AriVenatus/GatekeeperV3.1/blob/main/PERMISSIONS.md', ephemeral=True, delete_after=client.Message_Timeout)
         # This validates the `bot_perms.json` file.
         if not await client.permissions_update():
             return await context.send(f'Error loading the Permissions Cog, please check your Console for errors.', ephemeral=True, delete_after=client.Message_Timeout)

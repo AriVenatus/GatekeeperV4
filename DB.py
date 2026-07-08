@@ -254,6 +254,9 @@ class Database:
         self._AddConfig("Donator_role_id", None)
         # Prevent Server being removed from Banner Group
         self._AddConfig("Auto_BG_Remove", False)
+        # Banner timestamp timezone/format
+        self._AddConfig("Banner_Timezone", "UTC")
+        self._AddConfig("Banner_Use_12Hour", True)
 
     def _execute(self, SQL, params):
         Retry = 0
