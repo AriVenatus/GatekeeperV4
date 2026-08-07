@@ -981,7 +981,9 @@ class AMPInstance:
 
         # if result['result']['Status'] == False:
         if result["Status"] == False:
-            self.logger.critical(f"Unable to Set Permission Node __{PermissionNode}__ to `{Enabled}` for {RoleID}")
+            self.logger.critical(
+                f"Unable to Set Permission Node __{PermissionNode}__ to `{Enabled}` for {RoleID}, response was: {result}"
+            )
             return False
 
         return True
