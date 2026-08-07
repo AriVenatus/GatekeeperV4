@@ -158,7 +158,8 @@ class AMPInstance:
                 return
 
         self.AMPheader = {
-            "Accept": "text/javascript"
+            "Accept": "text/javascript",
+            "Content-Type": "application/json",
         }  # custom header for AMP API POST requests. AMP is pure POST requests. ***EVERY REQUEST MUST HAVE THIS***
         if instanceID != 0:
             self.url += f"ADSModule/Servers/{instanceID}/API/"
