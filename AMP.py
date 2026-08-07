@@ -159,7 +159,11 @@ class AMPInstance:
 
         self.AMPheader = {
             "Accept": "text/javascript",
-            "Content-Type": "application/json",
+            # AMP's own web client sends the JSON body under this (technically mismatched)
+            # Content-Type -- confirmed via the browser's actual Core/Login request -- and
+            # rejects requests that instead declare application/json.
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            "X-Requested-With": "XMLHttpRequest",
         }  # custom header for AMP API POST requests. AMP is pure POST requests. ***EVERY REQUEST MUST HAVE THIS***
         if instanceID != 0:
             self.url += f"ADSModule/Servers/{instanceID}/API/"
@@ -461,8 +465,8 @@ class AMPInstance:
         """This is the main API Call function"""
         self.logger.debug(f"Function {APICall} was called with {parameters} by {self.InstanceID}")
 
-        if self.SessionID != 0:
-            parameters["SESSIONID"] = self.SessionID
+        # AMP's own web client always includes this key, even as "" pre-login -- match that shape.
+        parameters["SESSIONID"] = self.SessionID if self.SessionID != 0 else ""
         jsonhandler = json.dumps(parameters)
 
         while True:
