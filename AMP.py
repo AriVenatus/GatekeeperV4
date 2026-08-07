@@ -441,6 +441,7 @@ class AMPInstance:
                     self.Running = True
 
                 else:
+                    self.logger.warning(f"Core/Login did not return a sessionID, response was: {result}")
                     self.logger.warning(f"{self.FriendlyName} - Instance is Offline")
                     self.Running = False
                     return False
