@@ -38,12 +38,15 @@ def perms_super():
         'ADS.*',
         '-ADS.TemplateManagement.*',
         'Settings.*',
-        '-Settings.GSMyAdmin.*',
+        # -Settings.GSMyAdmin.* removed: not a recognized permission node on current
+        # AMP versions (confirmed via Core/GetPermissionsSpec) -- nothing to exclude
+        # if the node doesn't exist.
         '-Settings.ADSModule.*',
         '-Settings.FileManagerPlugin.*',
         '-Settings.EmailSenderPlugin.*',
         '-Settings.WebRequestPlugin.*',
-        '-Settings.LocalFileBackupPlugin.*',
+        # -Settings.LocalFileBackupPlugin.* removed: same reason, matches the
+        # LocalFileBackup.* removal above.
         '-Settings.steamcmdplugin.*',
         'ADS.InstanceManagement.*',
         '-ADS.InstanceManagement.RegisterToController',
@@ -54,7 +57,8 @@ def perms_super():
         '-ADS.InstanceManagement.AttachRemoteADSInstance',
         '-ADS.InstanceManagement.RemoveRemoteADSInstance',
         '-ADS.InstanceManagement.EditRemoteTargets',
-        '-ADS.InstanceManagement.Convert',
+        # -ADS.InstanceManagement.Convert removed: not a recognized permission node
+        # on current AMP versions (confirmed via Core/GetPermissionsSpec).
         '-ADS.InstanceManagement.Reconfigure',
         '-ADS.InstanceManagement.RefreshConfiguration',
         '-ADS.InstanceManagement.RefreshRemoteConfigStores',
