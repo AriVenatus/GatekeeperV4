@@ -186,19 +186,10 @@ ______
     - `-token` - Bypasse tokens validation check. *(Mandatory for AMP Template Installations/Operations)*
     - `-command` - Enable slash command print statements for user traceback. 
     - `-super` - This leaves AMP Super Admin role intact, use at your own risk.    
-    - `-whitelist-only` - Restricts the bot's AMP role on the main instance to the minimum needed for Discord-Role<->Whitelist sync (no `Instances.*`/`ADS.*`/`FileManager.*`/`LocalFileBackup.*`). **⚠ Needs verification before relying on it in production** — see note below.
+    - `-whitelist-only` - Restricts the bot's AMP role on the main instance to the minimum needed for Discord-Role<->Whitelist sync (no `Instances.*`/`ADS.*`/`FileManager.*`/`LocalFileBackup.*`). **⚠ Needs verification before relying on it in production** — see `CLAUDE.md`.
     - `-dev` - Enable development print statments. *(used for development)*
     - `-debug` - Enables *DEBUGGING* level for logging. *(used for development)*
     - `-discord` - Disables Discord Intigration *(used for testing)*
-
-### **Verifying `-whitelist-only` before production use**
-- **Why this needs testing**: on every startup and every 30s poll, Gatekeeper calls the AMP API `ADSModule/GetInstances` to discover instances. It's undocumented whether this endpoint requires an explicit `ADS.*` permission node — `-whitelist-only` deliberately does *not* grant any `ADS.*` node. If it turns out `GetInstances` does need one, the bot will lose the ability to see any AMP instance after the first restart with this flag.
-- **How to test**:
-    1. Start the bot with `-whitelist-only` using a fresh bot account that still has `Super Admins`.
-    2. Let it restart (this is when Super Admin gets removed and the narrowed `Gatekeeper` role/permissions get applied).
-    3. Check the log for `***ATTENTION*** Please ensure the permissions are set correctly, the Bot cannot find any AMP Instances at this time...`.
-    4. Confirm a Minecraft whitelist add/remove still works end-to-end via Discord-Role sync.
-- **Expected result**: no "cannot find any AMP Instances" message, and whitelist sync still functions. If instance discovery fails, add an `ADS.*` (or a narrower `ADS.InstanceManagement.*` read-only) node to `perms_whitelist_only()` in `amp_permissions.py` and re-test.
 
 ___
 ## **Using Gatekeeperv2 as a Service**
