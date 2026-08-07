@@ -76,6 +76,27 @@ def perms_super():
     return core
 
 
+def perms_whitelist_only():
+    """Minimal permission profile for the MAIN AMP instance (ID 0) Gatekeeper role, scoped to
+    only what the bot needs to manage its OWN Gatekeeper role membership for the Discord-Role
+    <-> Whitelist-Sync use case. Per-instance module permissions (e.g. Minecraft.*) are granted
+    separately by each module's own setup_Gatekeeper_Permissions() override (see
+    modules/Minecraft/amp_minecraft.py) and are unaffected by this profile."""
+    core = ['Core.RoleManagement.*',
+        '-Core.RoleManagement.DeleteRoles',
+        '-Core.RoleManagement.CreateCommonRoles',
+        'Core.UserManagement.*',
+        '-Core.UserManagement.UpdateUserInfo',
+        '-Core.UserManagement.UpdateOwnAccount',
+        '-Core.UserManagement.DeleteUser',
+        '-Core.UserManagement.ResetUserPassword',
+        '-Core.UserManagement.CreateNewUser',
+        '-Core.UserManagement.ViewOtherUsersSessions',
+        '-Core.UserManagement.EndUserSessions',
+        'Core.UserManagement.ViewUserInfo']
+    return core
+
+
 
 
 

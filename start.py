@@ -22,6 +22,7 @@
 import sys
 import subprocess
 import argparse
+import hashlib
 import pip
 import threading
 from threading import current_thread
@@ -35,6 +36,9 @@ class Setup:
         parser = argparse.ArgumentParser(description='AMP Discord Bot')
         parser.add_argument('-token', help='Bypasse tokens validation check.', required=False, action="store_true")
         parser.add_argument('-super', help='This leaves AMP Super Admin role intact, use at your own risk.', required=False, action="store_true")
+        parser.add_argument('-whitelist-only', dest='whitelist_only', required=False, action="store_true",
+            help="Restrict the bot's AMP role on the main instance to the minimum needed for Discord-Role<->Whitelist "
+                 "sync (no Instances.*/ADS.*/FileManager.*/LocalFileBackup.* access).")
 
         # All the args below are used for development purpose.
         parser.add_argument('-dev', help='Enable development print statments.', required=False, action="store_true")
@@ -79,14 +83,9 @@ class Setup:
             while (AMP_Handler.AMP_setup == False):
                 time.sleep(.5)
 
-            # if self.args.dev and pathlib.Path('tokens_dev.py').exists():
-            #     import tokens_dev as tokens
-
-            import tokens
-
             import discordBot
             try:
-                discordBot.client_run(tokens)
+                discordBot.client_run(AMP_Handler.getAMPHandler().tokens)
             except (KeyboardInterrupt, SystemExit):
                 self.logger.warning('Shutdown signal received, stopping Gatekeeper...')
             finally:
@@ -105,12 +104,20 @@ class Setup:
         pip_v_major = int(pip_version[0])
         pip_v_minor = int(pip_version[1])
 
-        if pip_v_major > 22 or (pip_v_major == 22 and pip_v_minor >= 1):
-            _current_path = pathlib.Path(__file__).parent.absolute()
-            _requirements_path = _current_path.joinpath('requirements.txt')
-            subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', f'{_requirements_path}'])
-        else:
+        if not (pip_v_major > 22 or (pip_v_major == 22 and pip_v_minor >= 1)):
             print(f'Unable to Start Gatekeeper, PIP Version is {pip.__version__}, we require PIP Version >= 22.1')
+            return
+
+        _current_path = pathlib.Path(__file__).parent.absolute()
+        _requirements_path = _current_path.joinpath('requirements.txt')
+        _marker_path = _current_path.joinpath('.pip_install.marker')
+        _current_hash = hashlib.sha256(_requirements_path.read_bytes()).hexdigest()
+
+        if _marker_path.exists() and _marker_path.read_text().strip() == _current_hash:
+            return  # requirements.txt unchanged since last successful install; skip.
+
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', f'{_requirements_path}'])
+        _marker_path.write_text(_current_hash)
 
 
 Start = Setup()

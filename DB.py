@@ -97,6 +97,17 @@ def getDBHandler() -> DBHandler:
     return Handler
 
 
+_SERVERS_ALLOWED_COLUMNS = frozenset({
+    "InstanceID", "InstanceName", "FriendlyName", "DisplayName", "Host",
+    "Whitelist", "Whitelist_disabled", "Donator", "Console_Flag", "Console_Filtered",
+    "Console_Filtered_Type", "Discord_Console_Channel", "Discord_Chat_Channel",
+    "Discord_Chat_Prefix", "Discord_Event_Channel", "Discord_Role", "Avatar_url", "Hidden",
+})
+_USERS_ALLOWED_COLUMNS = frozenset({
+    "DiscordID", "DiscordName", "MC_IngameName", "MC_UUID", "SteamID", "Role",
+})
+
+
 class Database:
     def __init__(self, Handler=None):
         self.DBExists = False
@@ -306,12 +317,17 @@ class Database:
     def _UpdateServer(self, dbserver, **args):
         # get the property to update
         entry = list(args.keys())[0]
+        if entry not in _SERVERS_ALLOWED_COLUMNS:
+            raise ValueError(f"Refusing to update disallowed Servers column '{entry}'")
         self._execute(f"Update servers set {entry}=? where ID=?", (args[entry], dbserver.ID))
         jdata = dump_to_json({"Type": "ServerUpdate", "ServerID": dbserver.ID, "Field": entry, "Value": args[entry]})
         self._logdata(jdata)
 
     def _UpdateBanner(self, dbbanner, **args):
         entry = list(args.keys())[0]
+        allowed = dbbanner._attr_list.keys() - {"_db"}
+        if entry not in allowed:
+            raise ValueError(f"Refusing to update disallowed ServerBanners column '{entry}'")
         self._execute(f"Update ServerBanners set {entry}=? where ServerID=?", (args[entry], dbbanner.ServerID))
         jdata = dump_to_json({"Type": "BannerUpdate", "ServerID": dbbanner.ServerID, "Field": entry, "Value": args[entry]})
         self._logdata(jdata)
@@ -319,6 +335,8 @@ class Database:
     def _UpdateUser(self, dbuser, **args):
         # get the property to update
         entry = list(args.keys())[0]
+        if entry not in _USERS_ALLOWED_COLUMNS:
+            raise ValueError(f"Refusing to update disallowed Users column '{entry}'")
         self._execute(f"Update users set {entry}=? where ID=?", (args[entry], dbuser.ID))
         jdata = dump_to_json({"Type": "UserUpdate", "UserID": dbuser.ID, "Field": entry, "Value": args[entry]})
         self._logdata(jdata)

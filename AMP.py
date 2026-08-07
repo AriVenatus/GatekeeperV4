@@ -134,18 +134,12 @@ class AMPInstance:
         self.url = self.AMPHandler.tokens.AMPurl + "/API/"  # base url for AMP console /API/
 
         if hasattr(self, "perms") == False:
-            self.perms = [
-                "Core.*",
-                "Core.RoleManagement.*",
-                "Core.UserManagement.*",
-                "Instances.*",
-                "ADS.*",
-                "Settings.*",
-                "ADS.InstanceManagement.*",
-                "FileManager.*",
-                "LocalFileBackup.*",
-                "Core.AppManagement.*",
-            ]
+            import amp_permissions as AMPPerms
+
+            if self.AMPHandler.args.whitelist_only:
+                self.perms = AMPPerms.perms_whitelist_only()
+            else:
+                self.perms = AMPPerms.perms_super()
 
         if hasattr(self, "APIModule") == False:
             self.APIModule = "AMP"

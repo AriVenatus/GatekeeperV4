@@ -89,10 +89,9 @@ Installers can be downloaded from [here](https://www.python.org/downloads/window
 
 ### Installing Python 3.11
 
-Follow instructions listed above for your respective operating system.
-1. Open the `requirements.txt` and update `numpy==1.25.1` -> `numpy` and `yarl==1.9.2` -> `yarl` to no longer have version requirements.
-    - Simply save the text file after the edit and restart. 
-    - *Note* - Any future updates may require this change again.
+Follow instructions listed above for your respective operating system. As of the current
+`requirements.txt`, `numpy` and `yarl` are already pinned to versions with Python 3.11+
+support (`numpy==2.1.3`, `yarl==1.18.0`) — no manual edits to `requirements.txt` are needed.
 ___
 
 
@@ -109,6 +108,7 @@ ___
     - Remember the Log-in details for your newly created AMP user.
 2. Follow the instructions in `tokenstemplate.py` file -> [tokenstemplate.py](/tokenstemplate.py)
     - Rename `tokenstemplate.py` to `tokens.py` before you start.
+    - Alternatively, copy [`.env.template`](/.env.template) to `.env` (or export the same variables in your process/service environment) and fill in your credentials — Gatekeeper falls back to environment variables if `tokens.py` is not present. Useful for systemd `EnvironmentFile=` or container/secret-manager based deployments.
 3. From Command Line run script `start.py` *(eg. `../Discord Bot/start.py`)*
     - Run the bot, it will finish installing the rest of the requirements.
 4. See **[Interacting with the Bot~](#interacting-with-the-bot)**
@@ -186,12 +186,23 @@ ______
     - `-token` - Bypasse tokens validation check. *(Mandatory for AMP Template Installations/Operations)*
     - `-command` - Enable slash command print statements for user traceback. 
     - `-super` - This leaves AMP Super Admin role intact, use at your own risk.    
+    - `-whitelist-only` - Restricts the bot's AMP role on the main instance to the minimum needed for Discord-Role<->Whitelist sync (no `Instances.*`/`ADS.*`/`FileManager.*`/`LocalFileBackup.*`). **⚠ Needs verification before relying on it in production** — see note below.
     - `-dev` - Enable development print statments. *(used for development)*
     - `-debug` - Enables *DEBUGGING* level for logging. *(used for development)*
     - `-discord` - Disables Discord Intigration *(used for testing)*
 
+### **Verifying `-whitelist-only` before production use**
+- **Why this needs testing**: on every startup and every 30s poll, Gatekeeper calls the AMP API `ADSModule/GetInstances` to discover instances. It's undocumented whether this endpoint requires an explicit `ADS.*` permission node — `-whitelist-only` deliberately does *not* grant any `ADS.*` node. If it turns out `GetInstances` does need one, the bot will lose the ability to see any AMP instance after the first restart with this flag.
+- **How to test**:
+    1. Start the bot with `-whitelist-only` using a fresh bot account that still has `Super Admins`.
+    2. Let it restart (this is when Super Admin gets removed and the narrowed `Gatekeeper` role/permissions get applied).
+    3. Check the log for `***ATTENTION*** Please ensure the permissions are set correctly, the Bot cannot find any AMP Instances at this time...`.
+    4. Confirm a Minecraft whitelist add/remove still works end-to-end via Discord-Role sync.
+- **Expected result**: no "cannot find any AMP Instances" message, and whitelist sync still functions. If instance discovery fails, add an `ADS.*` (or a narrower `ADS.InstanceManagement.*` read-only) node to `perms_whitelist_only()` in `amp_permissions.py` and re-test.
+
 ___
 ## **Using Gatekeeperv2 as a Service**
+- **Secrets hygiene**: run Gatekeeper under a dedicated, non-root system user (not your personal SSH account, not `root`). Restrict `tokens.py`/`.env` to that user with `chmod 600 tokens.py` (or `.env`), owned by the service user.
 - Log into your dedicated server/VPS via root. 
 - You are then going to use the following command to create a service script for your Gatekeeper `nano /etc/systemd/system/gatekeeper.service`
     - Once done, input the following information into the service file.
@@ -203,6 +214,7 @@ After= network.service
 
 [Service]
 Type= simple
+User= # Dedicated non-root service user (eg. 'gatekeeper'), not root/your personal SSH user
 WorkingDirectory= # This points to the directory of Gatekeeperv2 files (eg. '/home/gatekeeper')
 ExecStart= #This points to the python3 script. (eg. 'ExecStart=/usr/bin/python3.9 /home/gatekeeper/start.py')
 Restart= always 

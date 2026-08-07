@@ -30,6 +30,7 @@ import threading
 import time
 import traceback
 from argparse import Namespace
+from types import SimpleNamespace
 
 import AMP
 import DB
@@ -126,6 +127,17 @@ class AMPHandler():
         if not self.args.super and not self.args.dev:
             self.AMP.setAMPUserRoleMembership(self.AMP.AMP_UserID, self.AMP.super_AdminID, False)
             self.logger.warning(f'***ATTENTION*** Removing {self.tokens.AMPUser} from `Super Admins` Role!')
+        elif self.args.super:
+            self.logger.warning(
+                f'***ATTENTION*** Gatekeeper was started with -super: {self.tokens.AMPUser} KEEPS the AMP '
+                '`Super Admins` role, all Gatekeeper role/permission downgrade logic is skipped. '
+                'This is NOT recommended for production -- restart without -super.'
+            )
+        elif self.args.dev:
+            self.logger.warning(
+                f'***ATTENTION*** Gatekeeper was started with -dev: {self.tokens.AMPUser} KEEPS the AMP '
+                '`Super Admins` role for this session (dev-mode skips the downgrade).'
+            )
 
     def get_AMP_instance_names(self, public: bool = False) -> dict[str, str]:
         """Creates a list of Instance Names/DisplayName or Friendly Name."""
@@ -153,23 +165,58 @@ class AMPHandler():
 
         return AMP_Instances_Names
 
+    def _load_tokens_from_env(self):
+        """Secondary secrets loader: builds a tokens-like namespace from environment variables
+        (optionally loaded from a .env file via python-dotenv) when tokens.py is absent."""
+        try:
+            from dotenv import load_dotenv
+            load_dotenv()  # no-op if no .env present; never overrides already-exported env vars
+        except ImportError:
+            self.logger.dev('python-dotenv not available; relying on process environment only.')
+
+        env_tokens = SimpleNamespace(
+            token=os.getenv('GATEKEEPER_TOKEN', ''),
+            AMPAuth=os.getenv('GATEKEEPER_AMP_AUTH', ''),
+            AMPUser=os.getenv('GATEKEEPER_AMP_USER', ''),
+            AMPPassword=os.getenv('GATEKEEPER_AMP_PASSWORD', ''),
+            AMPurl=os.getenv('GATEKEEPER_AMP_URL', ''),
+            SteamAPIKey=os.getenv('GATEKEEPER_STEAM_API_KEY', ''),
+        )
+
+        # token/AMPAuth/SteamAPIKey are legitimately optional per tokenstemplate.py's own comments
+        # (blank token = "testing AMP/DB only", blank AMPAuth = no 2FA, blank SteamAPIKey = feature disabled).
+        required = {'AMPUser': env_tokens.AMPUser, 'AMPPassword': env_tokens.AMPPassword, 'AMPurl': env_tokens.AMPurl}
+        if any(not v for v in required.values()):
+            self.logger.dev(f'Env-var token fallback incomplete, missing: {[k for k, v in required.items() if not v]}')
+            return None
+
+        self.logger.info('Loaded AMP credentials from environment variables / .env (tokens.py not found).')
+        return env_tokens
+
     # Checks for Errors in Config
     def val_settings(self):
         """Validates the tokens.py settings and 2FA."""
         self.logger.info('AMPHandler is validating your token file...')
         reset = False
 
-        if not self.args.token:
-            if not self._cwd.joinpath('tokens.py').exists():
-                self.logger.critical('**ERROR** Missing file tokens.py, please rename tokenstemplate.py or make a copy before trying again.')
-                reset = True
-
         if self.args.dev and pathlib.Path('tokens_dev.py').exists():
             self.logger.dev('Using Dev Tokens File --')
             import tokens_dev as tokens  # type:ignore
 
-        else:
+        elif self._cwd.joinpath('tokens.py').exists():
             import tokens
+
+        else:
+            tokens = self._load_tokens_from_env()
+
+        if tokens is None:
+            self.logger.critical(
+                '**ERROR** Missing tokens.py (rename tokenstemplate.py or copy it) and the required '
+                'environment variables (GATEKEEPER_AMP_USER, GATEKEEPER_AMP_PASSWORD, GATEKEEPER_AMP_URL) '
+                'were not set either. See tokenstemplate.py / .env.template.'
+            )
+            input("Press any Key to Exit")
+            sys.exit(0)
 
         self.tokens = tokens
         if not tokens.AMPurl.startswith('http://') and not tokens.AMPurl.startswith('https://'):
