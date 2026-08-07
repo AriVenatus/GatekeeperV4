@@ -22,9 +22,20 @@
 import datetime
 import sys
 import logging
-from haggis import logs
 from logging.handlers import TimedRotatingFileHandler
 import pathlib
+
+# Python 3.13 removed the private logging._acquireLock()/_releaseLock() wrapper
+# functions that haggis.logs.add_logging_level() still calls internally (the
+# underlying logging._lock it wrapped is still present). Back-fill them so
+# custom level registration below keeps working; harmless no-op on older
+# Python where haggis's own functions already exist.
+if not hasattr(logging, '_acquireLock'):
+    logging._acquireLock = logging._lock.acquire
+if not hasattr(logging, '_releaseLock'):
+    logging._releaseLock = logging._lock.release
+
+from haggis import logs
 
 def init(args=None):
     logginglevel = logging.INFO
