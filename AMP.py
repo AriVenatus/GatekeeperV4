@@ -341,6 +341,11 @@ class AMPInstance:
                         )
                         return False
 
+                    elif self.APIModule == "AMP":  # AKA the main (InstanceID == 0), which has no self.Port.
+                        self.logger.warning(
+                            f"Gatekeeper is missing the permission __{perm}__ Please check under Configuration -> Role Management -> Gatekeeper for {self.AMPHandler.tokens.AMPUser}."
+                        )
+
                     else:
                         end_point = self.AMPHandler.tokens.AMPurl.find(":", 5)
                         self.logger.warning(
