@@ -65,11 +65,10 @@ def perms_super():
         '-FileManager.FileManager.ConnectViaSFTP',
         '-FileManager.FileManager.ModifyAMPConfigFiles',
         '-FileManager.FileManager.DownloadFromURL',
-        'LocalFileBackup.*',
-        '-LocalFileBackup.Backup.ViewBackupsList',
-        '-LocalFileBackup.Backup.DeleteBackup',
-        '-LocalFileBackup.Backup.RestoreBackup',
-        '-LocalFileBackup.Backup.ToggleStickiness',
+        # LocalFileBackup.* removed: not a recognized permission node on current AMP
+        # versions (renamed/restructured server-side) -- setting it always fails and
+        # blocked Gatekeeper role setup from ever completing. Revisit once the modern
+        # equivalent node name is confirmed against Configuration -> Role Management.
         'Core.AppManagement.*',
         '-Core.AppManagement.UpdateApplication',
         '-Core.Special.*']
