@@ -13,6 +13,7 @@ from utils_dev.banner_editor.ui.view2 import Copy_To_View
 
 from utils_ui import banner_file_handler
 import modules.banner_creator as BC
+import i18n
 
 if TYPE_CHECKING:
     from AMP import AMPInstance
@@ -23,8 +24,8 @@ if TYPE_CHECKING:
 class Copy_To_Modal(Modal):
     """Used for Copy To Button within the Banner Settings Editor View."""
 
-    def __init__(self, edited_banner: Edited_DB_Banner, title: str = "Copy To Server", timeout: Optional[float] = None) -> None:
-        super().__init__(title=title, timeout=timeout)
+    def __init__(self, edited_banner: Edited_DB_Banner, title: str = None, timeout: Optional[float] = None) -> None:
+        super().__init__(title=title or i18n.t('ui.banner_copy.modal_title'), timeout=timeout)
         self._edited_banner: Edited_DB_Banner = edited_banner  # Need to pass this along to our view...
         self._amp_instance_names: dict[str, str] = AMP_Handler.getAMPHandler().get_AMP_instance_names()
         self._txt_input: Copy_To_TextInput = Copy_To_TextInput()
@@ -42,7 +43,7 @@ class Copy_To_Modal(Modal):
                     break
 
         copy_to_view: Copy_To_View = Copy_To_View(select_options=result_options, edited_banner=self._edited_banner)
-        await interaction.response.send_message(content=f"{self._txt_input.value} was provided. Here is the matching Servers..", view=copy_to_view, ephemeral=True)
+        await interaction.response.send_message(content=i18n.t('ui.banner_copy.matches_found', query=self._txt_input.value), view=copy_to_view, ephemeral=True)
         # await interaction.response.defer()
 
 
@@ -70,11 +71,11 @@ class Banner_Modal(Modal):
         # Depending on the Selection made; changes the validation code and the reply.
         if self._input_type == 'int':
             if await self._int_code_input.callback() == False:
-                await interaction.response.send_message(f'Please provide a Number only. {self._int_code_input.value}', ephemeral=True)
+                await interaction.response.send_message(i18n.t('ui.banner_modal.invalid_number', value=self._int_code_input.value), ephemeral=True)
 
         if self._input_type == 'color':
             if await self._color_code_input.callback() == False:
-                await interaction.response.send_message(content=f'Please provide a proper Hex color Code. {self._color_code_input._value}', ephemeral=True)
+                await interaction.response.send_message(content=i18n.t('ui.banner_modal.invalid_hex', value=self._color_code_input._value), ephemeral=True)
 
         # Regardless we defer the interaction; because we only care if it fails as seen above.\
         if self._banner_view._first_interaction:

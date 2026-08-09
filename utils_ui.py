@@ -16,18 +16,23 @@ import DB
 import AMP_Handler
 import modules.banner_creator as BC
 import utils
+import i18n
 
 
 class ServerButton(Button):
     """Custom Start Button for when Servers are Offline."""
 
-    def __init__(self, server: AMP_Handler.AMP.AMPInstance, view: discord.ui.View, function, label: str, callback_label: str, callback_disabled: bool, style=discord.ButtonStyle.green, context=None):
-        super().__init__(label=label, style=style, custom_id=label)
+    def __init__(self, server: AMP_Handler.AMP.AMPInstance, view: discord.ui.View, function, label: str, callback_label: str, callback_disabled: bool, action: str, style=discord.ButtonStyle.green, context=None):
+        # `custom_id`/`permission_node` are derived from `action` (a fixed, never-translated
+        # identifier), NOT from the display `label` -- the label is user-facing text that changes
+        # with the active language, but `server.start`/`server.stop`/etc. are permission nodes
+        # checked against bot_perms.json and must stay stable across a language switch.
+        super().__init__(label=label, style=style, custom_id=action)
         self.logger = logging.getLogger()
         self.server = server
         self.context = context
         self._label = label
-        self.permission_node = 'server.' + self._label.lower()
+        self.permission_node = 'server.' + action
 
         self.callback_label = callback_label
         self.callback_disabled = callback_disabled
@@ -58,22 +63,22 @@ class ServerButton(Button):
 
 class StartButton(ServerButton):
     def __init__(self, server, view, function):
-        super().__init__(server=server, view=view, function=function, label='Start', callback_label='Starting...', callback_disabled=True, style=discord.ButtonStyle.green)
+        super().__init__(server=server, view=view, function=function, action='start', label=i18n.t('ui.server_button.start'), callback_label=i18n.t('ui.server_button.starting'), callback_disabled=True, style=discord.ButtonStyle.green)
 
 
 class StopButton(ServerButton):
     def __init__(self, server, view, function):
-        super().__init__(server=server, view=view, function=function, label='Stop', callback_label='Stopping...', callback_disabled=True, style=discord.ButtonStyle.red)
+        super().__init__(server=server, view=view, function=function, action='stop', label=i18n.t('ui.server_button.stop'), callback_label=i18n.t('ui.server_button.stopping'), callback_disabled=True, style=discord.ButtonStyle.red)
 
 
 class RestartButton(ServerButton):
     def __init__(self, server, view, function):
-        super().__init__(server=server, view=view, function=function, label='Restart', callback_label='Restarting...', callback_disabled=True, style=discord.ButtonStyle.blurple)
+        super().__init__(server=server, view=view, function=function, action='restart', label=i18n.t('ui.server_button.restart'), callback_label=i18n.t('ui.server_button.restarting'), callback_disabled=True, style=discord.ButtonStyle.blurple)
 
 
 class KillButton(ServerButton):
     def __init__(self, server, view, function):
-        super().__init__(server=server, view=view, function=function, label='Kill', callback_label='Killed...', callback_disabled=True, style=discord.ButtonStyle.danger)
+        super().__init__(server=server, view=view, function=function, action='kill', label=i18n.t('ui.server_button.kill'), callback_label=i18n.t('ui.server_button.killed'), callback_disabled=True, style=discord.ButtonStyle.danger)
 
 
 class StatusView(View):
@@ -141,6 +146,30 @@ class Banner_Editor_View(View):
         self.add_item(Cancel_Banner_Button(banner_message=self._banner_message))
 
 
+# Maps each Banner Editor field's stable (never-translated) SelectOption `value` to the i18n key
+# suffix for its display text -- shared between the SelectOption label AND the Modal title that
+# opens for it, so the two are always consistent (they used to diverge: the modal title was
+# derived from the raw value via `.replace("_", " ")` instead of reusing the option's own label).
+BANNER_FIELD_LABEL_KEYS = {
+    'color_whitelist_open': 'whitelist_open_color',
+    'color_whitelist_closed': 'whitelist_closed_color',
+    'color_donator': 'donator_color',
+    'blur_background_amount': 'blur_background',
+    'color_header': 'header_color',
+    'color_body': 'body_color',
+    'color_host': 'host_color',
+    'color_status_online': 'status_online_color',
+    'color_status_offline': 'status_offline_color',
+    'color_player_limit_min': 'player_limit_min_color',
+    'color_player_limit_max': 'player_limit_max_color',
+    'color_player_online': 'player_online_color',
+}
+
+
+def banner_field_label(value: str) -> str:
+    return i18n.t(f'ui.banner_editor.fields.{BANNER_FIELD_LABEL_KEYS[value]}')
+
+
 class Banner_Editor_Select(Select):
     def __init__(self, edited_db_banner: Edited_DB_Banner, view: Banner_Editor_View, amp_server: AMP_Handler.AMP.AMPInstance, banner_message: discord.Message, custom_id: str = None, min_values: int = 1, max_values: int = 1, row: int = None, disabled: bool = False, placeholder: str = None):
         self.logger = logging.getLogger()
@@ -153,22 +182,22 @@ class Banner_Editor_Select(Select):
         self._amp_server = amp_server
 
         whitelist_options = [
-            discord.SelectOption(label="Whitelist Open Font Color", value='color_whitelist_open'),
-            discord.SelectOption(label="Whitelist Closed Font Color", value='color_whitelist_closed')]
+            discord.SelectOption(label=banner_field_label('color_whitelist_open'), value='color_whitelist_open'),
+            discord.SelectOption(label=banner_field_label('color_whitelist_closed'), value='color_whitelist_closed')]
         donator_options = [
-            discord.SelectOption(label="Donator Font Color", value='color_donator')]
+            discord.SelectOption(label=banner_field_label('color_donator'), value='color_donator')]
 
         options = [
-            discord.SelectOption(label="Blur Background Intensity", value='blur_background_amount'),
-            discord.SelectOption(label="Header Font Color", value='color_header'),
-            discord.SelectOption(label="Body Font Color", value='color_body'),
-            discord.SelectOption(label="Host Font Color", value='color_host'),
+            discord.SelectOption(label=banner_field_label('blur_background_amount'), value='blur_background_amount'),
+            discord.SelectOption(label=banner_field_label('color_header'), value='color_header'),
+            discord.SelectOption(label=banner_field_label('color_body'), value='color_body'),
+            discord.SelectOption(label=banner_field_label('color_host'), value='color_host'),
 
-            discord.SelectOption(label="Server Online Font Color", value='color_status_online'),
-            discord.SelectOption(label="Server Offline Font Color", value='color_status_offline'),
-            discord.SelectOption(label="Player Limit Minimum Font Color", value='color_player_limit_min'),
-            discord.SelectOption(label="Player Limit Maximum Font Color", value='color_player_limit_max'),
-            discord.SelectOption(label="Players Online Font Color", value='color_player_online')
+            discord.SelectOption(label=banner_field_label('color_status_online'), value='color_status_online'),
+            discord.SelectOption(label=banner_field_label('color_status_offline'), value='color_status_offline'),
+            discord.SelectOption(label=banner_field_label('color_player_limit_min'), value='color_player_limit_min'),
+            discord.SelectOption(label=banner_field_label('color_player_limit_max'), value='color_player_limit_max'),
+            discord.SelectOption(label=banner_field_label('color_player_online'), value='color_player_online')
         ]
 
         # If Whitelist is disabled, remove the options from the list.
@@ -187,7 +216,7 @@ class Banner_Editor_Select(Select):
         else:
             input_type = 'color'
 
-        self._banner_modal = Banner_Modal(input_type=input_type, title=f'{self.values[0].replace("_", " ")}', select_value=self.values[0], edited_db_banner=self._edited_db_banner, banner_message=self._banner_message, view=self._banner_view, amp_server=self._amp_server)
+        self._banner_modal = Banner_Modal(input_type=input_type, title=banner_field_label(self.values[0]), select_value=self.values[0], edited_db_banner=self._edited_db_banner, banner_message=self._banner_message, view=self._banner_view, amp_server=self._amp_server)
         await interaction.response.send_modal(self._banner_modal)
 
         self._first_interaction = False
@@ -217,11 +246,11 @@ class Banner_Modal(Modal):
         # Depending on the Selection made; changes the validation code and the reply.
         if self._input_type == 'int':
             if await self._int_code_input.callback() == False:
-                await interaction.response.send_message(f'Please provide a Number only. {self._int_code_input.value}', ephemeral=True, delete_after=self._client.Message_Timeout)
+                await interaction.response.send_message(i18n.t('ui.banner_modal.invalid_number', value=self._int_code_input.value), ephemeral=True, delete_after=self._client.Message_Timeout)
 
         if self._input_type == 'color':
             if await self._color_code_input.callback() == False:
-                await interaction.response.send_message(content=f'Please provide a proper Hex color Code. {self._color_code_input._value}', ephemeral=True, delete_after=self._client.Message_Timeout)
+                await interaction.response.send_message(content=i18n.t('ui.banner_modal.invalid_hex', value=self._color_code_input._value), ephemeral=True, delete_after=self._client.Message_Timeout)
 
         # Regardless we defer the interaction; because we only care if it fails as seen above.
         await interaction.response.defer()
@@ -231,7 +260,8 @@ class Banner_Modal(Modal):
 
 class Banner_Color_Input(TextInput):
     # This is the Modal that appears when Inputing a color hexcode.
-    def __init__(self, view: Banner_Editor_View, edited_db_banner: Edited_DB_Banner, select_value: str, label: str = "Enter your Hex color code below.", style=discord.TextStyle.short, placeholder: str = '#000000', default: str = '#ffffff', required=True, min_length=3, max_length=8):
+    def __init__(self, view: Banner_Editor_View, edited_db_banner: Edited_DB_Banner, select_value: str, label: str = None, style=discord.TextStyle.short, placeholder: str = '#000000', default: str = '#ffffff', required=True, min_length=3, max_length=8):
+        label = label or i18n.t('ui.banner_color_input.label')
         self._edited_db_banner = edited_db_banner
         self._select_value = select_value
         self._banner_view = view
@@ -256,7 +286,9 @@ class Banner_Color_Input(TextInput):
 
 class Banner_Blur_Input(TextInput):
     # This is the Modal that appears when inputing the blur value.
-    def __init__(self, view: Banner_Editor_View, edited_db_banner: Edited_DB_Banner, select_value: str, label: str = "Blur Background Intensity", style=discord.TextStyle.short, placeholder='Enter a Number', default: int = 2, required=True, min_length=1, max_length=2):
+    def __init__(self, view: Banner_Editor_View, edited_db_banner: Edited_DB_Banner, select_value: str, label: str = None, style=discord.TextStyle.short, placeholder: str = None, default: int = 2, required=True, min_length=1, max_length=2):
+        label = label or i18n.t('ui.banner_editor.fields.blur_background')
+        placeholder = placeholder or i18n.t('ui.banner_blur_input.placeholder')
         self._edited_db_banner = edited_db_banner
         self._select_value = select_value
         self._banner_view = view
@@ -275,7 +307,7 @@ class Save_Banner_Button(Button):
     """Saves the Banners current settings to the DB."""
 
     def __init__(self, banner_message: discord.Message, server: AMP_Handler.AMP.AMPInstance, edited_banner: Edited_DB_Banner, style=discord.ButtonStyle.green):
-        super().__init__(label='Save', style=style, custom_id='Save_Button')
+        super().__init__(label=i18n.t('ui.banner_buttons.save'), style=style, custom_id='Save_Button')
         self.logger = logging.getLogger()
         self._amp_server = server
         self._banner_message = banner_message
@@ -286,14 +318,14 @@ class Save_Banner_Button(Button):
         saved_banner = self._edited_db_banner.save_db()
         await interaction.response.defer()
         file = banner_file_handler(BC.Banner_Generator(self._amp_server, saved_banner)._image_())
-        await self._banner_message.edit(content='**Banner Settings have been saved.**', attachments=[file], view=None)
+        await self._banner_message.edit(content=i18n.t('ui.banner_buttons.saved_message'), attachments=[file], view=None)
 
 
 class Reset_Banner_Button(Button):
     """Resets the Banners current settings to the original DB."""
 
     def __init__(self, banner_message: discord.Message, server: AMP_Handler.AMP.AMPInstance, edited_banner: Edited_DB_Banner, style=discord.ButtonStyle.blurple):
-        super().__init__(label='Reset', style=style, custom_id='Reset_Button')
+        super().__init__(label=i18n.t('ui.banner_buttons.reset'), style=style, custom_id='Reset_Button')
         self.logger = logging.getLogger()
         self._amp_server = server
         self._banner_message = banner_message
@@ -304,21 +336,21 @@ class Reset_Banner_Button(Button):
         saved_banner = self._edited_db_banner.reset_db()
         await interaction.response.defer()
         file = banner_file_handler(BC.Banner_Generator(self._amp_server, saved_banner)._image_())
-        await self._banner_message.edit(content='**Banner Settings have been reset.**', attachments=[file])
+        await self._banner_message.edit(content=i18n.t('ui.banner_buttons.reset_message'), attachments=[file])
 
 
 class Cancel_Banner_Button(Button):
     """Cancels the Banner Settings View"""
 
     def __init__(self, banner_message: discord.Message, style=discord.ButtonStyle.red):
-        super().__init__(label='Cancel', style=style, custom_id='Cancel_Button')
+        super().__init__(label=i18n.t('common.button.cancel'), style=style, custom_id='Cancel_Button')
         self.logger = logging.getLogger()
         self._banner_message = banner_message
 
     async def callback(self, interaction: discord.Interaction):
         """This is called when a button is interacted with."""
         await interaction.response.defer()
-        await self._banner_message.edit(content='**Banner Settings Editor has been Cancelled.**', attachments=[], view=None)
+        await self._banner_message.edit(content=i18n.t('ui.banner_buttons.cancelled_message'), attachments=[], view=None)
 
 
 class Whitelist_view(View):
@@ -355,14 +387,14 @@ class Whitelist_view(View):
             whitelist_reply = random.choice(self.DB.GetAllWhitelistReplies())
             await self._context.message.channel.send(content=f'{self._context.author.mention} \n{self._client.uBot.whitelist_reply_handler(message= whitelist_reply, context= self._context, server= self._amp_server)}', delete_after=self._client.Message_Timeout)
         else:
-            await self._context.message.channel.send(content=f'You are all set! We whitelisted {self._context.author.mention} on **{db_server.FriendlyName}**', delete_after=self._client.Message_Timeout)
+            await self._context.message.channel.send(content=i18n.t('ui.whitelist_view.success_no_reply', user_mention=self._context.author.mention, server_name=db_server.FriendlyName), delete_after=self._client.Message_Timeout)
 
 
 class Accept_Whitelist_Button(Button):
     """Accepts the Whitelist Request"""
 
     def __init__(self, discord_message: discord.Message, view: Whitelist_view, client: discord.Client, amp_server: AMP_Handler.AMP.AMPInstance, style=discord.ButtonStyle.green):
-        super().__init__(label='Accept', style=style, custom_id='Accept_Button')
+        super().__init__(label=i18n.t('ui.whitelist_buttons.accept'), style=style, custom_id='Accept_Button')
         self._view = view
         self._discord_message = discord_message
         self._amp_server = amp_server
@@ -371,7 +403,7 @@ class Accept_Whitelist_Button(Button):
     async def callback(self, interaction: discord.Interaction):
         if await utils.async_rolecheck(context=interaction, perm_node='whitelist_buttons'):
             self._view.logger.info(f'We Accepted a Whitelist Request by {self._view._whitelist_message.author.name}')
-            await self._discord_message.edit(content=f'**{interaction.user.name}** -> Approved __{self._view._whitelist_message.author.name}__ Whitelist Request', view=None)
+            await self._discord_message.edit(content=i18n.t('ui.whitelist_buttons.approved', approver=interaction.user.name, requester=self._view._whitelist_message.author.name), view=None)
             await self._view._whitelist_handler()
             self._amp_server.addWhitelist(self._client.Whitelist_wait_list[self._view._whitelist_message.id]['dbuser'])
             self._client.Whitelist_wait_list.pop(self._view._whitelist_message.id)
@@ -382,7 +414,7 @@ class Deny_Whitelist_Button(Button):
     """Denys the Whitelist Request"""
 
     def __init__(self, discord_message: discord.Message, view: Whitelist_view, client: discord.Client, amp_server: AMP_Handler.AMP.AMPInstance, style=discord.ButtonStyle.red):
-        super().__init__(label='Deny', style=style, custom_id='Deny_Button')
+        super().__init__(label=i18n.t('ui.whitelist_buttons.deny'), style=style, custom_id='Deny_Button')
         self._view = view
         self._discord_message = discord_message
         self._amp_server = amp_server
@@ -391,8 +423,8 @@ class Deny_Whitelist_Button(Button):
     async def callback(self, interaction: discord.Interaction):
         if await utils.async_rolecheck(context=interaction, perm_node='whitelist_buttons'):
             self._view.logger.info(f'We Denied a Whitelist Request by {self._view._whitelist_message.author.name}')
-            await self._discord_message.edit(content=f'**{interaction.user.name}** -> Denied __{self._view._whitelist_message.author.name}__ Whitelist Request', view=None)
-            await self._view._whitelist_message.channel.send(content=f'**{interaction.user.name}** Denied {self._view._whitelist_message.author.mention} whitelist request. Please contact a Staff Member.')
+            await self._discord_message.edit(content=i18n.t('ui.whitelist_buttons.denied', approver=interaction.user.name, requester=self._view._whitelist_message.author.name), view=None)
+            await self._view._whitelist_message.channel.send(content=i18n.t('ui.whitelist_buttons.denied_notice', approver=interaction.user.name, requester_mention=self._view._whitelist_message.author.mention))
             self._client.Whitelist_wait_list.pop(self._view._whitelist_message.id)
             self.disabled = True
 
@@ -415,7 +447,7 @@ class LinkConfirmView(View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id != self._invoker_id:
-            await interaction.response.send_message('This confirmation is not for you.', ephemeral=True)
+            await interaction.response.send_message(i18n.t('ui.link_confirm.not_for_you'), ephemeral=True)
             return False
         return True
 
@@ -424,7 +456,7 @@ class LinkConfirmView(View):
             child.disabled = True
         if self.message != None:
             try:
-                await self.message.edit(content='This confirmation has timed out, please use `/link` again.', embed=None, view=self)
+                await self.message.edit(content=i18n.t('ui.link_confirm.timed_out'), embed=None, view=self)
             except discord.HTTPException:
                 pass
 
@@ -433,7 +465,7 @@ class Confirm_Link_Button(Button):
     """Confirms an Account Link"""
 
     def __init__(self, view: LinkConfirmView, style=discord.ButtonStyle.green):
-        super().__init__(label="Yes, that's me", style=style, custom_id='Confirm_Link')
+        super().__init__(label=i18n.t('ui.link_confirm.confirm_label'), style=style, custom_id='Confirm_Link')
         self._view = view
 
     async def callback(self, interaction: discord.Interaction):
@@ -448,7 +480,7 @@ class Confirm_Link_Button(Button):
             self._view._apply(db_user)
         except sqlite3.IntegrityError as e:
             if 'UNIQUE constraint failed' in e.args[0]:
-                await interaction.response.edit_message(content='That account is already linked to a different Discord user.', embed=None, view=self._view)
+                await interaction.response.edit_message(content=i18n.t('ui.link_confirm.already_linked'), embed=None, view=self._view)
                 return
             raise
 
@@ -460,13 +492,13 @@ class Deny_Link_Button(Button):
     """Cancels an Account Link"""
 
     def __init__(self, view: LinkConfirmView, style=discord.ButtonStyle.red):
-        super().__init__(label='No, cancel', style=style, custom_id='Deny_Link')
+        super().__init__(label=i18n.t('ui.link_confirm.deny_label'), style=style, custom_id='Deny_Link')
         self._view = view
 
     async def callback(self, interaction: discord.Interaction):
         for child in self._view.children:
             child.disabled = True
-        await interaction.response.edit_message(content="Okay, cancelled. Feel free to try `/link` again.", embed=None, view=self._view)
+        await interaction.response.edit_message(content=i18n.t('ui.link_confirm.cancelled'), embed=None, view=self._view)
 
 
 class DB_Instance_ID_Swap(View):
@@ -484,21 +516,21 @@ class Approve_Button(Button):
     def __init__(self, view: View, discord_message: discord.Message, style=discord.ButtonStyle.green):
         self._view = view
         self.message = discord_message
-        super().__init__(label='Approve', style=style, custom_id='Approve_Button')
+        super().__init__(label=i18n.t('ui.db_instance_swap.approve'), style=style, custom_id='Approve_Button')
 
     async def callback(self, interaction: discord.Interaction):
         to_db_server_ID = self._view._to_db_server.InstanceID
         to_db_server_Name = self._view._to_db_server.InstanceName
         self._view._to_db_server.delServer()
         self._view._from_db_server.InstanceID = to_db_server_ID
-        await self.message.edit(content=f'Replaced **{self._view._from_db_server.InstanceName} ID: {self._view._from_db_server.InstanceID}** with **{to_db_server_Name} ID: {to_db_server_ID}**', view=None)
+        await self.message.edit(content=i18n.t('ui.db_instance_swap.replaced', from_name=self._view._from_db_server.InstanceName, from_id=self._view._from_db_server.InstanceID, to_name=to_db_server_Name, to_id=to_db_server_ID), view=None)
 
 
 class Cancel_Button(Button):
     def __init__(self, view: View, discord_message: discord.Message, style=discord.ButtonStyle.red):
         self._view = view
         self.message = discord_message
-        super().__init__(label='Cancel', style=style, custom_id='Cancel_Button')
+        super().__init__(label=i18n.t('common.button.cancel'), style=style, custom_id='Cancel_Button')
 
     async def callback(self, interaction: discord.Interaction):
-        return await self.message.edit(content=f'Cancelling change of **{self._view._from_db_server.InstanceName}** Instance ID. ', view=None)
+        return await self.message.edit(content=i18n.t('ui.db_instance_swap.cancelled', from_name=self._view._from_db_server.InstanceName), view=None)

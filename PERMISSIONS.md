@@ -17,6 +17,7 @@ ___
         - **WARNING**: **Gatekeeper will NOT START** if you are set to `Custom` and the file is invalid.
     - **TIP** - The bot will still respect those with __Discord Administrator Permission__ privelage under `Role -> Advanced Permissions`.
         - **WARNING**: The bot will no longer respect the role set by `/bot moderator`, it is completely bypassed.
+    - **NOTE**: `/bot moderator`, `/bot permissions`, and `/bot language` always require real __Discord Administrator Permission__, regardless of `Custom`/`Default` mode. Unlike every other node in the list below, granting `bot.moderator`/`bot.permissions`/`bot.language` to a non-Administrator Role in `bot_perms.json` will **not** let that Role use those commands — they change bot-wide behavior for every user at once, so they're intentionally not delegable via Custom Permissions.
 
 ### **Setting up your Permissions File**
 - Each role must have a `name`, `discord_role_id`, `prefix` and `permissions`. 
@@ -98,6 +99,7 @@ bot.settings
 bot.donator
 bot.moderator
 bot.permissions
+bot.language #Administrator-only, see note above -- not delegable via Custom Permissions
 
 bot.bannergroup.*
 bot.bannergroup.rename

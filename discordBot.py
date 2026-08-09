@@ -35,9 +35,16 @@ import utils_embeds
 import utils_ui
 import AMP_Handler
 import DB
+import i18n
 from typing import Union
 
 Version = 'beta-4.7.5'
+
+# Eager init: loads locales/en.json + locales/de.json and reads DBConfig.GetSetting('Language').
+# Must happen before any i18n.t(...) call below in this file (e.g. the `bot_language` command's
+# own decorators), and before setup_hook() triggers loader.Handler's cog imports further down --
+# those cogs call i18n.t(...) at their own module-import time.
+i18n.getI18nHandler()
 
 
 class Gatekeeper(commands.Bot):
@@ -134,43 +141,43 @@ async def autocomplete_loadedcogs(interaction: discord.Interaction, current: str
 client = Gatekeeper(Version=Version)
 
 
-@client.hybrid_group(name='bot')
+@client.hybrid_group(name='bot', description=i18n.t('commands.bot.description'))
 @utils.role_check()
 async def main_bot(context: commands.Context):
     if context.invoked_subcommand is None:
-        await context.send('Invalid command passed...', ephemeral=True, delete_after=client.Message_Timeout)
+        await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=client.Message_Timeout)
 
 
-@main_bot.command(name='donator')
+@main_bot.command(name='donator', description=i18n.t('commands.bot.donator.description'))
 @utils.role_check()
 async def bot_donator(context: commands.Context, role: discord.Role):
-    """Sets the Donator Role for Donator Only AMP Server access."""
     client.logger.command(f'{context.author.name} used Bot Donator Role...')
 
     client.DBConfig.SetSetting('Donator_role_id', role.id)
-    await context.send(f'You are all set! Donator Role is now set to {role.mention}', ephemeral=True, delete_after=client.Message_Timeout)
+    await context.send(i18n.t('messages.bot.donator.success', role_mention=role.mention), ephemeral=True, delete_after=client.Message_Timeout)
 
 
-@main_bot.command(name='moderator')
+@main_bot.command(name='moderator', description=i18n.t('commands.bot.moderator.description'))
 @commands.has_guild_permissions(administrator=True)
 async def bot_moderator(context: commands.Context, role: discord.Role):
-    """Set the Discord Role for Bot Moderation"""
     client.logger.command(f'{context.author.name} used Bot Moderator...')
 
     client.DBConfig.SetSetting('Moderator_role_id', role.id)
-    await context.send(f'Set Moderator Role to `{role.name}`.', ephemeral=True)
+    await context.send(i18n.t('messages.bot.moderator.success', role_name=role.name), ephemeral=True)
 
 
-@main_bot.command(name='permissions')
+@main_bot.command(name='permissions', description=i18n.t('commands.bot.permissions.description'))
 @commands.has_guild_permissions(administrator=True)
-@app_commands.choices(permission=[Choice(name='Default', value=0), Choice(name='Custom', value=1)])
+@app_commands.choices(permission=[
+    Choice(name=i18n.t('commands.bot.permissions.params.permission.choices.0'), value=0),
+    Choice(name=i18n.t('commands.bot.permissions.params.permission.choices.1'), value=1),
+])
 async def bot_permissions(context: commands.Context, permission: Choice[int]):
-    """Set the Bot to use Default Permissions or Custom"""
     client.logger.command(f'{context.author.name} used Bot Permissions...')
 
     # If we set to 0; we are using `Default` Permissions and need to unload the cog and commands related to custom permissions.
     if permission.value == 0:
-        await context.send(f'You have selected `Default` permissions, removing permission commands...', ephemeral=True, delete_after=client.Message_Timeout)
+        await context.send(i18n.t('messages.bot.permissions.selected_default'), ephemeral=True, delete_after=client.Message_Timeout)
         parent_command = client.get_command('user')
         parent_command.remove_command('role')
         if 'cogs.Permissions_cog' in client.extensions:
@@ -178,41 +185,59 @@ async def bot_permissions(context: commands.Context, permission: Choice[int]):
 
     # If we set to 1; we are using `Custom` Permissions.
     elif permission.value == 1:
-        await context.send(f'You have selected `Custom` permissions, validating `bot_perms.json`', ephemeral=True, delete_after=client.Message_Timeout)
-        await context.send(f'Visit https://github.com/AriVenatus/GatekeeperV3.1/blob/main/PERMISSIONS.md', ephemeral=True, delete_after=client.Message_Timeout)
+        await context.send(i18n.t('messages.bot.permissions.selected_custom'), ephemeral=True, delete_after=client.Message_Timeout)
+        await context.send(i18n.t('messages.bot.permissions.visit_docs'), ephemeral=True, delete_after=client.Message_Timeout)
         # This validates the `bot_perms.json` file.
         if not await client.permissions_update():
-            return await context.send(f'Error loading the Permissions Cog, please check your Console for errors.', ephemeral=True, delete_after=client.Message_Timeout)
+            return await context.send(i18n.t('messages.bot.permissions.load_error'), ephemeral=True, delete_after=client.Message_Timeout)
 
     # Depending on which permissions; this will sync the updated commands available.
     client.tree.copy_global_to(guild=client.get_guild(context.guild.id))
     await client.tree.sync(guild=client.get_guild(context.guild.id))
     client.DBConfig.Permissions = permission.name
-    await context.send(f'Finished setting Gatekeeper permissions to `{permission.name}`!', ephemeral=True, delete_after=client.Message_Timeout)
+    await context.send(i18n.t('messages.bot.permissions.finished', permission_name=permission.name), ephemeral=True, delete_after=client.Message_Timeout)
 
 
-@main_bot.command(name='settings')
+@main_bot.command(name='language', description=i18n.t('commands.bot.language.description'))
+@commands.has_guild_permissions(administrator=True)
+@app_commands.describe(language=i18n.t('commands.bot.language.params.language.description'))
+@app_commands.choices(language=[Choice(name='English', value='en'), Choice(name='Deutsch', value='de')])
+async def bot_language(context: commands.Context, language: Choice[str]):
+    client.logger.command(f'{context.author.name} used Bot Language...')
+    # Walking every command in the tree plus a tree.sync() round trip can exceed Discord's 3s
+    # interaction-ack window; mirrors the existing defer() precedent in bot_utils_clear/bot_utils_sync.
+    await context.defer(ephemeral=True)
+
+    i18n.set_language(language.value)
+    updated, skipped = i18n.retranslate_command_tree(client)
+    client.logger.info(f'i18n: retranslated {updated} fields to "{language.value}" ({skipped} fell back/skipped).')
+
+    client.tree.copy_global_to(guild=client.get_guild(context.guild.id))
+    await client.tree.sync(guild=client.get_guild(context.guild.id))
+
+    await context.send(i18n.t('commands.bot.language.confirmation', language=language.name), ephemeral=True, delete_after=client.Message_Timeout)
+
+
+@main_bot.command(name='settings', description=i18n.t('commands.bot.settings.description'))
 @utils.role_check()
 async def bot_settings(context: commands.Context):
-    """Displays currently set Bot settings"""
     client.logger.command(f'{context.author.name} used Bot Settings...')
     await context.send(embed=client.eBot.bot_settings_embed(context), ephemeral=True, delete_after=(client.Message_Timeout * 3))  # Tripled the delay to help sort times.
 
 
-@main_bot.group(name='utils')
+@main_bot.group(name='utils', description=i18n.t('commands.bot.utils.description'))
 @utils.role_check()
 async def bot_utils(context: commands.Context):
     if context.invoked_subcommand is None:
-        await context.send('Invalid command passed...', ephemeral=True, delete_after=client.Message_Timeout)
+        await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=client.Message_Timeout)
 
 
-@bot_utils.command(name='clear')
-@app_commands.choices(all=[Choice(name='True', value=1), Choice(name='False', value=0)])
-@app_commands.describe(all='Default\'s to False, removes ALL commands from selected Channel regardless of sender when TRUE.')
-@app_commands.describe(channel='Default\'s to the Channel the command was run; otherwise applies to the channel selected')
+@bot_utils.command(name='clear', description=i18n.t('commands.bot.utils.clear.description'))
+@app_commands.choices(all=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
+@app_commands.describe(all=i18n.t('commands.bot.utils.clear.params.all.description'))
+@app_commands.describe(channel=i18n.t('commands.bot.utils.clear.params.channel.description'))
 @utils.role_check()
 async def bot_utils_clear(context: commands.Context, channel: discord.abc.GuildChannel = None, amount: app_commands.Range[int, 0, 100] = 50, all: Choice[int] = 0):
-    """Cleans up Messages sent by the anyone. Limit 100 messages..."""
     client.logger.info(f'{context.author.name} used {context.command.name}...')
     client.context = context
     await context.defer()
@@ -229,34 +254,32 @@ async def bot_utils_clear(context: commands.Context, channel: discord.abc.GuildC
     else:
         messages = await channel.purge(limit=amount, check=client.self_check, bulk=False)
 
-    return await channel.send(f'Cleaned up **{len(messages)} {"messages" if len(messages) > 1 else "message"}**. Wow, look at all this space!', delete_after=client.Message_Timeout)
+    word = i18n.t_plural('common.messages_word', count=len(messages))
+    return await channel.send(i18n.t('messages.bot.utils.clear.success', count=len(messages), word=word), delete_after=client.Message_Timeout)
 
 
-@bot_utils.command(name='roleid')
+@bot_utils.command(name='roleid', description=i18n.t('commands.bot.utils.roleid.description'))
 @utils.role_check()
 async def bot_utils_roleid(context: commands.Context, role: discord.Role):
-    """Returns the role id for the specified role."""
     client.logger.command(f'{context.author.name} used Bot Utils Role ID...')
 
-    await context.send(f'**{role.name}** has the Discord role id of: `{role.id}`', ephemeral=True, delete_after=client.Message_Timeout)
+    await context.send(i18n.t('messages.bot.utils.roleid.result', role_name=role.name, role_id=role.id), ephemeral=True, delete_after=client.Message_Timeout)
 
 
-@bot_utils.command(name='channelid')
+@bot_utils.command(name='channelid', description=i18n.t('commands.bot.utils.channelid.description'))
 @utils.role_check()
 async def bot_utils_channelid(context: commands.Context, channel: discord.abc.GuildChannel):
-    """Returns the channel id for the specified channel."""
     client.logger.command(f'{context.author.name} used Bot Utils Channel ID...')
 
-    await context.send(f'**{channel.name}** has the channel id of: `{channel.id}`', ephemeral=True, delete_after=client.Message_Timeout)
+    await context.send(i18n.t('messages.bot.utils.channelid.result', channel_name=channel.name, channel_id=channel.id), ephemeral=True, delete_after=client.Message_Timeout)
 
 
-@bot_utils.command(name='userid')
+@bot_utils.command(name='userid', description=i18n.t('commands.bot.utils.userid.description'))
 @utils.role_check()
 async def bot_utils_userid(context: commands.Context, user: Union[discord.User, discord.Member]):
-    """Returns the user id for the specified user."""
     client.logger.command(f'{context.author.name} used Bot Utils User ID...')
 
-    await context.send(f'**{user.name} // {user.display_name}** has the user id of: `{user.id}`', ephemeral=True, delete_after=client.Message_Timeout)
+    await context.send(i18n.t('messages.bot.utils.userid.result', user_name=user.name, display_name=user.display_name, user_id=user.id), ephemeral=True, delete_after=client.Message_Timeout)
 
 #!TODO! Need to finish developing this command.
 # @bot_utils.command(name='steamid')
@@ -271,81 +294,74 @@ async def bot_utils_userid(context: commands.Context, user: Union[discord.User, 
 #         await context.send(content= f'Well I was unable to find that Steam User {name}.', ephemeral= True, delete_after= client.Message_Timeout)
 
 
-@bot_utils.command(name='uuid')
+@bot_utils.command(name='uuid', description=i18n.t('commands.bot.utils.uuid.description'))
 @utils.role_check()
 async def bot_utils_uuid(context: commands.Context, mc_ign: str):
-    """This will convert a Minecraft IGN to a UUID if it exists"""
     client.logger.command(f'{context.author.name} used Bot Utils UUID...')
 
-    await context.send(f'The UUID of **{mc_ign}** is: `{client.uBot.name_to_uuid_MC(mc_ign)}`', ephemeral=True, delete_after=client.Message_Timeout)
+    await context.send(i18n.t('messages.bot.utils.uuid.result', mc_ign=mc_ign, uuid=client.uBot.name_to_uuid_MC(mc_ign)), ephemeral=True, delete_after=client.Message_Timeout)
 
 
-@bot_utils.command(name='ping')
+@bot_utils.command(name='ping', description=i18n.t('commands.bot.utils.ping.description'))
 @utils.role_check()
 async def bot_utils_ping(context: commands.Context):
-    """Pong..."""
     client.logger.command(f'{context.author.name} used Bot Ping...')
 
-    await context.send(f'Pong {round(client.latency * 1000)}ms', ephemeral=True, delete_after=client.Message_Timeout)
+    await context.send(i18n.t('messages.bot.utils.ping.result', latency=round(client.latency * 1000)), ephemeral=True, delete_after=client.Message_Timeout)
 
 
-@bot_utils.command(name='disconnect')
+@bot_utils.command(name='disconnect', description=i18n.t('commands.bot.utils.disconnect.description'))
 @utils.role_check()
 async def bot_utils_stop(context: commands.Context):
-    """Closes the connection to Discord."""
     client.logger.command(f'{context.author.name} used Bot Stop Function...')
 
-    await context.send('Disconnecting from the Server...', ephemeral=True, delete_after=client.Message_Timeout)
+    await context.send(i18n.t('messages.bot.utils.disconnect.message'), ephemeral=True, delete_after=client.Message_Timeout)
     return await client.close()
 
 
-@bot_utils.command(name='restart')
+@bot_utils.command(name='restart', description=i18n.t('commands.bot.utils.restart.description'))
 @utils.role_check()
 async def bot_utils_restart(context: commands.Context):
-    """This is the Gatekeeper restart function\n"""
     client.logger.command(f'{context.author.name} used Bot Restart Function...')
 
     import os
     import sys
-    await context.send(f'**Currently Restarting the Bot, please wait...**', ephemeral=True, delete_after=client.Message_Timeout)
+    await context.send(i18n.t('messages.bot.utils.restart.message'), ephemeral=True, delete_after=client.Message_Timeout)
     sys.stdout.flush()
     os.execv(sys.executable, ['python3'] + sys.argv)
 
 
-@bot_utils.command(name='status')
+@bot_utils.command(name='status', description=i18n.t('commands.bot.utils.status.description'))
 @utils.role_check()
 async def bot_utils_status(context: commands.Context):
-    """Status information for the Bot(Versions, AMP Connection, SQL DB Initialization)"""
     client.logger.command(f'{context.author.name} used Bot Status Function...')
 
-    await context.send(f'**Discord Version**: {discord.__version__}  //  **Python Version**: {sys.version}', ephemeral=True, delete_after=client.Message_Timeout)
-    await context.send(f'**Gatekeeperv2 Version**: {Version} // **SQL Database Version**: {client.DBHandler.DB_Version}', ephemeral=True, delete_after=client.Message_Timeout)
-    await context.send(f'**AMP Connected**: {client.AMPHandler.SuccessfulConnection} // **SQL Database**: {client.DBHandler.SuccessfulDatabase}', ephemeral=True, delete_after=client.Message_Timeout)
+    await context.send(i18n.t('messages.bot.utils.status.versions', discord_version=discord.__version__, python_version=sys.version), ephemeral=True, delete_after=client.Message_Timeout)
+    await context.send(i18n.t('messages.bot.utils.status.bot_db_version', bot_version=Version, db_version=client.DBHandler.DB_Version), ephemeral=True, delete_after=client.Message_Timeout)
+    await context.send(i18n.t('messages.bot.utils.status.connections', amp_connected=client.AMPHandler.SuccessfulConnection, db_connected=client.DBHandler.SuccessfulDatabase), ephemeral=True, delete_after=client.Message_Timeout)
 
 
-@bot_utils.command(name='message_timeout')
+@bot_utils.command(name='message_timeout', description=i18n.t('commands.bot.utils.message_timeout.description'))
 @utils.role_check()
-@app_commands.describe(time='Default is 60 seconds')
+@app_commands.describe(time=i18n.t('commands.bot.utils.message_timeout.params.time.description'))
 async def bot_utils_message_timeout(context: commands.Context, time: Union[None, int] = 60):
-    """Sets the Delete After time in seconds for ephemeral messages sent from Gatekeeperv2"""
     client.logger.command(f'{context.author.name} used Bot Utils Message Timeout Function...')
 
     client.DBConfig.SetSetting('Message_Timeout', f'{time}')
     client.Message_Timeout = time
 
-    content_str = f'will be deleted `{time}` seconds'
+    content_str = i18n.t('messages.bot.utils.message_timeout.will_delete', time=time)
     if time == None:
-        content_str = f'will no longer be deleted'
+        content_str = i18n.t('messages.bot.utils.message_timeout.will_not_delete')
 
-    await context.send(content=f'**Ephemeral Messages** {content_str} after being sent.', ephemeral=True, delete_after=client.Message_Timeout)
+    await context.send(content=i18n.t('messages.bot.utils.message_timeout.result', content_str=content_str), ephemeral=True, delete_after=client.Message_Timeout)
 
 
-@bot_utils.command(name='sync')
+@bot_utils.command(name='sync', description=i18n.t('commands.bot.utils.sync.description'))
 @utils.role_check()
-@app_commands.choices(local=[Choice(name='True', value=1), Choice(name='False', value=0)])
-@app_commands.choices(reset=[Choice(name='True', value=1), Choice(name='False', value=0)])
+@app_commands.choices(local=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
+@app_commands.choices(reset=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
 async def bot_utils_sync(context: commands.Context, local: Choice[int] = True, reset: Choice[int] = False):
-    """Syncs Bot Commands to the current guild this command was used in."""
     client.logger.command(f'{context.author.name} used Bot Sync Function...')
     await context.defer()
     # This keeps our DB Guild_ID Current.
@@ -357,56 +373,53 @@ async def bot_utils_sync(context: commands.Context, local: Choice[int] = True, r
             # Local command tree reset
             client.tree.clear_commands(guild=context.guild)
             client.logger.command(f'Bot Commands Reset Locally and Sync\'d: {await client.tree.sync(guild=context.guild)}')
-            return await context.send('**WARNING** Resetting Gatekeeper Commands Locally...', ephemeral=True, delete_after=client.Message_Timeout)
+            return await context.send(i18n.t('messages.bot.utils.sync.reset_local'), ephemeral=True, delete_after=client.Message_Timeout)
 
         elif context.author.id == 144462063920611328:
             # Global command tree reset, limited by k8thekat discord ID
             client.tree.clear_commands(guild=None)
             client.logger.command(f'Bot Commands Reset Global and Sync\'d: {await client.tree.sync(guild=None)}')
-            return await context.send('**WARNING** Resetting Gatekeeper Commands Globally...', ephemeral=True, delete_after=client.Message_Timeout)
+            return await context.send(i18n.t('messages.bot.utils.sync.reset_global'), ephemeral=True, delete_after=client.Message_Timeout)
         else:
-            return await context.sned('**ERROR** You do not have permission to reset the commands.', ephemeral=True, delete_after=client.Message_Timeout)
+            return await context.send(i18n.t('messages.bot.utils.sync.no_permission'), ephemeral=True, delete_after=client.Message_Timeout)
 
     if ((type(local) == bool) and (local == True)) or ((type(local) == Choice) and (local.value == 1)):
         # Local command tree sync
         client.tree.copy_global_to(guild=context.guild)
         client.logger.command(f'Bot Commands Sync\'d Locally: {await client.tree.sync(guild=context.guild)}')
-        return await context.send(f'Successfully Sync\'d Gatekeeper Commands to {context.guild.name}...', ephemeral=True, delete_after=client.Message_Timeout)
+        return await context.send(i18n.t('messages.bot.utils.sync.local_success', guild_name=context.guild.name), ephemeral=True, delete_after=client.Message_Timeout)
 
     elif context.author.id == 144462063920611328:
         # Global command tree sync, limited by k8thekat discord ID
         client.logger.command(f'Bot Commands Sync\'d Globally: {await client.tree.sync(guild=None)}')
-        await context.send('Successfully Sync\'d Gatekeeper Commands Globally...', ephemeral=True, delete_after=client.Message_Timeout)
+        await context.send(i18n.t('messages.bot.utils.sync.global_success'), ephemeral=True, delete_after=client.Message_Timeout)
 
 
 # Cog Specific Bot Commands --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-@main_bot.group(name='cog')
+@main_bot.group(name='cog', description=i18n.t('commands.bot.cog.description'))
 @utils.role_check()
 async def bot_cog(context: commands.Context):
-    """Cog Group Commands"""
     if context.invoked_subcommand is None:
-        await context.send('Invalid command passed...', ephemeral=True, delete_after=client.Message_Timeout)
+        await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=client.Message_Timeout)
 
 
-@bot_cog.command(name='load')
+@bot_cog.command(name='load', description=i18n.t('commands.bot.cog.load.description'))
 @utils.role_check()
 async def bot_cog_loader(context: commands.Context, cog: str):
-    """Load a specific cog, must provide path using '.' as a seperator. eg: 'cogs.my_cog'"""
     client.logger.command(f'{context.author.name} used Bot Cog Load Function...')
 
     try:
         await client.load_extension(name=cog)
     except Exception as e:
-        await context.send(f'**ERROR** Loading Extension `{cog}` - `{traceback.format_exc()}`', ephemeral=True, delete_after=client.Message_Timeout)
+        await context.send(i18n.t('messages.bot.cog.load.error', cog=cog, traceback=traceback.format_exc()), ephemeral=True, delete_after=client.Message_Timeout)
     else:
-        await context.send(f'**SUCCESS** Loading Extension `{cog}`', ephemeral=True, delete_after=client.Message_Timeout)
+        await context.send(i18n.t('messages.bot.cog.load.success', cog=cog), ephemeral=True, delete_after=client.Message_Timeout)
 
 
-@bot_cog.command(name='unload')
+@bot_cog.command(name='unload', description=i18n.t('commands.bot.cog.unload.description'))
 @utils.role_check()
 @app_commands.autocomplete(cog=autocomplete_loadedcogs)
 async def bot_cog_unloader(context: commands.Context, cog: str):
-    """Un-load a specific cog."""
     client.logger.command(f'{context.author.name} used Bot Cog Unload Function...')
 
     try:
@@ -414,22 +427,21 @@ async def bot_cog_unloader(context: commands.Context, cog: str):
         await my_cog.cog_unload()
         # await client.unload_extension(name=cog)
     except Exception as e:
-        await context.send(f'**ERROR** Un-Loading Extension `{cog}` - `{traceback.format_exc()}`', ephemeral=True, delete_after=client.Message_Timeout)
+        await context.send(i18n.t('messages.bot.cog.unload.error', cog=cog, traceback=traceback.format_exc()), ephemeral=True, delete_after=client.Message_Timeout)
     else:
-        await context.send(f'**SUCCESS** Un-Loading Extension `{cog}`', ephemeral=True, delete_after=client.Message_Timeout)
+        await context.send(i18n.t('messages.bot.cog.unload.success', cog=cog), ephemeral=True, delete_after=client.Message_Timeout)
 
 
-@bot_cog.command(name='reload')
+@bot_cog.command(name='reload', description=i18n.t('commands.bot.cog.reload.description'))
 @utils.role_check()
 async def bot_cog_reload(context: commands.Context):
-    """Reloads all loaded Cogs inside the cogs folder."""
     client.logger.command(f'{context.author.name} used Bot Cog Reload Function...')
 
     await client.Handler.cog_auto_loader(reload=True)
-    await context.send(f'**SUCCESS** Reloading All Extensions ', ephemeral=True, delete_after=client.Message_Timeout)
+    await context.send(i18n.t('messages.bot.cog.reload.success'), ephemeral=True, delete_after=client.Message_Timeout)
 
 
 def client_run(tokens):
-    client.logger.info('Gatekeeper v2 Intializing...')
-    client.logger.info(f'Discord Version: {discord.__version__}  // Gatekeeper v2 Version: {client.Bot_Version} // Python Version {sys.version}')
+    client.logger.info('Gatekeeper v3.1 Intializing...')
+    client.logger.info(f'Discord Version: {discord.__version__}  // Gatekeeper v3.1 Version: {client.Bot_Version} // Python Version {sys.version}')
     client.run(tokens.token, reconnect=True, log_handler=None)

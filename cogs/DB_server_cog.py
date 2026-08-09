@@ -32,6 +32,7 @@ import utils
 import utils_ui
 import AMP_Handler
 import DB
+import i18n
 
 # This is used to force cog order to prevent missing methods.
 Dependencies = None
@@ -64,16 +65,15 @@ class DB_Server(commands.Cog):
                 db_server_list.pop(key)
         return [app_commands.Choice(name=f"{value} | ID: {key}", value=key)for key, value in db_server_list.items()][:25]
 
-    @commands.hybrid_group(name='dbserver')
+    @commands.hybrid_group(name='dbserver', description=i18n.t('commands.dbserver.description'))
     @utils.role_check()
     async def db_server(self, context: commands.Context):
         if context.invoked_subcommand is None:
-            await context.send('Invalid command passed...', ephemeral=True, delete_after=30)
+            await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=30)
 
-    @db_server.command(name='cleanup')
+    @db_server.command(name='cleanup', description=i18n.t('commands.dbserver.cleanup.description'))
     @utils.role_check()
     async def db_server_cleanup(self, context: commands.Context):
-        """This is used to remove un-used DBServer entries."""
         self.logger.command(f'{context.author.name} used Database Clean-Up in progress...')
 
         amp_instance_keys = self.AMPInstances.keys()
@@ -84,26 +84,25 @@ class DB_Server(commands.Cog):
             if db_server != None and db_server.InstanceID not in amp_instance_keys:
                 db_server.delServer()
                 found_server = True
-                await context.send(f'Removing Server: **{db_server.InstanceName}** from the DB', ephemeral=True, delete_after=self._client.Message_Timeout)
+                await context.send(i18n.t('messages.db_server.cleanup.removing', server_name=db_server.InstanceName), ephemeral=True, delete_after=self._client.Message_Timeout)
 
         if not found_server:
-            await context.send('Hmm, it appears you don\'t have any Servers to cleanup..', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('messages.db_server.cleanup.none_found'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @db_server.command(name='change_instance_id')
+    @db_server.command(name='change_instance_id', description=i18n.t('commands.dbserver.change_instance_id.description'))
     @utils.role_check()
     @app_commands.autocomplete(from_server=autocomplete_db_servers)  # The DB Information we want to copy onto the Destination Server
     @app_commands.autocomplete(to_server=utils.autocomplete_servers)
-    @app_commands.describe(from_server='The DB Server Information we are moving')
-    @app_commands.describe(to_server='The Server you want the DB Server Information to belong too.')
+    @app_commands.describe(from_server=i18n.t('commands.dbserver.change_instance_id.params.from_server.description'))
+    @app_commands.describe(to_server=i18n.t('commands.dbserver.change_instance_id.params.to_server.description'))
     async def db_server_changeinstanceid(self, context: Union[commands.Context, discord.Interaction], from_server: str, to_server: str):
-        """This will be used to replace a DB Instance ID with an existing AMP Instance"""
         self.logger.command(f'{context.author.name} used Database Instance swap...')
 
         from_db_server = self.DB.GetServer(InstanceID=from_server)
 
         to_db_server = self.DB.GetServer(to_server)
 
-        content = f'We are going to move **{from_db_server.InstanceName}** information to **{to_db_server.InstanceName}**, which will remove the **{to_db_server.InstanceName}** Information from the Database.'
+        content = i18n.t('messages.db_server.change_instance_id.confirm', from_name=from_db_server.InstanceName, to_name=to_db_server.InstanceName)
         message = await context.send(content, delete_after=self._client.Message_Timeout, ephemeral=True)
 
         _view = self.uiBot.DB_Instance_ID_Swap(discord_message=message, timeout=self._client.Message_Timeout, from_db_server=from_db_server, to_db_server=to_db_server)

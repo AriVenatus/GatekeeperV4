@@ -32,6 +32,7 @@ import traceback
 import utils
 import AMP_Handler
 import DB as DB
+import i18n
 
 # This is used to force cog order to prevent missing methods.
 Dependencies = None
@@ -70,56 +71,59 @@ class Regex(commands.Cog):
             choice_list.append(regex_patterns[regex]["Name"])
         return [app_commands.Choice(name=choice, value=choice) for choice in choice_list if current.lower() in choice.lower()][:25]
 
-    @commands.hybrid_group(name='regex_pattern')
+    @commands.hybrid_group(name='regex_pattern', description=i18n.t('commands.bot.regex_pattern.description'))
     @utils.role_check()
     async def regex_pattern(self, context: commands.Context):
         if context.invoked_subcommand is None:
-            await context.send('Please try your command again...', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('common.try_again'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @regex_pattern.command(name='add')
+    @regex_pattern.command(name='add', description=i18n.t('commands.bot.regex_pattern.add.description'))
     @utils.role_check()
-    @app_commands.describe(name='The Name to associate to the Regex pattern')
-    @app_commands.describe(filter_type='Either the Pattern will apply to `Server Console` or `Server Events`')
-    @app_commands.describe(pattern='AMP uses `re.search(pattern)` for filtering.')
-    @app_commands.choices(filter_type=[Choice(name='Console', value=0), Choice(name='Events', value=1)])
+    @app_commands.describe(name=i18n.t('commands.bot.regex_pattern.add.params.name.description'))
+    @app_commands.describe(filter_type=i18n.t('commands.bot.regex_pattern.add.params.filter_type.description'))
+    @app_commands.describe(pattern=i18n.t('commands.bot.regex_pattern.add.params.pattern.description'))
+    @app_commands.choices(filter_type=[
+        Choice(name=i18n.t('commands.bot.regex_pattern.add.params.filter_type.choices.0'), value=0),
+        Choice(name=i18n.t('commands.bot.regex_pattern.add.params.filter_type.choices.1'), value=1),
+    ])
     async def regex_pattern_add(self, context: commands.Context, name: str, filter_type: Choice[int], pattern: str):
-        """Add a Regex Pattern to the Database"""
         self.logger.command(f'{context.author.name} used Regex Pattern Add')
         try:
             re.compile(pattern=pattern)
         except re.error as e:
             self.logger.error(e)
-            return await context.send(content=f'The Pattern you provided is invalid. \n `{pattern}`', ephemeral=True, delete_after=self._client.Message_Timeout)
+            return await context.send(content=i18n.t('messages.regex.invalid_pattern', pattern=pattern), ephemeral=True, delete_after=self._client.Message_Timeout)
 
         if self.DB.AddRegexPattern(Name=name, Pattern=pattern, Type=filter_type.value):
-            await context.send(content=f'Added the Regex - \n __**Name**:__ {name} \n __**Type**__: {filter_type.name} \n __**Pattern**:__ {pattern}', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(content=i18n.t('messages.regex.add.success', name=name, filter_name=filter_type.name, pattern=pattern), ephemeral=True, delete_after=self._client.Message_Timeout)
         else:
-            await context.send(content=f'I was unable to add the entry; the Name `{name}` already exists in the Database. Please provide a unique Name for your Regex.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(content=i18n.t('messages.regex.add.duplicate_name', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @regex_pattern.command(name='delete')
+    @regex_pattern.command(name='delete', description=i18n.t('commands.bot.regex_pattern.delete.description'))
     @utils.role_check()
     @app_commands.autocomplete(name=autocomplete_regex)
     async def regex_pattern_remove(self, context: commands.Context, name: str):
-        """Remove a Regex Pattern from the Database"""
         self.logger.command(f'{context.author.name} used Regex Pattern Delete')
         if self.DB.DelRegexPattern(Name=name):
-            await context.send(content=f'I removed the Regex pattern `{name}` from the Database. Bye bye *waves*', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(content=i18n.t('messages.regex.delete.success', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
         else:
-            await context.send(content=f'Well this sucks, the Regex Pattern by the Name of `{name}` is not in my Database. Oops?', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(content=i18n.t('messages.regex.delete.not_found', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @regex_pattern.command(name='update')
+    @regex_pattern.command(name='update', description=i18n.t('commands.bot.regex_pattern.update.description'))
     @utils.role_check()
     @app_commands.autocomplete(name=autocomplete_regex)
-    @app_commands.choices(filter_type=[Choice(name='Console', value=0), Choice(name='Events', value=1)])
+    @app_commands.choices(filter_type=[
+        Choice(name=i18n.t('commands.bot.regex_pattern.update.params.filter_type.choices.0'), value=0),
+        Choice(name=i18n.t('commands.bot.regex_pattern.update.params.filter_type.choices.1'), value=1),
+    ])
     async def regex_pattern_update(self, context: commands.Context, name: str, new_name: str = None, filter_type: Choice[int] = None, pattern: str = None):
-        """Update a Regex Patterns Name, Pattern and or Type"""
         self.logger.command(f'{context.author.name} used Regex Pattern Update')
 
         try:
             re.compile(pattern=pattern)
         except re.error as e:
             self.logger.error(f'Regex Error: {traceback.format_exc()}')
-            return await context.send(content=f'The Pattern you provided is invalid. \n `{pattern}`', ephemeral=True, delete_after=self._client.Message_Timeout)
+            return await context.send(content=i18n.t('messages.regex.invalid_pattern', pattern=pattern), ephemeral=True, delete_after=self._client.Message_Timeout)
 
         filter_value = None
         filter_name = None
@@ -127,40 +131,39 @@ class Regex(commands.Cog):
         if filter_type != None:
             filter_value = filter_type.value
             filter_name = filter_type.name
-            content_str = f'\n__**Type**__: {filter_name}'
+            content_str = i18n.t('messages.regex.update.type_suffix', filter_name=filter_name)
 
         if self.DB.UpdateRegexPattern(Pattern=pattern, Type=filter_value, Pattern_Name=name, Name=new_name):
             if new_name != None:
                 name = new_name
 
-            await context.send(content=f'Updated the Regex - \n__**Name**:__ {name}{content_str}\n __**Pattern**:__ {pattern}', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(content=i18n.t('messages.regex.update.success', name=name, content_str=content_str, pattern=pattern), ephemeral=True, delete_after=self._client.Message_Timeout)
         else:
-            await context.send(content=f'It appears the Name `{name}` does not exist in the Database. Awkward..', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(content=i18n.t('messages.regex.update.not_found', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @regex_pattern.command(name='list')
+    @regex_pattern.command(name='list', description=i18n.t('commands.bot.regex_pattern.list.description'))
     @utils.role_check()
     async def regex_pattern_list(self, context: commands.Context):
-        """Displays an Embed list of all Regex patterns"""
         self.logger.command(f'{context.author.name} used Regex Pattern List')
         regex_patterns = self.DB.GetAllRegexPatterns()
         if not regex_patterns:
-            return await context.send(content='Hmph.. trying to get a list of Regex Patterns, but you have none yet.. ', ephemeral=True, delete_after=self._client.Message_Timeout)
+            return await context.send(content=i18n.t('messages.regex.list.empty'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
         embed_field = 0
         embed_list = []
-        embed = discord.Embed(title='**Regex Patterns**')
+        embed = discord.Embed(title=i18n.t('embeds.regex.title'))
         for pattern in regex_patterns:
             embed_field += 1
             if regex_patterns[pattern]['Type'] == 0:
-                pattern_type = 'Console'
+                pattern_type = i18n.t('messages.regex.pattern_type_console')
             if regex_patterns[pattern]['Type'] == 1:
-                pattern_type = 'Events'
+                pattern_type = i18n.t('messages.regex.pattern_type_events')
 
-            embed.add_field(name=f"__**Name**:__ {regex_patterns[pattern]['Name']}\n__**Type**__: {pattern_type}", value=regex_patterns[pattern]['Pattern'], inline=False)
+            embed.add_field(name=i18n.t('embeds.regex.field_name', name=regex_patterns[pattern]['Name'], pattern_type=pattern_type), value=regex_patterns[pattern]['Pattern'], inline=False)
 
             if embed_field >= 25:
                 embed_list.append(embed)
-                embed = discord.Embed(title='**Regex Patterns**')
+                embed = discord.Embed(title=i18n.t('embeds.regex.title'))
                 embed_field = 1
                 continue
 

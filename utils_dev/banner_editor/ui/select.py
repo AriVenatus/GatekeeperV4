@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from utils_dev.banner_editor.edited_banner import Edited_DB_Banner
 
 from utils_dev.banner_editor.ui.modal import Banner_Modal
+from utils_ui import banner_field_label
 
 if TYPE_CHECKING:
     from AMP import AMPInstance
@@ -28,22 +29,22 @@ class Banner_Editor_Select(Select):
         self._amp_server = amp_server
 
         whitelist_options = [
-            SelectOption(label="Whitelist Open Font Color", value='color_whitelist_open'),
-            SelectOption(label="Whitelist Closed Font Color", value='color_whitelist_closed')]
+            SelectOption(label=banner_field_label('color_whitelist_open'), value='color_whitelist_open'),
+            SelectOption(label=banner_field_label('color_whitelist_closed'), value='color_whitelist_closed')]
         donator_options = [
-            SelectOption(label="Donator Font Color", value='color_donator')]
+            SelectOption(label=banner_field_label('color_donator'), value='color_donator')]
 
         options = [
-            SelectOption(label="Blur Background Intensity", value='blur_background_amount'),
-            SelectOption(label="Header Font Color", value='color_header'),
-            SelectOption(label="Body Font Color", value='color_body'),
-            SelectOption(label="Host Font Color", value='color_host'),
+            SelectOption(label=banner_field_label('blur_background_amount'), value='blur_background_amount'),
+            SelectOption(label=banner_field_label('color_header'), value='color_header'),
+            SelectOption(label=banner_field_label('color_body'), value='color_body'),
+            SelectOption(label=banner_field_label('color_host'), value='color_host'),
 
-            SelectOption(label="Server Online Font Color", value='color_status_online'),
-            SelectOption(label="Server Offline Font Color", value='color_status_offline'),
-            SelectOption(label="Player Limit Minimum Font Color", value='color_player_limit_min'),
-            SelectOption(label="Player Limit Maximum Font Color", value='color_player_limit_max'),
-            SelectOption(label="Players Online Font Color", value='color_player_online')
+            SelectOption(label=banner_field_label('color_status_online'), value='color_status_online'),
+            SelectOption(label=banner_field_label('color_status_offline'), value='color_status_offline'),
+            SelectOption(label=banner_field_label('color_player_limit_min'), value='color_player_limit_min'),
+            SelectOption(label=banner_field_label('color_player_limit_max'), value='color_player_limit_max'),
+            SelectOption(label=banner_field_label('color_player_online'), value='color_player_online')
         ]
 
         # If Whitelist is disabled, remove the options from the list.
@@ -62,7 +63,7 @@ class Banner_Editor_Select(Select):
         else:
             input_type = 'color'
 
-        self._banner_modal = Banner_Modal(input_type=input_type, title=f'{self.values[0].replace("_", " ")}', select_value=self.values[0], edited_db_banner=self._edited_db_banner, banner_message=self._banner_message, view=self._banner_view, amp_server=self._amp_server)
+        self._banner_modal = Banner_Modal(input_type=input_type, title=banner_field_label(self.values[0]), select_value=self.values[0], edited_db_banner=self._edited_db_banner, banner_message=self._banner_message, view=self._banner_view, amp_server=self._amp_server)
         await interaction.response.send_modal(self._banner_modal)
 
         self._first_interaction = False

@@ -34,6 +34,7 @@ import utils
 import utils_embeds
 import AMP_Handler
 import DB
+import i18n
 
 # This is used to force cog order to prevent missing methods.
 Dependencies = None
@@ -81,37 +82,40 @@ class DB_User(commands.Cog):
         return member
 
     @utils.role_check()
-    @commands.hybrid_group(name='user')
+    @commands.hybrid_group(name='user', description=i18n.t('commands.user.description'))
     async def user(self, context: commands.Context):
         if context.invoked_subcommand is None:
-            await context.send('Please try your command again...', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('common.try_again'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @user.command(name='info')
+    @user.command(name='info', description=i18n.t('commands.user.info.description'))
     @utils.role_check()
     @app_commands.choices(identifier_type=[
-        Choice(name='Discord', value='discord'),
-        Choice(name='Minecraft', value='minecraft'),
-        Choice(name='Steam', value='steam'),
+        Choice(name=i18n.t('commands.user.info.params.identifier_type.choices.discord'), value='discord'),
+        Choice(name=i18n.t('commands.user.info.params.identifier_type.choices.minecraft'), value='minecraft'),
+        Choice(name=i18n.t('commands.user.info.params.identifier_type.choices.steam'), value='steam'),
     ])
-    async def user_info(self, context: commands.Context, identifier_type: Choice[str], user: Union[discord.Member, discord.User] = None, identifier: str = None):
-        """Displays a Users Database information. Search by Discord Member, Minecraft IGN/UUID, or SteamID."""
+    @app_commands.describe(
+        identifier=i18n.t('commands.user.info.params.identifier.description'),
+        user=i18n.t('commands.user.info.params.user.description'),
+    )
+    async def user_info(self, context: commands.Context, identifier_type: Choice[str], identifier: str = None, user: Union[discord.Member, discord.User] = None):
         self.logger.command(f'{context.author.name} used User Information')
 
-        if identifier_type.value == 'discord':
-            if user == None:
-                return await context.send('Please select a Discord `user` to search for.', ephemeral=True, delete_after=self._client.Message_Timeout)
-
-            db_user = self.DB.GetUser(user.id)
-            discord_user = user
-
+        if identifier_type.value == 'discord' and user != None:
+            search_value = user.id
+        elif identifier != None:
+            search_value = identifier
         else:
-            if identifier == None:
-                return await context.send(f'Please provide a `{identifier_type.name}` `identifier` to search for.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            if identifier_type.value == 'discord':
+                return await context.send(i18n.t('messages.db_user.user_info.need_user_or_identifier'), ephemeral=True, delete_after=self._client.Message_Timeout)
+            return await context.send(i18n.t('messages.db_user.user_info.need_identifier', identifier_type=identifier_type.name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-            db_user = self.DB.GetUser(identifier)
-            if db_user == None:
-                return await context.send(f'I was unable to find anyone in the Database matching **{identifier}**.', ephemeral=True, delete_after=self._client.Message_Timeout)
+        db_user = self.DB.GetUser(search_value)
+        if db_user == None:
+            return await context.send(i18n.t('messages.db_user.user_info.not_found', search_value=search_value), ephemeral=True, delete_after=self._client.Message_Timeout)
 
+        discord_user = user
+        if discord_user == None:
             discord_user = self._client.get_user(int(db_user.DiscordID))
             if discord_user == None:
                 try:
@@ -121,10 +125,9 @@ class DB_User(commands.Cog):
 
         await context.send(embed=self.eBot.user_info_embed(db_user, discord_user), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @user.command(name='add')
+    @user.command(name='add', description=i18n.t('commands.user.add.description'))
     @utils.role_check()
     async def user_add(self, context: commands.Context, user: Union[discord.Member, discord.User], mc_ign: str = None, mc_uuid: str = None, steamid: str = None):
-        """Adds the Discord Users information to the Database"""
         self.logger.command(f'{context.author.name} used User Add Function')
 
         if mc_ign != None:
@@ -133,14 +136,13 @@ class DB_User(commands.Cog):
         db_user = self.DB.GetUser(user.id)
         if db_user == None:
             self.DB.AddUser(DiscordID=user.id, DiscordName=user.name, MC_IngameName=mc_ign, MC_UUID=mc_uuid, SteamID=steamid)
-            await context.send(f'Added **{user.name}** to the Database!', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('messages.db_user.user_add.success', user_name=user.name), ephemeral=True, delete_after=self._client.Message_Timeout)
         else:
-            await context.send(f'**{user.name}** already exists in the Database.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('messages.db_user.user_add.already_exists', user_name=user.name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @user.command(name='update')
+    @user.command(name='update', description=i18n.t('commands.user.update.description'))
     @utils.role_check()
     async def user_update(self, context: commands.Context, user: Union[discord.Member, discord.User], mc_ign: str = None, steamid: str = None):
-        """Updated a Discord Users information in the Database"""
         self.logger.command(f'{context.author.name} used User Update Function')
 
         db_user = None
@@ -169,22 +171,22 @@ class DB_User(commands.Cog):
                     continue
                 elif params[entry].lower() == 'none':
                     setattr(db_user, db_params[entry], None)
-                    updated_vals.append(f'> **{db_params[entry]}** - `None`')
+                    updated_vals.append(i18n.t('messages.db_user.user_update.field_cleared', field=db_params[entry]))
 
                 else:
                     try:
                         setattr(db_user, db_params[entry], params[entry])
-                        updated_vals.append(f'> **{db_params[entry]}** -> {params[entry]}')
+                        updated_vals.append(i18n.t('messages.db_user.user_update.field_set', field=db_params[entry], value=params[entry]))
 
                     except sqlite3.IntegrityError as e:
                         if "UNIQUE constraint failed" in e.args[0]:
                             self.logger.error(f'SQLITE Exception {e}')
-                            await context.send(f'The **{db_params[entry]}** must be Unique for {db_user.DiscordName}', ephemeral=True, delete_after=self._client.Message_Timeout)
+                            await context.send(i18n.t('messages.db_user.user_update.unique_violation', field=db_params[entry], user_name=db_user.DiscordName), ephemeral=True, delete_after=self._client.Message_Timeout)
 
             updated_vals = "\n".join(updated_vals)
-            await context.send(f'We Updated the Database User: **{db_user.DiscordName}**\n{updated_vals}', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('messages.db_user.user_update.success', user_name=db_user.DiscordName, updated_fields=updated_vals), ephemeral=True, delete_after=self._client.Message_Timeout)
         else:
-            await context.send('Looks like this user is not in the Database, please use `/user add`', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('messages.db_user.user_update.not_found'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
 
 async def setup(client):

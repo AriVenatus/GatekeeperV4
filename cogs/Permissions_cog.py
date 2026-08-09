@@ -31,6 +31,7 @@ from typing import Union
 import utils
 import AMP_Handler
 import DB as DB
+import i18n
 
 # This is used to force cog order to prevent missing methods.
 Dependencies = ["DB_user_cog.py"]
@@ -60,19 +61,18 @@ class Permissions(commands.Cog):
         choice_list = bPerms.get_roles()
         return [app_commands.Choice(name=choice, value=choice) for choice in choice_list if current.lower() in choice.lower()][:25]
 
-    @commands.hybrid_command(name='role')
+    @commands.hybrid_command(name='role', description=i18n.t('commands.user.role.description'))
     @utils.role_check()
     @app_commands.autocomplete(role=autocomplete_permission_roles)
     async def user_role(self, context: commands.Context, user: Union[discord.User, discord.Member], role: str):
-        """Set a users Permission Role for commands."""
         self.logger.command(f'{context.author.name} used User Role Function')
 
         db_user = self.DB.GetUser(user.id)
         if db_user != None:
             db_user.Role = role
-            await context.send(f"We set the User: **{user.name}** permission's role to `{role}`.", ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('messages.permissions.user_role.success', user_name=user.name, role=role), ephemeral=True, delete_after=self._client.Message_Timeout)
         else:
-            await context.send(f'We failed to find the User: {user.name}, please make sure they are in the DB.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('messages.permissions.user_role.not_found', user_name=user.name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
 
 async def setup(client):

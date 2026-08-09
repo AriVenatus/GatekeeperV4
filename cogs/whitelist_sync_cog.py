@@ -35,6 +35,7 @@ import DB
 import utils
 import utils_embeds
 import utils_ui
+import i18n
 from discordBot import Gatekeeper
 
 if TYPE_CHECKING:
@@ -102,8 +103,9 @@ class WhitelistSync(commands.Cog):
             return
 
         if whitelisted == False:
+            server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
             try:
-                await member.send(f'Hey! I would love to auto-Whitelist you on **{amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName}**, but I do not have a linked game account for you yet. Please use `/link` first.')
+                await member.send(i18n.t('messages.whitelist_sync.dm_need_link', server_name=server_name))
             except discord.Forbidden:
                 pass
             return
@@ -227,85 +229,84 @@ class WhitelistSync(commands.Cog):
 
     # Account Linking Commands -----------------------------------------------------------------------------------------------------------------
 
-    @commands.hybrid_group(name='link')
+    @commands.hybrid_group(name='link', description=i18n.t('commands.link.description'))
     async def link_group(self, context: commands.Context):
         if context.invoked_subcommand is None:
-            await context.send('Please use a subcommand, e.g. `/link minecraft <ign>` or `/link steam <steamid64>`.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('messages.link.need_subcommand'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @link_group.command(name='minecraft')
+    @link_group.command(name='minecraft', description=i18n.t('commands.link.minecraft.description'))
     async def link_minecraft(self, context: commands.Context, ign: str):
-        """Links your Discord account to a Minecraft in-game name."""
         self.logger.command(f'{context.author.name} used Link Minecraft')
 
         profile = self.uBot.get_minecraft_profile(ign)
         if profile == None:
-            return await context.send(f'I was unable to find a Minecraft account named **{ign}**, please double check the spelling.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            return await context.send(i18n.t('messages.link.minecraft.not_found', ign=ign), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-        embed = discord.Embed(title='Is this your Minecraft Account?', description=f'**{profile["name"]}**\nUUID: `{profile["uuid"]}`', color=0x808000)
+        embed = discord.Embed(title=i18n.t('embeds.link.minecraft_title'), description=i18n.t('embeds.link.minecraft_description', name=profile["name"], uuid=profile["uuid"]), color=0x808000)
         embed.set_thumbnail(url=profile['avatar'])
 
         def apply_minecraft_link(db_user: DB.DBUser):
             db_user.MC_IngameName = profile['name']
             db_user.MC_UUID = profile['uuid']
 
-        view = self.uiBot.LinkConfirmView(invoker_id=context.author.id, apply=apply_minecraft_link, confirm_message=f'Linked your Discord account to the Minecraft account **{profile["name"]}**!')
+        view = self.uiBot.LinkConfirmView(invoker_id=context.author.id, apply=apply_minecraft_link, confirm_message=i18n.t('messages.link.minecraft.confirm', name=profile["name"]))
         view.message = await context.send(embed=embed, view=view, ephemeral=True)
 
-    @link_group.command(name='steam')
+    @link_group.command(name='steam', description=i18n.t('commands.link.steam.description'))
     async def link_steam(self, context: commands.Context, steam: str):
-        """Links your Discord account to a Steam Account. Accepts a vanity name, profile URL, or SteamID64."""
         self.logger.command(f'{context.author.name} used Link Steam')
 
         if not self.uBot.steam_api_key_configured():
-            return await context.send('Sorry, Steam account linking has not been configured by Staff yet.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            return await context.send(i18n.t('messages.link.steam.not_configured'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
         profile = self.uBot.get_steam_profile(steam)
         if profile == None:
-            return await context.send(f'I was unable to find a Steam account matching **{steam}**. Try pasting your full Steam profile URL instead.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            return await context.send(i18n.t('messages.link.steam.not_found', steam=steam), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-        embed = discord.Embed(title='Is this your Steam Account?', description=f'[{profile["personaname"]}]({profile["profileurl"]})\nSteamID64: `{profile["steamid"]}`', color=0x808000)
+        embed = discord.Embed(title=i18n.t('embeds.link.steam_title'), description=i18n.t('embeds.link.steam_description', personaname=profile["personaname"], profileurl=profile["profileurl"], steamid=profile["steamid"]), color=0x808000)
         if profile['avatar'] != None:
             embed.set_thumbnail(url=profile['avatar'])
 
         def apply_steam_link(db_user: DB.DBUser):
             db_user.SteamID = profile['steamid']
 
-        view = self.uiBot.LinkConfirmView(invoker_id=context.author.id, apply=apply_steam_link, confirm_message='Linked your Discord account to that Steam account!')
+        view = self.uiBot.LinkConfirmView(invoker_id=context.author.id, apply=apply_steam_link, confirm_message=i18n.t('messages.link.steam.confirm'))
         view.message = await context.send(embed=embed, view=view, ephemeral=True)
 
-    @link_group.command(name='show')
+    @link_group.command(name='show', description=i18n.t('commands.link.show.description'))
     async def link_show(self, context: commands.Context):
-        """Shows your currently linked game accounts."""
         self.logger.command(f'{context.author.name} used Link Show')
 
         db_user = self.DB.GetUser(context.author.id)
         await context.send(embed=self.eBot.user_info_embed(db_user, context.author), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @link_group.command(name='remove')
-    @app_commands.choices(identity=[Choice(name='Minecraft', value='minecraft'), Choice(name='Steam', value='steam')])
+    @link_group.command(name='remove', description=i18n.t('commands.link.remove.description'))
+    @app_commands.choices(identity=[
+        Choice(name=i18n.t('commands.link.remove.params.identity.choices.minecraft'), value='minecraft'),
+        Choice(name=i18n.t('commands.link.remove.params.identity.choices.steam'), value='steam'),
+    ])
     async def link_remove(self, context: commands.Context, identity: Choice[str]):
-        """Removes one of your linked game accounts."""
         self.logger.command(f'{context.author.name} used Link Remove')
 
         db_user = self.DB.GetUser(context.author.id)
         if db_user is None:
-            return await context.send('You do not have any linked accounts yet.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            return await context.send(i18n.t('messages.link.remove.no_accounts'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
         if identity.value == 'minecraft':
             if db_user.MC_IngameName == None and db_user.MC_UUID == None:
-                return await context.send('You do not have a linked Minecraft account to remove.', ephemeral=True, delete_after=self._client.Message_Timeout)
+                return await context.send(i18n.t('messages.link.remove.no_minecraft'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
             # Must run before nulling the fields below; removal still needs the old IGN/UUID to know who to remove.
             await self._cleanup_minecraft_whitelist(context)
             db_user.MC_IngameName = None
             db_user.MC_UUID = None
-            await context.send('Removed your linked Minecraft account.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('messages.link.remove.removed_minecraft'), ephemeral=True, delete_after=self._client.Message_Timeout)
         elif identity.value == 'steam':
             if db_user.SteamID == None:
-                return await context.send('You do not have a linked Steam account to remove.', ephemeral=True, delete_after=self._client.Message_Timeout)
+                return await context.send(i18n.t('messages.link.remove.no_steam'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
             db_user.SteamID = None
-            await context.send('Removed your linked Steam account.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('messages.link.remove.removed_steam'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     # Discord Auto Completes ---------------------------------------------------------------------------------------------------------------
 
@@ -323,7 +324,7 @@ class WhitelistSync(commands.Cog):
         choices = []
         for role_id in db_server.GetWhitelistRoles():
             role = interaction.guild.get_role(role_id)
-            name = role.name if role != None else f'Deleted Role ({role_id})'
+            name = role.name if role != None else i18n.t('messages.whitelist_role.deleted_role_placeholder', role_id=role_id)
             if current.lower() in name.lower():
                 choices.append(app_commands.Choice(name=name, value=str(role_id)))
 
@@ -331,11 +332,10 @@ class WhitelistSync(commands.Cog):
 
     # Whitelist Role Management Commands (attached to `server settings`) ----------------------------------------------------------------------
 
-    @commands.hybrid_command(name='whitelist_role_add')
+    @commands.hybrid_command(name='whitelist_role_add', description=i18n.t('commands.server.settings.whitelist_role_add.description'))
     @utils.role_check()
     @app_commands.autocomplete(server=utils.autocomplete_servers)
     async def whitelist_role_add(self, context: commands.Context, server: str, role: discord.Role):
-        """Adds a Discord Role that grants automatic Whitelist access to the provided Server."""
         self.logger.command(f'{context.author.name} used Whitelist Role Add')
 
         amp_server = await self.uBot._serverCheck(context, server, False)
@@ -344,16 +344,15 @@ class WhitelistSync(commands.Cog):
             server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
 
             if role.id in db_server.GetWhitelistRoles():
-                return await context.send(f'**{role.name}** is already gating Whitelist access for **{server_name}**.', ephemeral=True, delete_after=self._client.Message_Timeout)
+                return await context.send(i18n.t('messages.whitelist_role.add.already_gating', role_name=role.name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
             db_server.AddWhitelistRole(role.id)
-            await context.send(f'Members with **{role.name}** will now be automatically Whitelisted on **{server_name}**.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('messages.whitelist_role.add.success', role_name=role.name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @commands.hybrid_command(name='whitelist_role_remove')
+    @commands.hybrid_command(name='whitelist_role_remove', description=i18n.t('commands.server.settings.whitelist_role_remove.description'))
     @utils.role_check()
     @app_commands.autocomplete(server=utils.autocomplete_servers, role=autocomplete_whitelist_roles)
     async def whitelist_role_remove(self, context: commands.Context, server: str, role: str):
-        """Removes a Discord Role from a Server's Whitelist Sync gate list."""
         self.logger.command(f'{context.author.name} used Whitelist Role Remove')
 
         amp_server = await self.uBot._serverCheck(context, server, False)
@@ -362,23 +361,22 @@ class WhitelistSync(commands.Cog):
             server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
 
             if not role.isdigit():
-                return await context.send(f'I could not recognize **{role}** as a Discord Role, please pick one from the autocomplete list.', ephemeral=True, delete_after=self._client.Message_Timeout)
+                return await context.send(i18n.t('messages.whitelist_role.remove.not_a_role', role=role), ephemeral=True, delete_after=self._client.Message_Timeout)
 
             role_id = int(role)
             discord_role = context.guild.get_role(role_id)
-            role_name = discord_role.name if discord_role != None else f'Deleted Role ({role_id})'
+            role_name = discord_role.name if discord_role != None else i18n.t('messages.whitelist_role.deleted_role_placeholder', role_id=role_id)
 
             if role_id not in db_server.GetWhitelistRoles():
-                return await context.send(f'**{role_name}** is not currently gating Whitelist access for **{server_name}**.', ephemeral=True, delete_after=self._client.Message_Timeout)
+                return await context.send(i18n.t('messages.whitelist_role.remove.not_gating', role_name=role_name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
             db_server.DelWhitelistRole(role_id)
-            await context.send(f'Removed **{role_name}** from **{server_name}**\'s Whitelist Sync.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('messages.whitelist_role.remove.success', role_name=role_name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @commands.hybrid_command(name='whitelist_role_list')
+    @commands.hybrid_command(name='whitelist_role_list', description=i18n.t('commands.server.settings.whitelist_role_list.description'))
     @utils.role_check()
     @app_commands.autocomplete(server=utils.autocomplete_servers)
     async def whitelist_role_list(self, context: commands.Context, server: str):
-        """Lists all Discord Roles gating Whitelist access for the provided Server."""
         self.logger.command(f'{context.author.name} used Whitelist Role List')
 
         amp_server = await self.uBot._serverCheck(context, server, False)
@@ -388,28 +386,27 @@ class WhitelistSync(commands.Cog):
             role_ids = db_server.GetWhitelistRoles()
 
             if not len(role_ids):
-                return await context.send(f'**{server_name}** has no Whitelist Sync Roles configured.', ephemeral=True, delete_after=self._client.Message_Timeout)
+                return await context.send(i18n.t('messages.whitelist_role.list.none_configured', server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
             role_mentions = []
             for role_id in role_ids:
                 role = context.guild.get_role(role_id)
-                role_mentions.append(role.mention if role != None else f'`{role_id}` (deleted role)')
+                role_mentions.append(role.mention if role != None else i18n.t('messages.whitelist_role.deleted_role_mention', role_id=role_id))
 
-            await context.send(f'**{server_name}** Whitelist Sync Roles: {", ".join(role_mentions)}', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('messages.whitelist_role.list.result', server_name=server_name, role_mentions=", ".join(role_mentions)), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     # Whitelist Sync Global Settings --------------------------------------------------------------------------------------------------------
 
-    @commands.hybrid_group(name='whitelist_sync')
+    @commands.hybrid_group(name='whitelist_sync', description=i18n.t('commands.whitelist_sync.description'))
     @utils.role_check()
     async def whitelist_sync_settings(self, context: commands.Context):
         if context.invoked_subcommand is None:
-            await context.send('Invalid command passed...', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @whitelist_sync_settings.command(name='enabled')
+    @whitelist_sync_settings.command(name='enabled', description=i18n.t('commands.whitelist_sync.enabled.description'))
     @utils.role_check()
-    @app_commands.choices(flag=[Choice(name='True', value=1), Choice(name='False', value=0)])
+    @app_commands.choices(flag=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
     async def whitelist_sync_enabled(self, context: commands.Context, flag: Choice[int]):
-        """Turns Discord Role Whitelist Syncing ON or OFF."""
         self.logger.command(f'{context.author.name} used Whitelist Sync Enabled')
 
         self.DBConfig.SetSetting('Whitelist_Role_Sync', flag.value)
@@ -418,23 +415,23 @@ class WhitelistSync(commands.Cog):
                 interval = int(self.DBConfig.GetSetting('Whitelist_Role_Sync_Interval') or 15)
                 self.whitelist_role_sync_reconciliation.change_interval(minutes=interval)
                 self.whitelist_role_sync_reconciliation.start()
-            await context.send('Woohoo! I will now keep Whitelists in sync with Discord Roles.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('messages.whitelist_sync.enabled.on'), ephemeral=True, delete_after=self._client.Message_Timeout)
         else:
             if self.whitelist_role_sync_reconciliation.is_running():
                 self.whitelist_role_sync_reconciliation.stop()
-            await context.send('Alright, I will no longer sync Whitelists with Discord Roles.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send(i18n.t('messages.whitelist_sync.enabled.off'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @whitelist_sync_settings.command(name='interval')
+    @whitelist_sync_settings.command(name='interval', description=i18n.t('commands.whitelist_sync.interval.description'))
     @utils.role_check()
-    @app_commands.describe(minutes='How often (in minutes) to run the Whitelist Sync reconciliation pass.')
+    @app_commands.describe(minutes=i18n.t('commands.whitelist_sync.interval.params.minutes.description'))
     async def whitelist_sync_interval(self, context: commands.Context, minutes: app_commands.Range[int, 1, 1440] = 15):
-        """Sets how often the Whitelist Sync reconciliation pass runs, in minutes."""
         self.logger.command(f'{context.author.name} used Whitelist Sync Interval')
 
         self.DBConfig.SetSetting('Whitelist_Role_Sync_Interval', minutes)
         if self.whitelist_role_sync_reconciliation.is_running():
             self.whitelist_role_sync_reconciliation.change_interval(minutes=minutes)
-        await context.send(f'Whitelist Sync reconciliation will now run every **{minutes} {"minutes" if minutes > 1 else "minute"}**.', ephemeral=True, delete_after=self._client.Message_Timeout)
+        interval_str = i18n.t_plural('common.minutes', count=minutes)
+        await context.send(i18n.t('messages.whitelist_sync.interval.result', interval=interval_str), ephemeral=True, delete_after=self._client.Message_Timeout)
 
 
 async def setup(client: commands.Bot):

@@ -37,6 +37,7 @@ import asyncio
 
 import DB
 import AMP_Handler
+import i18n
 
 # GLOBAL VARS# DO NOT EDIT THESE! ONLY READ THEM
 __AMP_Handler = AMP_Handler.getAMPHandler()
@@ -95,7 +96,7 @@ async def async_rolecheck(context: Union[commands.Context, discord.Interaction, 
 
     # This is the final check before we attempt to use the "DEFAULT" permissions setup.
     if _mod_role == None:
-        await context.send(f'Please have an Adminstrator run `/bot moderator (role)` or consider setting up Custom Permissons.', ephemeral=True)
+        await context.send(i18n.t('common.no_moderator_role'), ephemeral=True)
         logger.error(f'DBConfig Moderator role has not been set yet!')
         return False
 
@@ -115,7 +116,7 @@ async def async_rolecheck(context: Union[commands.Context, discord.Interaction, 
         return True
 
     logger.command(f'*Default* Permission Check Failed on {author}')
-    await context.send('You do not have permission to use that command...', ephemeral=True)
+    await context.send(i18n.t('common.no_permission'), ephemeral=True)
     return False
 
 
@@ -131,7 +132,7 @@ def author_check(user_id: int = None):
         if context.author.id == user_id:
             return True
         else:
-            await context.send('You do not have permission to use that command...', ephemeral=True)
+            await context.send(i18n.t('common.no_permission'), ephemeral=True)
             return False
     return commands.check(predicate)
 
@@ -142,7 +143,7 @@ def guild_check(guild_id: int = None):
         if context.guild.id == guild_id:
             return True
         else:
-            await context.send('You do not have permission to use that command...', ephemeral=True)
+            await context.send(i18n.t('common.no_permission'), ephemeral=True)
             return False
     return commands.check(predicate)
 
