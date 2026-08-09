@@ -12,8 +12,6 @@ import traceback
 from typing import TYPE_CHECKING, Literal, Union
 
 import pyotp  # 2Factor Authentication Python Module
-import requests
-import requests.sessions
 
 import AMP_Console
 import DB
@@ -476,7 +474,7 @@ class AMPInstance:
 
         while True:
             try:
-                post_req = requests.post(self.url + APICall, headers=self.AMPheader, data=jsonhandler)
+                post_req = self.AMPHandler.http_session.post(self.url + APICall, headers=self.AMPheader, data=jsonhandler)
 
                 if len(post_req.content) > 0:
                     break

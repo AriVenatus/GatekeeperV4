@@ -32,6 +32,8 @@ import traceback
 from argparse import Namespace
 from types import SimpleNamespace
 
+import requests
+
 import AMP
 import DB
 
@@ -101,6 +103,11 @@ class AMPHandler():
         self.superUser = False
 
         self.SessionIDlist = {}
+
+        # Shared across every AMPInstance (main + per-server) since they all talk to the
+        # same AMP host -- reuses TCP/TLS connections instead of paying a fresh handshake
+        # on every single CallAPI() call.
+        self.http_session = requests.Session()
 
         self.AMP_Modules = {}
         self.AMP_Instances: dict[str, AMP.AMPInstance] = {}
