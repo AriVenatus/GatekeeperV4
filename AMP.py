@@ -269,8 +269,19 @@ class AMPInstance:
         self.logger.warning("Creating the AMP role `Gatekeeper`...")
         self.createRole("Gatekeeper")
         self.setRoleIDs()
+
+        if self.AMP_BotRoleID is None:
+            self.logger.critical("Failed to create/find the `Gatekeeper` role in AMP -- aborting role setup.")
+            return
+
         self.logger.dev(f"Created `Gatekeeper` role. ID: {self.AMP_BotRoleID}")
         self.AMP_UserID = self.getAMPUserID(self.AMPHandler.tokens.AMPUser)
+        if self.AMP_UserID is None:
+            self.logger.critical(
+                f"Failed to resolve AMP User ID for {self.AMPHandler.tokens.AMPUser} -- aborting role setup."
+            )
+            return
+
         self.setAMPUserRoleMembership(self.AMP_UserID, self.AMP_BotRoleID, True)
         self.logger.warning(f"***ATTENTION*** Adding {self.AMPHandler.tokens.AMPUser} to `Gatekeeper` Role.")
         self.setup_Gatekeeper_Permissions()
@@ -329,15 +340,15 @@ class AMPInstance:
             # self.logger.dev('Gatekeeper Role Exists..')
             self._AMP_botRole_exists = True
 
+        my_roles = self.AMP_userinfo.get("Roles", [])
+
         # Gatekeeper has `Gatekeeper` Role inside of AMP
-        if self._AMP_botRole_exists and self.AMP_BotRoleID in self.AMP_userinfo["Roles"]:
-            # if self._AMP_botRole_exists and self.AMP_BotRoleID in self.AMP_userinfo['result']['Roles']:
+        if self._AMP_botRole_exists and self.AMP_BotRoleID in my_roles:
             # self.logger.dev('Gatekeeper User has Gatekepeer Role.')
             self._have_AMP_botRole = True
 
         # `Super_Admin Role inside of AMP`
-        # if self.super_AdminID in self.AMP_userinfo['result']['Roles']:
-        if self.super_AdminID in self.AMP_userinfo["Roles"]:
+        if self.super_AdminID in my_roles:
             # self.logger.dev('Gatekeeper User has Super Admins')
             self._have_superAdmin = True
 
@@ -345,12 +356,17 @@ class AMPInstance:
             self.logger.dev(
                 f"Checking `Gatekeeper Role` permissions on {'AMP' if self.InstanceID == 0 else self.FriendlyName}"
             )
+            role_perms = self.getAMPRolePermissions(self.AMP_BotRoleID)
+            if not isinstance(role_perms, (list, dict)):
+                self.logger.error(
+                    f"Core/GetAMPRolePermissions did not return permission data for {'AMP' if self.InstanceID == 0 else self.FriendlyName}: {role_perms}"
+                )
+                return False
+
             for perm in self.perms:
                 # Skip the perm check on ones we "shouldn't have!"
                 if perm.startswith("-"):
                     continue
-
-                role_perms = self.getAMPRolePermissions(self.AMP_BotRoleID)
 
                 if perm not in role_perms:
                     # if perm not in role_perms['result']:
@@ -967,6 +983,10 @@ class AMPInstance:
     def setRoleIDs(self):
         """Sets `self.AMP_BotRoleID` and `self.super_AdminID` (if they exist)"""
         roles = self.getRoleIds()
+        if not isinstance(roles, dict):
+            self.logger.error(f"Core/GetRoleIds did not return role data: {roles}")
+            return
+
         for role in roles:
             if roles[role].lower() == "gatekeeper":
                 self.AMP_BotRoleID = role
@@ -1005,8 +1025,7 @@ class AMPInstance:
         parameters = {"RoleId": RoleID, "PermissionNode": PermissionNode, "Enabled": Enabled}
         result = self.CallAPI("Core/SetAMPRolePermission", parameters)
 
-        # if result['result']['Status'] == False:
-        if result["Status"] == False:
+        if not isinstance(result, dict) or result.get("Status") == False:
             self.logger.critical(
                 f"Unable to Set Permission Node __{PermissionNode}__ to `{Enabled}` for {RoleID}, response was: {result}"
             )
