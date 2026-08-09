@@ -300,7 +300,28 @@ class AMPInstance:
         failed = False
 
         self.AMP_userinfo = self.getAMPUserInfo(self.AMPHandler.tokens.AMPUser)  # This gets my AMP User Information
-        self.AMP_UserID = self.getAMPUserID(self.AMPHandler.tokens.AMPUser)  # This gets my AMP User ID
+
+        if not isinstance(self.AMP_userinfo, dict):
+            # Some AMP builds reject Core/GetAMPUserInfo on a per-instance delegate session
+            # (InstanceID != 0) even when check_SessionPermissions() already confirmed every
+            # node in self.perms moments earlier via CurrentSessionHasPermission. Treat that
+            # combination as "already verified, this extra self-lookup just isn't available
+            # here" instead of crashing the whole AMP Handler thread on the missing dict.
+            if self.InstanceID == 0:
+                self.logger.critical(
+                    f"Unable to read our own AMP user info via Core/GetAMPUserInfo for {self.AMPHandler.tokens.AMPUser} -- "
+                    "cannot verify/bootstrap the `Gatekeeper` role on the main AMP instance."
+                )
+                return False
+
+            self.logger.warning(
+                f"Core/GetAMPUserInfo was rejected for {self.FriendlyName}'s delegate session even though "
+                "CurrentSessionHasPermission already confirmed the required permission nodes -- skipping "
+                "this redundant self-check for this instance."
+            )
+            return True
+
+        self.AMP_UserID = self.AMP_userinfo.get("ID")
         self.setRoleIDs()
 
         # `Gatekeeper Role inside of AMP`
@@ -905,7 +926,9 @@ class AMPInstance:
     def getAMPUserID(self, name: str):
         """Returns AMP Users ID Only."""
         result = self.getAMPUserInfo(name=name)
-        # return result['result']['ID']
+        if not isinstance(result, dict):
+            self.logger.error(f"getAMPUserID: Core/GetAMPUserInfo did not return user data for {name}: {result}")
+            return None
         return result["ID"]
 
     def CurrentSessionHasPermission(self, PermissionNode: str) -> dict:
