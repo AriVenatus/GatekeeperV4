@@ -95,11 +95,9 @@ ___
 - `/link remove (identity)` - Removes one of your linked accounts. `identity` is either `Minecraft` or `Steam`.
 
 ### <u>User/Member Group Commands</u>: 
-- `/user info (identifier_type, user, identifier)` - Displays a Users Database information overview.
-    - `identifier_type` is required and is one of `Discord`, `Minecraft`, or `Steam` - it decides which of `user`/`identifier` below gets used.
-    - Set `identifier_type` to `Discord` and fill in `user` (the native Discord Member picker) if you already know who they are.
-    - Set `identifier_type` to `Minecraft` or `Steam` and fill in `identifier` (free text) to look someone up by their Minecraft IGN/UUID or SteamID instead - handy when you don't know who the Discord User is yet.
-        - **TIP**: `identifier` also matches against Discord ID/Name, in case typing it is easier than using the picker.
+- `/user info discord (user)` - Displays a Users Database information overview, looked up by the native Discord Member picker.
+- `/user info minecraft (identifier)` - Displays a Users Database information overview, looked up by Minecraft IGN/UUID (free text) - handy when you don't know who the Discord User is yet.
+- `/user info steam (identifier)` - Displays a Users Database information overview, looked up by SteamID (free text).
     - **ATTENTION**: If the matching Discord Account can no longer be resolved (they left/deleted their account), still shows their stored Database info with a note instead of failing.
 - `/user add (user, mc_ign, mc_uuid, steamid)` - Adds a User to the Database with the provided arguments.
     - **ATTENTION**: `user` is the **only required paramater**. 
@@ -107,7 +105,7 @@ ___
     - `mc_ign` and `mc_uuid` are optional.
         - **TIP**: When providing `mc_ign`, the bot will fetch the `mc_uuid` and set it for you in the Database if not provided.
     - `steamid` is optional. 
-        - **TIP**: If the player has already self-linked via `/link steam`, you don't need this at all - use `/user info` (identifier_type = `Steam`) to find their account instead of entering it manually here.
+        - **TIP**: If the player has already self-linked via `/link steam`, you don't need this at all - use `/user info steam` to find their account instead of entering it manually here.
 - `/user update (user, mc_ign, steamid)` - Updates the Users Database information with the provided arguments.
 
 ### <u>AMP Server Database Commands</u>: 

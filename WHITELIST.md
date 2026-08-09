@@ -38,7 +38,7 @@ Both Whitelist systems need to know a player's in-game identity. Rather than Sta
 - `/link remove (identity)` - Clears a linked account (`Minecraft` or `Steam`).
     - **TIP**: If a Role Sync Role (below) is still gating your access to a Minecraft Server, removing your Minecraft link also removes you from that Server's live Whitelist, since the bot can no longer verify who you are.
 
-- **TIP for Staff**: Once a player has linked their own account, `/user info` (with `identifier_type` set to `Minecraft` or `Steam`) can find their Database entry without you needing to know their Discord identity first.
+- **TIP for Staff**: Once a player has linked their own account, `/user info minecraft` or `/user info steam` can find their Database entry without you needing to know their Discord identity first.
 
 ## **Discord Role Whitelist Sync**
 ___

@@ -27,7 +27,6 @@ import sqlite3
 
 import discord
 from discord import app_commands
-from discord.app_commands import Choice
 from discord.ext import commands
 
 import utils
@@ -87,34 +86,38 @@ class DB_User(commands.Cog):
         if context.invoked_subcommand is None:
             await context.send(i18n.t('common.try_again'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @user.command(name='info', description=i18n.t('commands.user.info.description'))
+    @user.group(name='info', description=i18n.t('commands.user.info.description'))
     @utils.role_check()
-    @app_commands.choices(identifier_type=[
-        Choice(name=i18n.t('commands.user.info.params.identifier_type.choices.discord'), value='discord'),
-        Choice(name=i18n.t('commands.user.info.params.identifier_type.choices.minecraft'), value='minecraft'),
-        Choice(name=i18n.t('commands.user.info.params.identifier_type.choices.steam'), value='steam'),
-    ])
-    @app_commands.describe(
-        identifier=i18n.t('commands.user.info.params.identifier.description'),
-        user=i18n.t('commands.user.info.params.user.description'),
-    )
-    async def user_info(self, context: commands.Context, identifier_type: Choice[str], identifier: str = None, user: Union[discord.Member, discord.User] = None):
-        self.logger.command(f'{context.author.name} used User Information')
+    async def user_info(self, context: commands.Context):
+        if context.invoked_subcommand is None:
+            await context.send(i18n.t('common.try_again'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-        if identifier_type.value == 'discord' and user != None:
-            search_value = user.id
-        elif identifier != None:
-            search_value = identifier
-        else:
-            if identifier_type.value == 'discord':
-                return await context.send(i18n.t('messages.db_user.user_info.need_user_or_identifier'), ephemeral=True, delete_after=self._client.Message_Timeout)
-            return await context.send(i18n.t('messages.db_user.user_info.need_identifier', identifier_type=identifier_type.name), ephemeral=True, delete_after=self._client.Message_Timeout)
+    @user_info.command(name='discord', description=i18n.t('commands.user.info.discord.description'))
+    @utils.role_check()
+    @app_commands.describe(user=i18n.t('commands.user.info.discord.params.user.description'))
+    async def user_info_discord(self, context: commands.Context, user: Union[discord.Member, discord.User]):
+        self.logger.command(f'{context.author.name} used User Information (Discord)')
+        await self._send_user_info(context, user.id, user)
 
+    @user_info.command(name='minecraft', description=i18n.t('commands.user.info.minecraft.description'))
+    @utils.role_check()
+    @app_commands.describe(identifier=i18n.t('commands.user.info.minecraft.params.identifier.description'))
+    async def user_info_minecraft(self, context: commands.Context, identifier: str):
+        self.logger.command(f'{context.author.name} used User Information (Minecraft)')
+        await self._send_user_info(context, identifier)
+
+    @user_info.command(name='steam', description=i18n.t('commands.user.info.steam.description'))
+    @utils.role_check()
+    @app_commands.describe(identifier=i18n.t('commands.user.info.steam.params.identifier.description'))
+    async def user_info_steam(self, context: commands.Context, identifier: str):
+        self.logger.command(f'{context.author.name} used User Information (Steam)')
+        await self._send_user_info(context, identifier)
+
+    async def _send_user_info(self, context: commands.Context, search_value, discord_user: Union[discord.Member, discord.User] = None):
         db_user = self.DB.GetUser(search_value)
         if db_user == None:
             return await context.send(i18n.t('messages.db_user.user_info.not_found', search_value=search_value), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-        discord_user = user
         if discord_user == None:
             discord_user = self._client.get_user(int(db_user.DiscordID))
             if discord_user == None:
