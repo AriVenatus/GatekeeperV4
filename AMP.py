@@ -282,9 +282,17 @@ class AMPInstance:
             )
             return
 
+        # Set every permission node on the new role BEFORE joining it ourselves. AMP resolves
+        # effective permissions with "deny beats allow" across all of a user's role
+        # memberships -- joining a still-empty/unconfigured role while we're also Super Admin
+        # cancels out our own Super Admin grants mid-setup, making every subsequent
+        # SetAMPRolePermission call fail with "you cannot assign a permission you yourself do
+        # not have" even though we genuinely are Super Admin (confirmed live: the same failure
+        # reproduces even via the AMP GUI itself while logged in as this account).
+        self.setup_Gatekeeper_Permissions()
+
         self.setAMPUserRoleMembership(self.AMP_UserID, self.AMP_BotRoleID, True)
         self.logger.warning(f"***ATTENTION*** Adding {self.AMPHandler.tokens.AMPUser} to `Gatekeeper` Role.")
-        self.setup_Gatekeeper_Permissions()
 
     def setup_Gatekeeper_Permissions(self):
         """Sets the Permissions Nodes for AMP Gatekeeper Role"""
