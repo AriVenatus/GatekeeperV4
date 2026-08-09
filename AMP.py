@@ -509,9 +509,20 @@ class AMPInstance:
         parameters["SESSIONID"] = self.SessionID if self.SessionID != 0 else ""
         jsonhandler = json.dumps(parameters)
 
+        # AMP's own web client also sends the session as a Bearer token, in addition to the
+        # SESSIONID body field above. Most endpoints work fine off SESSIONID alone, but some
+        # privilege-sensitive checks (e.g. Core/SetAMPRolePermission's "you cannot grant a
+        # permission you don't have yourself" guard) resolve the caller's own effective
+        # permissions from this header specifically -- without it they see the caller as
+        # having none, and reject even genuine Super Admins. Found via browser DevTools diff,
+        # same methodology as the Core/Login header fix.
+        headers = dict(self.AMPheader)
+        if self.SessionID != 0:
+            headers["Authorization"] = f"Bearer {self.SessionID}"
+
         while True:
             try:
-                post_req = self.AMPHandler.http_session.post(self.url + APICall, headers=self.AMPheader, data=jsonhandler)
+                post_req = self.AMPHandler.http_session.post(self.url + APICall, headers=headers, data=jsonhandler)
 
                 if len(post_req.content) > 0:
                     break
