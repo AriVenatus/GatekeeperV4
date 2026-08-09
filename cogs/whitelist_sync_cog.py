@@ -242,14 +242,14 @@ class WhitelistSync(commands.Cog):
         if profile == None:
             return await context.send(i18n.t('messages.link.minecraft.not_found', ign=ign), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-        embed = discord.Embed(title=i18n.t('embeds.link.minecraft_title'), description=i18n.t('embeds.link.minecraft_description', name=profile["name"], uuid=profile["uuid"]), color=0x808000)
+        embed = discord.Embed(title=i18n.t('embeds.link.minecraft_title'), description=i18n.t('embeds.link.minecraft_description', name=discord.utils.escape_markdown(profile["name"]), uuid=profile["uuid"]), color=0x808000)
         embed.set_thumbnail(url=profile['avatar'])
 
         def apply_minecraft_link(db_user: DB.DBUser):
             db_user.MC_IngameName = profile['name']
             db_user.MC_UUID = profile['uuid']
 
-        view = self.uiBot.LinkConfirmView(invoker_id=context.author.id, apply=apply_minecraft_link, confirm_message=i18n.t('messages.link.minecraft.confirm', name=profile["name"]))
+        view = self.uiBot.LinkConfirmView(invoker_id=context.author.id, apply=apply_minecraft_link, confirm_message=i18n.t('messages.link.minecraft.confirm', name=discord.utils.escape_markdown(profile["name"])))
         view.message = await context.send(embed=embed, view=view, ephemeral=True)
 
     @link_group.command(name='steam', description=i18n.t('commands.link.steam.description'))
@@ -263,7 +263,7 @@ class WhitelistSync(commands.Cog):
         if profile == None:
             return await context.send(i18n.t('messages.link.steam.not_found', steam=steam), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-        embed = discord.Embed(title=i18n.t('embeds.link.steam_title'), description=i18n.t('embeds.link.steam_description', personaname=profile["personaname"], profileurl=profile["profileurl"], steamid=profile["steamid"]), color=0x808000)
+        embed = discord.Embed(title=i18n.t('embeds.link.steam_title'), description=i18n.t('embeds.link.steam_description', personaname=discord.utils.escape_markdown(profile["personaname"]), profileurl=profile["profileurl"], steamid=profile["steamid"]), color=0x808000)
         if profile['avatar'] != None:
             embed.set_thumbnail(url=profile['avatar'])
 

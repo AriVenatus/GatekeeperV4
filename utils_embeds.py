@@ -364,7 +364,7 @@ class botEmbeds():
             embed = discord.Embed(title=title, description=i18n.t('embeds.user_info.unresolvable'), color=0x808000)
             embed.add_field(name=i18n.t('embeds.user_info.discord_id'), value=f'`{discord_id}`', inline=False)
 
-        embed.add_field(name=i18n.t('embeds.user_info.in_database'), value=self._bool_str(db_user != None))
+        embed.add_field(name=i18n.t('embeds.user_info.in_database'), value=f'`{db_user != None}`')
         if db_user != None:
             if db_user.MC_IngameName != None:
                 embed.add_field(name=i18n.t('embeds.user_info.minecraft_ign'), value=f'`{db_user.MC_IngameName}`', inline=False)
