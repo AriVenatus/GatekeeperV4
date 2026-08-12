@@ -1,3 +1,34 @@
+__**Update 4.11.0**__
+- Renamed this fork from `GatekeeperV3.1` to `GatekeeperV4` (README, `CLAUDE.md`, `pyproject.toml`, startup log lines, and every live GitHub URL — repo link, avatar images, docs links) to reflect the scope of everything below.
+- Repo restructure:
+    - Moved all root Python modules (`AMP.py`, `AMP_Handler.py`, `DB.py`, `discordBot.py`, `i18n.py`, `loader.py`, `logger.py`, `utils*.py`, etc.) into a new `core/` package; `start.py` stays at the repo root as the entry point.
+    - Moved all user-facing docs (`BANNER.md`, `COMMANDS.md`, `PERMISSIONS.md`, `REGEX.md`, `WHITELIST.md`, `changelog.md`, etc.) into `docs/`, plus new guides `docs/INSTALL.md` (setup, split out of `README.md`) and `docs/LOCALIZATION.md` (how to add a language).
+    - Renamed `modules/Counter-Strike_Go` -> `modules/CounterStrikeGo` and lowercased `AMP_server_cog.py`/`AMP_tasks_cog.py`/`DB_server_cog.py`/`DB_user_cog.py`/`Permissions_cog.py` for naming consistency with the rest of `cogs/`.
+- Removed `tokens.py`/`tokenstemplate.py`/`tokens_dev.py` support entirely — a `.env` file or real environment variables (`.env.template`) are now the only way to configure secrets.
+- Fixed a locale-file lookup bug introduced by the `core/` move: `i18n.py`'s locales path resolved relative to its own file location, which broke once it moved into `core/` (was silently falling back to raw i18n keys like `messages.bot.utils.sync.local_success` instead of translated text).
+- Rewrote `README.md`: dropped "MAINTENANCE MODE ONLY" (this fork is under active development again), new intro, explicit credits to k8thekat (original author) and Leon Breidenbach, trimmed "Features" to flat one-liners, moved all setup/installation content to `docs/INSTALL.md`.
+- Documented the correct `.env` placement for a systemd deployment (outside the repo checkout, wired via `EnvironmentFile=`, not inside `WorkingDirectory`) and added the missing `EnvironmentFile=` line to the example service unit in `docs/INSTALL.md`.
+- Removed the duplicate `COPYING` (kept `LICENSE`) and the stale `discord-role-synced-whitelist.md` proposal doc; added `.DS_Store` to `.gitignore`.
+
+__**Update 4.10.0**__
+- Added English/German localization: a global (not per-user), admin-controlled language switch via `/bot language`, which retranslates the entire command tree (descriptions, parameters, choices) and every bot-authored message live, no restart required.
+- Split `/user info` into `/user info discord`/`/user info minecraft`/`/user info steam` subcommands (was one command with an `identifier_type` Choice) — Discord slash commands can't conditionally show/hide a parameter based on another parameter's value, so the old version showed both `identifier` and `user` regardless of which type was picked.
+- Escaped external/API-sourced display names (Steam personaname, Minecraft IGN) before interpolating them into `/link` confirmation embeds, so a name containing `_`/`*`/etc. can no longer bleed into the surrounding markdown formatting.
+- Fixed a few bugs surfaced while translating: a `context.sned(...)` typo, `/server status` referencing an already-None-checked variable, and `ServerButton`'s AMP permission-node lookup being derived from its (now-translatable) display label instead of an explicit `action` param.
+- Full text-quality audit of both locale files (grammar/accuracy) plus a German-naturalness pass (idiomatic phrasing over literal translation, a hardcoded English `' and '` literal that was bleeding into German sentences, a missing `need_selection` guard on `/bot bannergroup remove`, and a few broken sentence-composition bugs where interpolating one translated fragment into another produced disagreeing grammar).
+
+__**Update 4.9.0**__
+# First production deployment (Hetzner) and everything it surfaced
+- Python 3.13 compatibility: bumped `certifi`/`aiohttp`/`multidict` and their new transitive deps in `requirements.txt`, added a shim for `haggis.logs.add_logging_level()`'s use of a `logging` API CPython 3.13 removed, and added `audioop-lts` for `discord.py`'s voice-import crash.
+- Matched AMP's exact expected login request shape (found by diffing against the AMP web client): `Content-Type: application/x-www-form-urlencoded; charset=UTF-8` instead of `application/json`, added `X-Requested-With: XMLHttpRequest`, always send the `SESSIONID` field, and added an `Authorization: Bearer <SessionID>` header to every authenticated call.
+- Fixed the real root cause of a Super-Admin bootstrap crash: `setup_AMPbotrole()` joined the bot's own account to the new `Gatekeeper` role *before* permissions were set on it, which (deny-beats-allow) cancelled out Super Admin mid-setup; reordered to set permissions first.
+- Fixed a crash when `check_GatekeeperRole_Permissions()` referenced `self.Port` on the main AMP instance (which has no `Port` attribute), and a crash when a per-instance delegate session's `Core/GetAMPUserInfo` self-check gets rejected (now guarded and non-fatal for non-main instances).
+- Reconciled `perms_super()`/`perms_whitelist_only()` against a live `Core/GetPermissionsSpec` dump: dropped `LocalFileBackup.*` and 3 more stale/renamed exclusion nodes, excluded several wildcard-granted-but-unused nodes.
+- Hardened secrets/permissions handling: added a `.env`/environment-variable fallback for secrets, a loud startup warning when `-super`/`-dev` leaves the bot's AMP account as Super Admin, and a new `perms_whitelist_only()` profile + `-whitelist-only` flag for a minimal-permission whitelist-sync-only deployment mode.
+- Closed a latent SQL-injection-via-column-name gap in `DB.py`'s dynamic `UPDATE` statement construction (added a column allowlist check).
+- Performance: AMP API calls now reuse a single shared `requests.Session()` instead of a fresh connection per call; `start.py` skips re-running `pip install` on startup when `requirements.txt` is unchanged.
+- Added raw-response logging on AMP login/permission-set failures, which is what made several of the fixes above possible instead of guessing blind.
+
 __**Update 4.8.0**__
 - Added a Discord Role \<-> Whitelist Sync system (new `whitelist_sync_cog.py`):
     - `/server settings whitelist_role_add/remove/list` lets Staff configure one or more Discord Roles per Server that grant Whitelist access; the same Role can gate multiple Servers.

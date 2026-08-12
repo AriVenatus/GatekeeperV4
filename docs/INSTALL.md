@@ -1,6 +1,6 @@
 ### **Requirements**
 _________
-- **Python 3.11 -> [Help](#installing-python-311)** or greater
+- **Python 3.13 -> [Help](#installing-python-313)** or greater
     - See **[Setting up Python](#setting-up-python)**
 - Cube Coders AMP License
     - *https://cubecoders.com/AMP*
@@ -19,7 +19,7 @@ For example, to install latest Python version available in the system repository
 
 Or for a specific version:
 
-    `python3.11 python3-pip python3.11-venv`
+    `python3.13 python3-pip python3.13-venv`
 
 For RHEL or similar systems, consult your system documentation. An example might be:
 
@@ -33,11 +33,12 @@ Installers can be downloaded from [here](https://www.python.org/downloads/window
     - Make sure you select the option to install `pip`, and (under Advanced Options) the options to install Python for all users on the system and add it to the system’s environment variables. 
     - *Note* - This will mean Python is installed in Program Files and is essential to ensuring it can be used by AMP.
 
-### Installing Python 3.11
+### Installing Python 3.13
 
-Follow instructions listed above for your respective operating system. As of the current
-`requirements.txt`, `numpy` and `yarl` are already pinned to versions with Python 3.11+
-support (`numpy==2.1.3`, `yarl==1.18.0`) — no manual edits to `requirements.txt` are needed.
+Follow instructions listed above for your respective operating system. `requirements.txt`
+already pins Python 3.13-compatible versions of every dependency (`numpy==2.1.3`,
+`yarl==1.18.0`, plus 3.13-specific fixes like `audioop-lts` for `discord.py`'s voice module) —
+no manual edits are needed.
 ___
 
 
@@ -115,7 +116,7 @@ ___
     - **TIP**: Use `/whitelist_sync interval (minutes)` to control how often the safety-net reconciliation pass runs (default `15` minutes), which catches any Role/Whitelist drift that happened while the bot was offline.
 
 ### **Setting up your Server Banner Displays**
-- First, set all your servers settings/information. See [Server Commands](/docs/COMMANDS.md#server-commands)
+- First, set all your servers settings/information. See [Server Commands](/docs/COMMANDS.md#uamp-server-commandsu)
     - Adjust your settings on via sub commands such as `Host`, `Description`, `DisplayName`, `Prefix` and `Whitelist` to name a few.
     - **TIP**: You can do this after you set your Display Banner location, the bot will updated the information automatically.
 
@@ -127,10 +128,9 @@ ___
 ______
 ## **Launch Args**
 - These are append to the command line when launching the bot. *(eg. `start.py -super`)*
-    - `-token` - Bypasse tokens validation check. *(Mandatory for AMP Template Installations/Operations)*
     - `-command` - Enable slash command print statements for user traceback. 
     - `-super` - This leaves AMP Super Admin role intact, use at your own risk.    
-    - `-whitelist-only` - Restricts the bot's AMP role on the main instance to the minimum needed for Discord-Role<->Whitelist sync (no `Instances.*`/`ADS.*`/`FileManager.*`/`LocalFileBackup.*`). **⚠ Needs verification before relying on it in production** — see `CLAUDE.md`.
+    - `-whitelist-only` - Restricts the bot's AMP role on the main instance to the minimum needed for Discord-Role<->Whitelist sync (no `Instances.*`/`ADS.*`/`FileManager.*`/`LocalFileBackup.*`). **⚠ Needs verification before relying on it in production** — see [CLAUDE.md](/CLAUDE.md).
     - `-dev` - Enable development print statments. *(used for development)*
     - `-debug` - Enables *DEBUGGING* level for logging. *(used for development)*
     - `-discord` - Disables Discord Intigration *(used for testing)*
@@ -169,6 +169,4 @@ systemctl start gatekeeper.service
 
 ## Useful Command
 - Use `systemctl status gatekeeper.service` to see the status of the Gatekeeper Service!
-
-*Thanks @LeviN*
 ___
