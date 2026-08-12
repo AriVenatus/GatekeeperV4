@@ -1,6 +1,5 @@
 from __future__ import annotations
 import logging
-import re
 import io
 import sqlite3
 from typing import Callable
@@ -9,14 +8,13 @@ import random
 
 import discord
 from discord.ext import commands
-from discord.ui import Button, View, Select, Modal, TextInput
+from discord.ui import Button, View
 import asyncio
 
-import DB
-import AMP_Handler
-import modules.banner_creator as BC
-import utils
-import i18n
+from core import DB
+from core import AMP_Handler
+from core import utils
+from core import i18n
 
 
 class ServerButton(Button):
@@ -100,52 +98,6 @@ def banner_file_handler(image: Image.Image):
         return discord.File(fp=image_binary, filename='image.png')
 
 
-class Edited_DB_Banner():
-    """DB_Banner for Banner Editor"""
-
-    def __init__(self, db_banner: DB.DBBanner):
-        self._db_banner = db_banner
-
-        self.invalid_keys = ['_db', 'ServerID', 'background_path']
-        self.reset_db()
-
-    def save_db(self):
-        for key in self._db_banner.attr_list:
-            if key in self.invalid_keys:
-                continue
-
-            if getattr(self._db_banner, key) != getattr(self, key):
-                setattr(self._db_banner, key, getattr(self, key))
-
-        return self._db_banner
-
-    def reset_db(self):
-        for key in self._db_banner.attr_list:
-            if key in self.invalid_keys:
-                continue
-            setattr(self, key, getattr(self._db_banner, key))
-        return self._db_banner
-
-
-class Banner_Editor_View(View):
-    def __init__(self, amp_server: AMP_Handler.AMP.AMPInstance, db_banner: DB.DBBanner, banner_message: discord.Message, timeout=None):
-        self.logger = logging.getLogger()
-
-        self._original_db_banner = db_banner
-        self._edited_db_banner = Edited_DB_Banner(db_banner)
-        self._banner_message = banner_message  # This is the message that the banner is attached to.
-        self._amp_server = amp_server
-        self._first_interaction = discord.Interaction
-        self._first_interaction_bool = True
-
-        self._banner_editor_select = Banner_Editor_Select(custom_id='banner_editor', edited_db_banner=self._edited_db_banner, banner_message=self._banner_message, view=self, amp_server=self._amp_server)
-        super().__init__(timeout=timeout)
-        self.add_item(self._banner_editor_select)
-        self.add_item(Save_Banner_Button(banner_message=self._banner_message, edited_banner=self._edited_db_banner, server=self._amp_server))
-        self.add_item(Reset_Banner_Button(banner_message=self._banner_message, edited_banner=self._edited_db_banner, server=self._amp_server))
-        self.add_item(Cancel_Banner_Button(banner_message=self._banner_message))
-
-
 # Maps each Banner Editor field's stable (never-translated) SelectOption `value` to the i18n key
 # suffix for its display text -- shared between the SelectOption label AND the Modal title that
 # opens for it, so the two are always consistent (they used to diverge: the modal title was
@@ -168,189 +120,6 @@ BANNER_FIELD_LABEL_KEYS = {
 
 def banner_field_label(value: str) -> str:
     return i18n.t(f'ui.banner_editor.fields.{BANNER_FIELD_LABEL_KEYS[value]}')
-
-
-class Banner_Editor_Select(Select):
-    def __init__(self, edited_db_banner: Edited_DB_Banner, view: Banner_Editor_View, amp_server: AMP_Handler.AMP.AMPInstance, banner_message: discord.Message, custom_id: str = None, min_values: int = 1, max_values: int = 1, row: int = None, disabled: bool = False, placeholder: str = None):
-        self.logger = logging.getLogger()
-        options = []
-        self._banner_view = view
-
-        self._edited_db_banner = edited_db_banner
-        self._banner_message = banner_message
-
-        self._amp_server = amp_server
-
-        whitelist_options = [
-            discord.SelectOption(label=banner_field_label('color_whitelist_open'), value='color_whitelist_open'),
-            discord.SelectOption(label=banner_field_label('color_whitelist_closed'), value='color_whitelist_closed')]
-        donator_options = [
-            discord.SelectOption(label=banner_field_label('color_donator'), value='color_donator')]
-
-        options = [
-            discord.SelectOption(label=banner_field_label('blur_background_amount'), value='blur_background_amount'),
-            discord.SelectOption(label=banner_field_label('color_header'), value='color_header'),
-            discord.SelectOption(label=banner_field_label('color_body'), value='color_body'),
-            discord.SelectOption(label=banner_field_label('color_host'), value='color_host'),
-
-            discord.SelectOption(label=banner_field_label('color_status_online'), value='color_status_online'),
-            discord.SelectOption(label=banner_field_label('color_status_offline'), value='color_status_offline'),
-            discord.SelectOption(label=banner_field_label('color_player_limit_min'), value='color_player_limit_min'),
-            discord.SelectOption(label=banner_field_label('color_player_limit_max'), value='color_player_limit_max'),
-            discord.SelectOption(label=banner_field_label('color_player_online'), value='color_player_online')
-        ]
-
-        # If Whitelist is disabled, remove the options from the list.
-        if not self._amp_server.Whitelist_disabled:
-            options = whitelist_options + options
-
-        # If Donator Only is enabled; adds the option to set the color.
-        if self._amp_server.Donator:
-            options = options + donator_options
-
-        super().__init__(custom_id=custom_id, placeholder=placeholder, min_values=min_values, max_values=max_values, options=options, disabled=disabled, row=row)
-
-    async def callback(self, interaction: discord.Interaction):
-        if self.values[0] == 'blur_background_amount':
-            input_type = 'int'
-        else:
-            input_type = 'color'
-
-        self._banner_modal = Banner_Modal(input_type=input_type, title=banner_field_label(self.values[0]), select_value=self.values[0], edited_db_banner=self._edited_db_banner, banner_message=self._banner_message, view=self._banner_view, amp_server=self._amp_server)
-        await interaction.response.send_modal(self._banner_modal)
-
-        self._first_interaction = False
-
-
-class Banner_Modal(Modal):
-    def __init__(self, input_type: str, select_value: str, title: str, view: Banner_Editor_View, edited_db_banner: Edited_DB_Banner, banner_message: discord.Message, amp_server: AMP_Handler.AMP.AMPInstance, timeout=None, custom_id='Banner Modal'):
-        self._edited_db_banner = edited_db_banner
-        self._banner_message = banner_message
-        self._banner_view = view
-
-        self._amp_server = amp_server
-
-        self._select_value = select_value  # This is the Select Option Choice that was made.
-        self._input_type = input_type
-        super().__init__(title=title, timeout=timeout, custom_id=custom_id)
-
-        if self._input_type == 'color':
-            self._color_code_input = Banner_Color_Input(edited_db_banner=self._edited_db_banner, select_value=self._select_value, view=self._banner_view)
-            self.add_item(self._color_code_input)
-
-        if self._input_type == 'int':
-            self._int_code_input = Banner_Blur_Input(edited_db_banner=self._edited_db_banner, select_value=self._select_value, view=self._banner_view)
-            self.add_item(self._int_code_input)
-
-    async def on_submit(self, interaction: discord.Interaction):
-        # Depending on the Selection made; changes the validation code and the reply.
-        if self._input_type == 'int':
-            if await self._int_code_input.callback() == False:
-                await interaction.response.send_message(i18n.t('ui.banner_modal.invalid_number', value=self._int_code_input.value), ephemeral=True, delete_after=self._client.Message_Timeout)
-
-        if self._input_type == 'color':
-            if await self._color_code_input.callback() == False:
-                await interaction.response.send_message(content=i18n.t('ui.banner_modal.invalid_hex', value=self._color_code_input._value), ephemeral=True, delete_after=self._client.Message_Timeout)
-
-        # Regardless we defer the interaction; because we only care if it fails as seen above.
-        await interaction.response.defer()
-        # Then we send the updated Banner object to the View.
-        await self._banner_message.edit(attachments=[banner_file_handler(BC.Banner_Generator(self._amp_server, self._edited_db_banner)._image_())], view=self._banner_view)
-
-
-class Banner_Color_Input(TextInput):
-    # This is the Modal that appears when Inputing a color hexcode.
-    def __init__(self, view: Banner_Editor_View, edited_db_banner: Edited_DB_Banner, select_value: str, label: str = None, style=discord.TextStyle.short, placeholder: str = '#000000', default: str = '#ffffff', required=True, min_length=3, max_length=8):
-        label = label or i18n.t('ui.banner_color_input.label')
-        self._edited_db_banner = edited_db_banner
-        self._select_value = select_value
-        self._banner_view = view
-        super().__init__(label=label, style=style, placeholder=placeholder, default=default, required=required, min_length=min_length, max_length=max_length)
-
-    async def callback(self):
-        # Remove the Hex code for validation.
-        # Also lower the value for better comparison.
-        self._value = self.value.lower()
-        if self._value[0] == '#':
-            self._value = self._value[1:]
-
-        # Validate if Hex Color Code.
-        if len(self._value) in [3, 4, 6, 8] and re.search(f'([0-9a-f]{{{len(self._value)}}})$', self._value):
-            self._banner_view.logger.dev(f'Set attr for {self._edited_db_banner} {self._select_value} #{self._value}')
-            setattr(self._edited_db_banner, self._select_value, '#' + self._value)
-            return True
-
-        else:
-            return False
-
-
-class Banner_Blur_Input(TextInput):
-    # This is the Modal that appears when inputing the blur value.
-    def __init__(self, view: Banner_Editor_View, edited_db_banner: Edited_DB_Banner, select_value: str, label: str = None, style=discord.TextStyle.short, placeholder: str = None, default: int = 2, required=True, min_length=1, max_length=2):
-        label = label or i18n.t('ui.banner_editor.fields.blur_background')
-        placeholder = placeholder or i18n.t('ui.banner_blur_input.placeholder')
-        self._edited_db_banner = edited_db_banner
-        self._select_value = select_value
-        self._banner_view = view
-        super().__init__(label=label, style=style, placeholder=placeholder, default=default, required=required, min_length=min_length, max_length=max_length)
-
-    async def callback(self):
-        if self.value.isnumeric() and int(self.value) <= 99:
-            self._banner_view.logger.dev(f'Set attr for {self._edited_db_banner} {self._select_value} {self.value}')
-            setattr(self._edited_db_banner, self._select_value, int(self.value[0]))
-            return True
-        else:
-            return False
-
-
-class Save_Banner_Button(Button):
-    """Saves the Banners current settings to the DB."""
-
-    def __init__(self, banner_message: discord.Message, server: AMP_Handler.AMP.AMPInstance, edited_banner: Edited_DB_Banner, style=discord.ButtonStyle.green):
-        super().__init__(label=i18n.t('ui.banner_buttons.save'), style=style, custom_id='Save_Button')
-        self.logger = logging.getLogger()
-        self._amp_server = server
-        self._banner_message = banner_message
-        self._edited_db_banner = edited_banner
-
-    async def callback(self, interaction: discord.Interaction):
-        """This is called when a button is interacted with."""
-        saved_banner = self._edited_db_banner.save_db()
-        await interaction.response.defer()
-        file = banner_file_handler(BC.Banner_Generator(self._amp_server, saved_banner)._image_())
-        await self._banner_message.edit(content=i18n.t('ui.banner_buttons.saved_message'), attachments=[file], view=None)
-
-
-class Reset_Banner_Button(Button):
-    """Resets the Banners current settings to the original DB."""
-
-    def __init__(self, banner_message: discord.Message, server: AMP_Handler.AMP.AMPInstance, edited_banner: Edited_DB_Banner, style=discord.ButtonStyle.blurple):
-        super().__init__(label=i18n.t('ui.banner_buttons.reset'), style=style, custom_id='Reset_Button')
-        self.logger = logging.getLogger()
-        self._amp_server = server
-        self._banner_message = banner_message
-        self._edited_db_banner = edited_banner
-
-    async def callback(self, interaction: discord.Interaction):
-        """This is called when a button is interacted with."""
-        saved_banner = self._edited_db_banner.reset_db()
-        await interaction.response.defer()
-        file = banner_file_handler(BC.Banner_Generator(self._amp_server, saved_banner)._image_())
-        await self._banner_message.edit(content=i18n.t('ui.banner_buttons.reset_message'), attachments=[file])
-
-
-class Cancel_Banner_Button(Button):
-    """Cancels the Banner Settings View"""
-
-    def __init__(self, banner_message: discord.Message, style=discord.ButtonStyle.red):
-        super().__init__(label=i18n.t('common.button.cancel'), style=style, custom_id='Cancel_Button')
-        self.logger = logging.getLogger()
-        self._banner_message = banner_message
-
-    async def callback(self, interaction: discord.Interaction):
-        """This is called when a button is interacted with."""
-        await interaction.response.defer()
-        await self._banner_message.edit(content=i18n.t('ui.banner_buttons.cancelled_message'), attachments=[], view=None)
 
 
 class Whitelist_view(View):
@@ -430,7 +199,7 @@ class Deny_Whitelist_Button(Button):
 
 
 class LinkConfirmView(View):
-    """Generic confirmation View shown after a `/link` lookup, so the user can confirm the resolved Account is theirs.\n
+    """Generic confirmation View shown after a `/link` lookup, so the user can confirm the resolved Account is theirs.
     `apply` is called with the caller's `DB.DBUser` once they hit Confirm, and should set whichever fields on it are needed."""
 
     def __init__(self, invoker_id: int, apply: Callable[[DB.DBUser], None], confirm_message: str, timeout: float = 60):

@@ -1,24 +1,5 @@
-'''
-   Copyright (C) 2021-2022 Katelynn Cadwallader.
-
-   This file is part of Gatekeeper, the AMP Minecraft Discord Bot.
-
-   Gatekeeper is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3, or (at your option)
-   any later version.
-
-   Gatekeeper is distributed in the hope that it will be useful, but WITHOUT
-   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-   License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with Gatekeeper; see the file COPYING.  If not, write to the Free
-   Software Foundation, 51 Franklin Street - Fifth Floor, Boston, MA
-   02110-1301, USA. 
-
-'''
+# Copyright (C) 2021-2022 Katelynn Cadwallader
+# SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 import os
 import logging
@@ -31,13 +12,13 @@ from discord import app_commands
 from discord.app_commands import Choice
 from numpy import isin
 
-import AMP_Handler
-import DB
-import utils
-import utils_ui
-import utils_embeds
+from core import AMP_Handler
+from core import DB
+from core import utils
+from core import utils_ui
+from core import utils_embeds
 import modules.banner_creator as BC
-import i18n
+from core import i18n
 
 # This is used to force cog order to prevent missing methods.
 Dependencies = None

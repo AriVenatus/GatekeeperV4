@@ -84,7 +84,7 @@ ___
 ___
 ### Discord Console Channel Permissions:
 - For a user to interact/send console commands via the Discord Console Channel. They need `server.console.interact`
-    - See [Commands-Interacting via Discord Channels](/COMMANDS.md#interacting-with-your-server-via-discord-channels)
+    - See [Commands-Interacting via Discord Channels](/docs/COMMANDS.md#interacting-with-your-server-via-discord-channels)
 ___
 #### **Full Permission Node List**
 - This list may be missing permissions. You have been warned, check your logger for permission nodes.

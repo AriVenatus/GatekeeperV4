@@ -5,14 +5,14 @@ from discord import ButtonStyle, Interaction, Message
 from discord.ui import Button
 from typing import TYPE_CHECKING
 
-from utils_ui import banner_file_handler
+from core.utils_ui import banner_file_handler
 from modules import banner_creator as BC
 
 from utils_dev.banner_editor.ui.modal import Copy_To_Modal
 from utils_dev.banner_editor.edited_banner import Edited_DB_Banner
-from AMP import AMPInstance
-from AMP_Handler import AMPHandler
-import i18n
+from core.AMP import AMPInstance
+from core.AMP_Handler import AMPHandler
+from core import i18n
 
 
 class Copy_To_Banner_Button(Button):

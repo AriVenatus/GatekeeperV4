@@ -1,23 +1,5 @@
-"""
-Copyright (C) 2021-2022 Katelynn Cadwallader.
-
-This file is part of Gatekeeper, the AMP Minecraft Discord Bot.
-
-Gatekeeper is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
-
-Gatekeeper is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-License for more details.
-
-You should have received a copy of the GNU General Public License
-along with Gatekeeper; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street - Fifth Floor, Boston, MA
-02110-1301, USA.
-"""
+# Copyright (C) 2021-2022 Katelynn Cadwallader
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 from __future__ import annotations
 
@@ -29,12 +11,12 @@ import traceback
 from datetime import UTC, datetime, timezone
 from typing import TYPE_CHECKING, TypedDict
 
-import DB
+from core import DB
 
 if TYPE_CHECKING:
-    from AMP import AMPInstance
-    from AMP_Handler import AMPHandler
-    from DB import DBServer
+    from core.AMP import AMPInstance
+    from core.AMP_Handler import AMPHandler
+    from core.DB import DBServer
 
 
 class ConsoleEntry(TypedDict):
@@ -155,23 +137,14 @@ class AMPConsole:
                     f"Name: {self.AMPInstance.FriendlyName} | DisplayImageSource: {self.AMPInstance.DisplayImageSource} | Console Channel: {self.AMPInstance.Discord_Console_Channel}\n Console Entry: {entry}"
                 )
                 # This will add the Servers Discord_Chat_Prefix to the beginning of any of the messages.
-                # Its done down here to prevent breaking of any existing filtering.
-                # TODO - Unsure what I was using this for. Removing the logic at this time.
-                # if self.DB_Server is not None and self.DB_Server.Discord_Chat_Prefix != None:
-                #     entry["Prefix"] = self.DB_Server.Discord_Chat_Prefix
-
-                # This should handle server events(such as join/leave/disconnects)
-                # if self.console_events(entry):
-                # continue
-
                 # This will vary depending on the server type.
                 # I don't want to filter out the chat message here though. Just send it to two different places!
                 if self.console_chat(entry):
                     continue
 
                 # This will filter any messages such as errors or mods loading, etc..
-                # if self.console_filter(entry):
-                #    continue
+                if self.console_filter(entry):
+                    continue
 
                 if len(entry["Contents"]) > 1500:
                     index_hunt = entry["Contents"].find(";")
@@ -217,7 +190,7 @@ class AMPConsole:
         self.logger.warning(f"{self.AMPInstance.FriendlyName} Thread Loop is Ending")
 
     def console_filter(self, message: ConsoleEntry) -> bool:
-        """Controls what will be sent to the Discord Console Channel via AMP Console. \n
+        """Controls what will be sent to the Discord Console Channel via AMP Console.
         Return `True` to Continue, `False` to Return Message"""
         self.logger.dev(
             f"Console Filtered: {bool(self.AMPInstance.Console_Filtered)} | Console Filtered Type: {self.AMPInstance.Console_Filtered_Type}"
@@ -260,7 +233,7 @@ class AMPConsole:
         return False
 
     def console_chat(self, message: ConsoleEntry) -> None | bool:
-        """This will handle all player chat messages from AMP to Discord.\n
+        """This will handle all player chat messages from AMP to Discord.
         Format's Server Chat Messages for better readability to the Console"""
         # {'Timestamp': '/Date(1657587898574)/', 'Source': 'IceOfWraith', 'Type': 'Chat', 'Contents': 'This is a local message','Prefix': 'Discord_Chat_Prefix}
         # Currently all servers set "Type" to Chat! So lets use those.
@@ -285,8 +258,3 @@ class AMPConsole:
             self.console_message_lock.release()
             return True
         return False
-
-    # def console_events(self, message):
-    #     """This will handle all player join/leave/disconnects and other achievements. THIS SHOULD ALWAYS RETURN FALSE!
-    #     ALL events go to `self.console_event_messages` """
-    #     return False

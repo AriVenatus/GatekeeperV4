@@ -1,24 +1,5 @@
-"""
-Copyright (C) 2021-2022 Katelynn Cadwallader.
-
-This file is part of Gatekeeper, the AMP Minecraft Discord Bot.
-
-Gatekeeper is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3, or (at your option)
-any later version.
-
-Gatekeeper is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-License for more details.
-
-You should have received a copy of the GNU General Public License
-along with Gatekeeper; see the file COPYING.  If not, write to the Free
-Software Foundation, 51 Franklin Street - Fifth Floor, Boston, MA
-02110-1301, USA.
-
-"""
+# Copyright (C) 2021-2022 Katelynn Cadwallader
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 from __future__ import annotations
 
@@ -30,7 +11,7 @@ import sqlite3
 import time
 from typing import Union
 
-from DB_Update import DB_Update
+from core.DB_Update import DB_Update
 
 
 def dump_to_json(data):
@@ -60,7 +41,6 @@ class DBHandler:
         # Always update this value when changing Tables!
         self.DB_Version = DB_Version
 
-        # self.DBConfig.SetSetting('DB_Version', 2.5)
         # This should ONLY BE TRUE on new Database's going forward.
         if self.DBConfig.GetSetting("DB_Version") == None and self.DB.DBExists:
             DB_Update(self.DB, 1.0)
@@ -127,7 +107,6 @@ class Database:
         self._db.row_factory = sqlite3.Row
         if not self.DBExists:
             self._InitializeDatabase()
-            # self._InitializeDefaultData()
         self.DBConfig = self.GetConfig()
 
     def _InitializeDatabase(self):
@@ -258,14 +237,11 @@ class Database:
         self._AddConfig("Guild_ID", None)
         self._AddConfig("Moderator_role_id", None)
         self._AddConfig("Permissions", 0)  # 0 = Default | 1 = Custom
-        # self._AddConfig('Server_Info_Display', None)
         self._AddConfig("Whitelist_Request_Channel", None)
         self._AddConfig("WhiteList_Wait_Time", 5)
         self._AddConfig("Auto_Whitelist", False)
         self._AddConfig("Whitelist_Role_Sync", False)
         self._AddConfig("Whitelist_Role_Sync_Interval", 15)
-        # self._AddConfig('Whitelist_Emoji_Pending', ':arrows_counterclockwise:')
-        # self._AddConfig('Whitelist_Emoji_Done', ':ballot_box_with_check:')
         self._AddConfig("Banner_Auto_Update", True)
         self._AddConfig("Banner_Type", 0)  # 0 = Discord embeds | 1 = Custom Banner Images
         self._AddConfig("Bot_Version", None)
@@ -457,7 +433,7 @@ class Database:
         return True
 
     def GetRegexPattern(self, ID: int = None, Name: str = None):
-        """Returns RegexPatterns Table \n
+        """Returns RegexPatterns Table
         Returns `row['ID'] = {'Name': row['Name'], 'Type': row['Type'], 'Pattern': row['Pattern']}`
         """
         (row, cur) = self._fetchone("SELECT ID, Name, Type, Pattern FROM RegexPatterns WHERE Name=? or ID=?", (Name, ID))
@@ -521,7 +497,7 @@ class Database:
         return ret
 
     def GetAllRegexPatterns(self):
-        """Gets all Regex Patterns from the RegexPatterns Table. \n
+        """Gets all Regex Patterns from the RegexPatterns Table.
         Returns `dict[entry['ID']] = {'Name': entry['Name'], 'Type': entry['Type'], 'Pattern': entry['Pattern']}`"""
         regex_patterns = {}
         SQLArgs = []
@@ -586,7 +562,7 @@ class Database:
         return
 
     def Get_one_BannerGroup_info(self, name: str) -> Union[None, dict[str, int]]:
-        """Gets a Specific Banner Groups full information\n
+        """Gets a Specific Banner Groups full information
         return `Banner_info[entry['name']] = {'InstanceName': list[entry['InstanceName']], 'Discord_Channel': list[entry['Discord_Channel_ID']]}`"""
         banner_id = self.Get_BannerGroup(name)
         Banner_info = {}
@@ -621,7 +597,7 @@ class Database:
         return Banner_info
 
     def Get_All_BannerGroups(self) -> Union[None, dict[str, str]]:
-        """Gets all BannerGroups Names/IDs\n
+        """Gets all BannerGroups Names/IDs
         returns `Banners[entry["ID"]] = entry["name"]`"""
         Banners = {}
         (row, cur) = self._fetchall("SELECT * FROM BannerGroup", ())
@@ -648,7 +624,7 @@ class Database:
             cur.close()
 
     def Get_All_BannerGroup_Info(self) -> Union[None, dict[str, int]]:
-        """Gets all the BannerGroups and sorts them by `Discord_Channel_ID`.\n
+        """Gets all the BannerGroups and sorts them by `Discord_Channel_ID`.
         `example: {916195413839712277: {'name': 'TestBannerGroup', 'guild_id': 602285328320954378, 'servers': [1], 'messages': [1079236992145051668]}}`"""
         Banners = {}
         # We need to get each BannerGroupID and then get the corresponding Discord_Message_IDs, ServerIDs and Name from related tables.
@@ -993,7 +969,6 @@ class DBUser:
                 raise Exception(f"Unable to locate User ID {ID}")
             cur.close()
             super().__setattr__("ID", int(self.ID))
-            # super().__setattr__("DiscordID", int(self.DiscordID))
         else:
             # we should have a discord id
             if not DiscordID or DiscordID == 0:
@@ -1046,25 +1021,25 @@ class DBUser:
 
 class DBServer:
     """DB Server Attributes:
-    `InstanceID: str` \n
-    `InstanceName: str` \n
-    `FriendlyName: str` \n
-    `DisplayName: str` \n
-    `Description: str` \n
-    `Host: str` \n
-    `Whitelist: bool (0/1)` \n
-    `Whitelist_disabled: bool` \n
-    `Donator: bool (0/1)` \n
-    `Discord_Console_Channel: int` \n
-    `Discord_Chat_Channel: int` \n
-    `Discord_Chat_Prefix: str` \n
-    `Discord_Event_Channel: int` \n
-    `Discord_Role: int` \n
-    `Console_Flag: bool (0/1)` \n
-    `Console_Filtered: bool (0/1)` \n
-    `Console_Filtered_Type: integer (0 = Blacklist| 1 = Whitelist)` \n
-    `Avatar_url: str` \n
-    `Hidden: bool (0/1)` \n
+    `InstanceID: str`
+    `InstanceName: str`
+    `FriendlyName: str`
+    `DisplayName: str`
+    `Description: str`
+    `Host: str`
+    `Whitelist: bool (0/1)`
+    `Whitelist_disabled: bool`
+    `Donator: bool (0/1)`
+    `Discord_Console_Channel: int`
+    `Discord_Chat_Channel: int`
+    `Discord_Chat_Prefix: str`
+    `Discord_Event_Channel: int`
+    `Discord_Role: int`
+    `Console_Flag: bool (0/1)`
+    `Console_Filtered: bool (0/1)`
+    `Console_Filtered_Type: integer (0 = Blacklist| 1 = Whitelist)`
+    `Avatar_url: str`
+    `Hidden: bool (0/1)`
     """
 
     Discord_Chat_Prefix: str
@@ -1191,7 +1166,6 @@ class DBServer:
         self._db._UpdateServer(self, **{name: value})
 
     def delServer(self):
-        # self._db._execute("delete from ServerNicknames where ServerID=?", (self.ID,))
         self._db._execute("delete from Servers where ID=?", (self.ID,))
 
     def setDisplayName(self, DisplayName: str):
@@ -1235,7 +1209,7 @@ class DBServer:
         return True
 
     def GetServerRegexPatterns(self):
-        """Gets all Regex Patterns related to Server \n
+        """Gets all Regex Patterns related to Server
         Returns `dict['ID': {'Name': entry['Name'], 'Type': entry['Type'], 'Pattern': entry['Pattern']}]`"""
         regex_patterns = {}
         SQLArgs = []
@@ -1306,7 +1280,6 @@ class DBConfig:
 
         return val
 
-    # list(self._ConfigNameToID.keys())
     def GetSettingList(self) -> list[str]:
         settings = list(self._ConfigNameToID.keys())
         return settings

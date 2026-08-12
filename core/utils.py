@@ -1,24 +1,5 @@
-'''
-   Copyright (C) 2021-2022 Katelynn Cadwallader.
-
-   This file is part of Gatekeeper, the AMP Minecraft Discord Bot.
-
-   Gatekeeper is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3, or (at your option)
-   any later version.
-
-   Gatekeeper is distributed in the hope that it will be useful, but WITHOUT
-   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-   License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with Gatekeeper; see the file COPYING.  If not, write to the Free
-   Software Foundation, 51 Franklin Street - Fifth Floor, Boston, MA
-   02110-1301, USA. 
-
-'''
+# Copyright (C) 2021-2022 Katelynn Cadwallader
+# SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 from datetime import datetime
 import logging
@@ -35,9 +16,9 @@ from discord import app_commands
 from discord.ext import commands
 import asyncio
 
-import DB
-import AMP_Handler
-import i18n
+from core import DB
+from core import AMP_Handler
+from core import i18n
 
 # GLOBAL VARS# DO NOT EDIT THESE! ONLY READ THEM
 __AMP_Handler = AMP_Handler.getAMPHandler()
@@ -126,17 +107,6 @@ def role_check():
     return commands.check(async_rolecheck)
 
 
-def author_check(user_id: int = None):
-    """Checks if User ID matchs Context User ID"""
-    async def predicate(context: commands.Context):
-        if context.author.id == user_id:
-            return True
-        else:
-            await context.send(i18n.t('common.no_permission'), ephemeral=True)
-            return False
-    return commands.check(predicate)
-
-
 def guild_check(guild_id: int = None):
     """Use this before any commands to limit it to a certain guild usage."""
     async def predicate(context: commands.Context):
@@ -170,25 +140,19 @@ class discordBot():
         self.botLogger.debug(f'Utils Discord Loaded')
 
     async def userAddRole(self, user: discord.Member, role: discord.Role, reason: str = None):
-        """Adds a Role to a User.\n
-        Requires a `<user`> and `<role>` discord object.\n
-        Supports `reason`(Optional)"""
+        """Adds `role` to `user`."""
 
         self.botLogger.dev('Add Users Discord Role Called...')
         await user.add_roles(role, reason)
 
     async def userRemoveRole(self, user: discord.Member, role: discord.Role, reason: str = None):
-        """Removes a Role from the User.\n
-        Requires a `<user>` and `<role>` discord object.\n
-        Supports `reason`(Optional)"""
+        """Removes `role` from `user`."""
 
         self.botLogger.dev('Remove Users Discord Role Called...')
         await user.remove_roles(role, reason)
 
     async def delMessage(self, message: discord.Message, delay: float = None):
-        """Deletes the message.\n
-        Your own messages could be deleted without any proper permissions. However to delete other people's messages, you need the `manage_messages` permission.\n
-        Supports `delay[float]`(Optional)"""
+        """Deletes `message`. Deleting another user's message requires the `manage_messages` permission."""
 
         self.botLogger.dev('Delete Discord Message Called...')
         await message.delete(delay=delay)
@@ -201,28 +165,19 @@ class discordBot():
         return messages
 
     async def editMessage(self, message: discord.Message, content: str = None, embed: discord.Embed = None, embeds: list[discord.Embed] = None, delete_after: float = None):
-        """Edits the message.\n
-        The content must be able to be transformed into a string via `str(content)`.\n
-        Supports `delete_after[float]`(Optional)"""
+        """Edits `message`; `content` must be convertible to `str`."""
 
         self.botLogger.dev('Edit Discord Message Called...')
         await message.edit(content=content, embed=embed, embeds=embeds, delete_after=delete_after)
 
     async def sendMessage(self, parameter: object, content: str, *, tts: bool = False, embed=None, file: discord.file = None, files: list = None, delete_after: float = None, nonce=None, allowed_mentions=None, reference: object = None):
-        # content=None, *, tts=False, embed=None, file=None, files=None, delete_after=None, nonce=None, allowed_mentions=None, reference=None, mention_author=None
-        """Sends a message to the destination with the content given.\n
-        The content must be a type that can convert to a string through `str(content)`. If the content is set to `None` (the default), then the embed parameter must be provided.\n
-        To upload a single file, the `file` parameter should be used with a single File object. To upload multiple files, the `files` parameter should be used with a `list` of `File` objects. Specifying both parameters will lead to an exception.\n
-        `NOTE:` Using `file` - await channel.send(file=discord.File('my_file.png')) or 
-            with open('my_file.png', 'rb') as fp:
-                await channel.send(file=discord.File(fp, 'new_filename.png')) 
-        `NOTE:` Using `files` - my_files = [discord.File('result.zip'), discord.File('teaser_graph.png')] await channel.send(files=my_files)"""
+        """Sends `content` to `parameter`. Only one of `file`/`files` may be given, not both."""
 
         self.botLogger.dev('Member Send Message Called...')
         await parameter.send(content, tts=tts, embed=embed, file=file, files=files, delete_after=delete_after, nonce=nonce, allowed_mentions=allowed_mentions, reference=reference)
 
     async def messageAddReaction(self, message: discord.Message, reaction_id: str):
-        """The name and ID of a custom emoji can be found with the client by prefixing ':custom_emoji:' with a backslash. \n
+        """The name and ID of a custom emoji can be found with the client by prefixing ':custom_emoji:' with a backslash.
             For example, sending the message ':python3:' with the client will result in '<:python3:232720527448342530>'.
             `NOTE` Can only use Emoji's the bot has access too"""
 
@@ -261,27 +216,20 @@ class botUtils():
         return parameter.lower() == 'true'
 
     def message_formatter(self, message: str):
-        """Formats the message for Discord \n
-        `Bold = \\x01, \\x02` \n
-        `Italic = \\x03, \\x04` \n
+        """Formats the message for Discord
+        `Bold = \\x01, \\x02`
+        `Italic = \\x03, \\x04`
         `Underline = \\x05, \\x06` \n"""
-        # Bold
         message = message.replace('\x01', '**')
         message = message.replace('\x02', '**')
-        # Italic
         message = message.replace('\x03', '*')
         message = message.replace('\x04', '*')
-        # Underline
         message = message.replace('\x05', '__')
         message = message.replace('\x06', '__')
         return message
 
     def whitelist_reply_handler(self, message: str, context: commands.Context, server: AMP_Handler.AMP.AMPInstance = None) -> str:
-        """Handles the reply message for the whitelist event\n
-        Supports the following: \n
-        `<user>` - Uses the Message Author's Name/IGN \n
-        `<server>` - Uses the AMP Server Name \n 
-        `<guild>` - Uses the Guild Name \n"""
+        """Fills whitelist reply placeholders: `<user>`, `<server>`, `<guild>`."""
 
         if message.find('<user>') != -1:
             message = message.replace('<user>', context.author.name)
@@ -295,7 +243,7 @@ class botUtils():
         return message
 
     async def validate_avatar(self, db_server: AMP_Handler.AMP.AMPInstance) -> Union[str, None]:
-        """This checks the DB Server objects Avatar_url and returns the proper object type. \n
+        """This checks the DB Server objects Avatar_url and returns the proper object type.
         Must be either `webp`, `jpeg`, `jpg`, `png`, or `gif` if it's animated."""
         if db_server.Avatar_url == None:
             return None
@@ -318,7 +266,7 @@ class botUtils():
             return None
 
     def name_to_uuid_MC(self, name) -> Union[None, str]:
-        """Converts an IGN to a UUID/Name Table \n
+        """Converts an IGN to a UUID/Name Table
         `returns 'uuid'` else returns `None`, multiple results return `None`"""
         url = 'https://api.mojang.com/profiles/minecraft'
         header = {'Content-Type': 'application/json'}
@@ -336,7 +284,7 @@ class botUtils():
             return minecraft_user[0]['id']  # returns [{'id': 'uuid', 'name': 'name'}]
 
     def get_minecraft_profile(self, username: str) -> Union[dict, None]:
-        """Resolves a Minecraft in-game name into profile info via the official Mojang API. \n
+        """Resolves a Minecraft in-game name into profile info via the official Mojang API.
         Returns `{'name': str, 'uuid': str, 'avatar': str}` (`uuid` is undashed, matching `DBUser.MC_UUID`) or `None` if not found/failed."""
         try:
             req = requests.get(f'https://api.mojang.com/users/profiles/minecraft/{username}', timeout=10)
@@ -376,11 +324,11 @@ class botUtils():
         return steam_id
 
     def steam_api_key_configured(self) -> bool:
-        """Returns `True` if a Steam Web API Key has been set in tokens.py"""
+        """Returns `True` if a Steam Web API Key has been set via GATEKEEPER_STEAM_API_KEY"""
         return bool(getattr(self.AMPHandler.tokens, 'SteamAPIKey', ''))
 
     def parse_steam_input(self, steam_input: str) -> tuple[str, bool]:
-        """Parses a raw SteamID64, a full profile URL (`/profiles/<id>` or `/id/<vanity>`), or a bare vanity name. \n
+        """Parses a raw SteamID64, a full profile URL (`/profiles/<id>` or `/id/<vanity>`), or a bare vanity name.
         Returns `(value, is_steamid64)`"""
         steam_input = steam_input.strip()
 
@@ -397,8 +345,8 @@ class botUtils():
         return steam_input, False
 
     def get_steam_profile(self, steam_input: str) -> Union[dict, None]:
-        """Resolves a SteamID64, profile URL, or vanity name into Steam profile info via the Steam Web API. \n
-        Requires `tokens.SteamAPIKey` to be set. \n
+        """Resolves a SteamID64, profile URL, or vanity name into Steam profile info via the Steam Web API.
+        Requires `tokens.SteamAPIKey` to be set.
         Returns `{'steamid': str, 'personaname': str, 'avatar': str, 'profileurl': str}` or `None` if not found/unconfigured/failed."""
         api_key = getattr(self.AMPHandler.tokens, 'SteamAPIKey', '')
         if not api_key:
@@ -433,9 +381,9 @@ class botUtils():
         return {'steamid': player.get('steamid'), 'personaname': player.get('personaname'), 'avatar': player.get('avatarfull'), 'profileurl': player.get('profileurl')}
 
     def role_parse(self, parameter: str, context: commands.Context, guild_id: int) -> Union[discord.Role, None]:
-        """This is the bot utils Role Parse Function\n
-        It handles finding the specificed Discord `<role>` in multiple different formats.\n
-        They can contain single quotes, double quotes and underscores. (" ",' ',_)\n
+        """This is the bot utils Role Parse Function
+        It handles finding the specificed Discord `<role>` in multiple different formats.
+        They can contain single quotes, double quotes and underscores. (" ",' ',_)
         returns `<role>` object if True, else returns `None`
         **Note** Use context.guild.id"""
         self.logger.dev('Role Parse Called...')
@@ -470,8 +418,8 @@ class botUtils():
             return None
 
     def channel_parse(self, parameter: Union[str, int], context: commands.Context = None, guild_id: int = None) -> Union[discord.TextChannel, None]:
-        """This is the bot utils Channel Parse Function\n
-        It handles finding the specificed Discord `<channel>` in multiple different formats, either numeric or alphanumeric.\n
+        """This is the bot utils Channel Parse Function
+        It handles finding the specificed Discord `<channel>` in multiple different formats, either numeric or alphanumeric.
         returns `<channel>` object if True, else returns `None`
         **Note** Use context.guild.id"""
         self.logger.dev('Channel Parse Called...')
@@ -502,9 +450,9 @@ class botUtils():
                 return None
 
     def user_parse(self, parameter: str, context: commands.Context = None, guild_id: int = None) -> Union[discord.Member, None]:
-        """This is the bot utils User Parse Function\n
-        It handles finding the specificed Discord `<user>` in multiple different formats, either numeric or alphanumeric.\n
-        It also supports '@', '#0000' and partial display name searching for user indentification (eg. k8thekat#1357)\n
+        """This is the bot utils User Parse Function
+        It handles finding the specificed Discord `<user>` in multiple different formats, either numeric or alphanumeric.
+        It also supports '@', '#0000' and partial display name searching for user indentification (eg. k8thekat#1357)
         returns `<user>` object if True, else returns `None`
         **Note** Use context.guild.id"""
         self.logger.dev('User Parse Called...')
@@ -556,7 +504,7 @@ class botUtils():
 
     def serverparse(self, instanceID=str, context: commands.Context = None, guild_id: int = None) -> Union[AMP_Handler.AMP.AMPInstance, None]:
         """This is the botUtils Server Parse function.
-        **Note** Use context.guild.id \n
+        **Note** Use context.guild.id
         Returns `AMPInstance[server] <object>`"""
         self.logger.dev('Bot Utility Server Parse')
         cur_server = None

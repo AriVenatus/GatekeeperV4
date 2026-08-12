@@ -1,3 +1,5 @@
+# Copyright (C) 2021-2022 Katelynn Cadwallader
+# SPDX-License-Identifier: GPL-3.0-or-later
 # AMP API
 # by k8thekat // Lightning
 # 11/10/2021
@@ -9,64 +11,25 @@ import sys
 import threading
 import time
 import traceback
-from typing import TYPE_CHECKING, Literal, Union
+from typing import TYPE_CHECKING, Union
 
 import pyotp  # 2Factor Authentication Python Module
 
-import AMP_Console
-import DB
+from core import AMP_Console
+from core import DB
 
 if TYPE_CHECKING:
-    from AMP_Handler import AMPHandler
+    from core.AMP_Handler import AMPHandler
 
 
 class AMPInstance:
-    """AMP Base Class: \n
-    Attributes: \n
-    `AMP2Factor `\n
-    `AMPheader `\n
-    `AppState `\n
-    `ApplicationEndpoints `\n
-    `CallAPI `\n
-    `Console - AMPConsole Object `\n
-    `ConsoleMessage `\n
-    `ConsoleUpdate #returns a list `\n
-    `ContainerCPUs `\n
-    `ContainerMemoryMB `\n
-    `ContainerMemoryPolicy `\n
-    `Daemon `\n
-    `DaemonAutostart `\n
-    `DisplayImageSource `\n
-    `ExcludeFromFirewall `\n
-    `FriendlyName : What is displayed in AMP Panel `\n
-    `IP `\n
-    `InstalledVersion `\n
-    `InstanceID `\n
-    `InstanceName : What the instance was named when it was created! `\n
-    `IsContainerInstance `\n
-    `IsHTTPS `\n
-    `IsTemplateInstance `\n
-    `KillInstance `\n
-    `Login `\n
-    `ManagementMode `\n
-    `Metrics `\n
-    `Module `\n
-    `Port `\n
-    `ReleaseStream `\n
-    `RestartInstance `\n
-    `Running : This is the Instance Status `\n
-    `ADS_Running : This is the Dedicated Server `\n
-    `SessionID `\n
-    `StartInstance `\n
-    `StopInstance `\n
-    `Suspended `\n
-    `TargetID `\n
-    `addTask `\n
-    `getInstances : # returns list `\n
-    `getSchedule : #returns a dict `\n
-    `getStatus : #returns TPS,PlayerCount,Uptime `\n
-    `serverdata `\n
-    `url `\n
+    """AMP Base Class -- one instance per AMP-managed server (or the main install when `InstanceID == 0`).
+
+    A few non-obvious attributes: `FriendlyName` is the display name shown in the AMP panel;
+    `InstanceName` is fixed at instance creation and never changes; `Running` reports the
+    Instance status while `ADS_Running` separately reports the Dedicated Server status;
+    `Console` holds the associated `AMPConsole` object; `getInstances()` returns a list,
+    `getSchedule()` a dict, and `getStatus()` returns TPS/PlayerCount/Uptime.
     """
 
     AMP2Factor: str
@@ -103,15 +66,12 @@ class AMPInstance:
         self.logger = logging.getLogger()
 
         self.AMPHandler = Handler
-        # if self.AMPHandler == None:
-        #     self.AMPHandler = AMP_Handler.getAMPHandler()
 
         self.DBHandler = DB.getDBHandler()
         self.DB = self.DBHandler.DB
         self.DBConfig = self.DB.DBConfig
 
         self.SessionID = 0
-        # self.Index = Index
         self.serverdata = serverdata
         self.serverlist = {}
 
@@ -132,7 +92,7 @@ class AMPInstance:
         self.url = self.AMPHandler.tokens.AMPurl + "/API/"  # base url for AMP console /API/
 
         if hasattr(self, "perms") == False:
-            import amp_permissions as AMPPerms
+            from core import amp_permissions as AMPPerms
 
             if self.AMPHandler.args.whitelist_only:
                 self.perms = AMPPerms.perms_whitelist_only()
@@ -150,7 +110,7 @@ class AMPInstance:
 
             except AttributeError:
                 self.logger.critical(
-                    "**ERROR** Please check your 2 Factor Set-up Code in tokens.py, should not contain spaces,escape characters and enclosed in quotes!"
+                    "**ERROR** Please check your 2 Factor Set-up Code (GATEKEEPER_AMP_AUTH), it should not contain spaces or escape characters!"
                 )
                 self.AMP2Factor = None
                 return
@@ -170,7 +130,6 @@ class AMPInstance:
             self.Console = AMP_Console.AMPConsole(self)
 
         if instanceID != 0:
-            # This gets all the dictionary values tied to AMP and makes them attributes of self.
             for entry in serverdata:
                 setattr(self, entry, serverdata[entry])
 
@@ -297,8 +256,7 @@ class AMPInstance:
     def setup_Gatekeeper_Permissions(self):
         """Sets the Permissions Nodes for AMP Gatekeeper Role"""
         self.logger.info("Setting AMP Role Permissions for `Gatekeeper`...")
-        # import AMP_Permissions as AMPPerms
-        import amp_permissions as AMPPerms
+        from core import amp_permissions as AMPPerms
 
         core = AMPPerms.perms_super()
         for perm in core:
@@ -312,7 +270,7 @@ class AMPInstance:
                 )
 
     def check_GatekeeperRole_Permissions(self) -> bool:
-        """- Will check `Gatekeeper Role` for `Permission Nodes` when we have `Super Admin` and `not InstanceID = 0`.\n
+        """- Will check `Gatekeeper Role` for `Permission Nodes` when we have `Super Admin` and `not InstanceID = 0`.
         - Checks for `Gatekeeper Role`, if we `have the Gatekeeper Role` and `Super Admin Role`
         Returns `True` if we have permissions. Otherwise `False`"""
         # If we have Super Admin; lets check for the Bot Role and if we are not on the Main Instance.
@@ -345,19 +303,16 @@ class AMPInstance:
 
         # `Gatekeeper Role inside of AMP`
         if self.AMP_BotRoleID != None:
-            # self.logger.dev('Gatekeeper Role Exists..')
             self._AMP_botRole_exists = True
 
         my_roles = self.AMP_userinfo.get("Roles", [])
 
         # Gatekeeper has `Gatekeeper` Role inside of AMP
         if self._AMP_botRole_exists and self.AMP_BotRoleID in my_roles:
-            # self.logger.dev('Gatekeeper User has Gatekepeer Role.')
             self._have_AMP_botRole = True
 
         # `Super_Admin Role inside of AMP`
         if self.super_AdminID in my_roles:
-            # self.logger.dev('Gatekeeper User has Super Admins')
             self._have_superAdmin = True
 
         if self._AMP_botRole_exists:
@@ -377,7 +332,6 @@ class AMPInstance:
                     continue
 
                 if perm not in role_perms:
-                    # if perm not in role_perms['result']:
                     if self._have_superAdmin:
                         self.logger.dev(
                             "We have `Super Admins` Role and we are missing Permissions, returning to setup Permissions."
@@ -402,7 +356,7 @@ class AMPInstance:
             return False
 
     def check_SessionPermissions(self) -> bool:
-        """These check AMP for the proper Permission Nodes.\n
+        """These check AMP for the proper Permission Nodes.
         Returns `True` only if I have ALL the Required Permissions; Otherwise `False`."""
         self.logger.warning(f"Checking Session: {self.SessionID} for proper permissions...")
         failed = False
@@ -568,21 +522,12 @@ class AMPInstance:
         # {"result": Int or Bool} or dict[str, int] -> Int or Bool
 
         self.logger.debug(f"Post Request Prints: {res}")
-        # Permission errors will trigger this, unsure what else.
-        # print("API CALL---->", APICall, type(res), res)
         if isinstance(res, dict) and "result" in res:
-            # if "result" in res:
-            # This was one of the API calls that failed.
-            # if APICall == "Core/GetAMPUserInfo":
-            #     print(res["result"])
-
             # This one was to deal with "Core/Login" as it has a dict key value called "result" that has a int value. (near the end of the res)
             if type(res["result"]) == int:
-                # print("Found an int in keyed ['result']")
                 return res
 
             elif type(res["result"]) == bool:
-                # print("Found a bool in keyed ['result']")
                 if res["result"] == True:
                     return res
 
@@ -649,7 +594,6 @@ class AMPInstance:
                     for amp_instance in self.AMPHandler.AMP_Instances:
                         # This should be the <AMP Instance Object> comparing to the Instance Objects we got from `getInstances()`
                         if self.AMPHandler.AMP_Instances[amp_instance].InstanceID == instance["InstanceID"]:
-                            # This gets all the dictionary values tied to AMP and makes them attributes of self.
                             for entry in instance:
                                 setattr(self.AMPHandler.AMP_Instances[amp_instance], entry, instance[entry])
                             break
@@ -690,7 +634,7 @@ class AMPInstance:
         return result
 
     def ConsoleUpdate(self) -> dict:
-        """Returns `{'ConsoleEntries':[{'Contents': 'String','Source': 'Server thread/INFO','Timestamp': '/Date(1651703130702)/','Type': 'Console'}]`\n
+        """Returns `{'ConsoleEntries':[{'Contents': 'String','Source': 'Server thread/INFO','Timestamp': '/Date(1651703130702)/','Type': 'Console'}]`
         Will post all updates from previous API call of console update"""
         self.Login()
         parameters = {}
@@ -757,13 +701,7 @@ class AMPInstance:
         return result
 
     def getMetrics(self) -> tuple:
-        """Returns AMP Instance Metrics \n
-        `Uptime str` \n
-        `TPS str`  \n
-        `Users tuple(str,str)` \n
-        `Memory tuple(str, str)` \n
-        `CPU str` \n
-        """
+        """Returns `(TPS: str, Users: tuple(str, str), CPU: str, Memory: tuple(str, str), Uptime: str)`."""
         Uptime = ""
         TPS = ""
         Users = ("None", "None")
@@ -787,8 +725,8 @@ class AMPInstance:
         return TPS, Users, CPU, Memory, Uptime
 
     def getLiveStatus(self) -> bool:
-        """Server is Online and Proper AMP Permissions. \n
-        So we check TPS/State to make sure the Dedicated Server is actually 'live'. \n
+        """Server is Online and Proper AMP Permissions.
+        So we check TPS/State to make sure the Dedicated Server is actually 'live'.
         `Returns False` when 0 TPS"""
         result = self.getStatus()
         if result == False:
@@ -804,7 +742,7 @@ class AMPInstance:
             return False
 
     def getUsersOnline(self) -> tuple[str, str]:
-        """Returns Number of Online Players over Player Limit. \n
+        """Returns Number of Online Players over Player Limit.
         `eg 2/10`"""
         result = self.getStatus()
         if result == False:
@@ -845,7 +783,7 @@ class AMPInstance:
         return result["PopulatedTriggers"]
 
     def setFriendlyName(self, name: str, description: str) -> str:
-        """This is used to change an Instance's Friendly Name and or Description. Retains all previous settings. \n
+        """This is used to change an Instance's Friendly Name and or Description. Retains all previous settings.
         `This requires the instance to be Offline!`"""
         self.Login()
         parameters = {

@@ -17,7 +17,7 @@ Well Gatekeeper currently has two formats, `Discord Embeds` or `Custom Banner Im
 
 ## **Editing your Server Banner/Embed**
 ___
-Most of the settings will be handles via [Server Setting Commands](/COMMANDS.md#amp-server-settings-commands); these usually include your `Host`, `Whitelist` and `Donator`.  
+Most of the settings will be handles via [Server Setting Commands](/docs/COMMANDS.md#amp-server-settings-commands); these usually include your `Host`, `Whitelist` and `Donator`.  
 - **TIP**: `Description` is using your AMP Instance Description. [What is this?](/resources/wiki/banner/banner_description_location.png)
 
 ### Using the Custom Banner Image Editor:  
@@ -61,7 +61,7 @@ Most of the settings will be handles via [Server Setting Commands](/COMMANDS.md#
 ___
 Cool you have probably figured out how to edit your banners and make them look how you want; but you still cant see them anywhere yet. Let's start!
 
-Full list of commands -> [Banner Group commands](/COMMANDS.md#bot-bannergroup-commands)
+Full list of commands -> [Banner Group commands](/docs/COMMANDS.md#bot-bannergroup-commands)
 
 1. First we need to create a `Banner Group` use `/bot bannergroup create_group` and enter a group name *(eg. Minecraft)*
     - The name you enter is for identifcation purposes only. Autocomplete will prompt all group names.

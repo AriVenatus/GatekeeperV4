@@ -1,23 +1,5 @@
-'''
-   Copyright (C) 2021-2022 Katelynn Cadwallader.
-
-   This file is part of Gatekeeper, the AMP Minecraft Discord Bot.
-
-   Gatekeeper is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3, or (at your option)
-   any later version.
-
-   Gatekeeper is distributed in the hope that it will be useful, but WITHOUT
-   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-   License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with Gatekeeper; see the file COPYING.  If not, write to the Free
-   Software Foundation, 51 Franklin Street - Fifth Floor, Boston, MA
-   02110-1301, USA. 
-'''
+# Copyright (C) 2021-2022 Katelynn Cadwallader
+# SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
 import importlib
@@ -34,8 +16,8 @@ from types import SimpleNamespace
 
 import requests
 
-import AMP
-import DB
+from core import AMP
+from core import DB
 
 # import utils
 Handler = None
@@ -173,8 +155,8 @@ class AMPHandler():
         return AMP_Instances_Names
 
     def _load_tokens_from_env(self):
-        """Secondary secrets loader: builds a tokens-like namespace from environment variables
-        (optionally loaded from a .env file via python-dotenv) when tokens.py is absent."""
+        """Builds a tokens-like namespace from environment variables (optionally loaded from a
+        .env file via python-dotenv)."""
         try:
             from dotenv import load_dotenv
             load_dotenv()  # no-op if no .env present; never overrides already-exported env vars
@@ -190,37 +172,28 @@ class AMPHandler():
             SteamAPIKey=os.getenv('GATEKEEPER_STEAM_API_KEY', ''),
         )
 
-        # token/AMPAuth/SteamAPIKey are legitimately optional per tokenstemplate.py's own comments
+        # token/AMPAuth/SteamAPIKey are legitimately optional per .env.template's own comments
         # (blank token = "testing AMP/DB only", blank AMPAuth = no 2FA, blank SteamAPIKey = feature disabled).
         required = {'AMPUser': env_tokens.AMPUser, 'AMPPassword': env_tokens.AMPPassword, 'AMPurl': env_tokens.AMPurl}
         if any(not v for v in required.values()):
-            self.logger.dev(f'Env-var token fallback incomplete, missing: {[k for k, v in required.items() if not v]}')
+            self.logger.dev(f'Env-var tokens incomplete, missing: {[k for k, v in required.items() if not v]}')
             return None
 
-        self.logger.info('Loaded AMP credentials from environment variables / .env (tokens.py not found).')
+        self.logger.info('Loaded AMP credentials from environment variables / .env.')
         return env_tokens
 
     # Checks for Errors in Config
     def val_settings(self):
-        """Validates the tokens.py settings and 2FA."""
-        self.logger.info('AMPHandler is validating your token file...')
+        """Validates the .env/environment-variable settings and 2FA."""
+        self.logger.info('AMPHandler is validating your credentials...')
         reset = False
 
-        if self.args.dev and pathlib.Path('tokens_dev.py').exists():
-            self.logger.dev('Using Dev Tokens File --')
-            import tokens_dev as tokens  # type:ignore
-
-        elif self._cwd.joinpath('tokens.py').exists():
-            import tokens
-
-        else:
-            tokens = self._load_tokens_from_env()
+        tokens = self._load_tokens_from_env()
 
         if tokens is None:
             self.logger.critical(
-                '**ERROR** Missing tokens.py (rename tokenstemplate.py or copy it) and the required '
-                'environment variables (GATEKEEPER_AMP_USER, GATEKEEPER_AMP_PASSWORD, GATEKEEPER_AMP_URL) '
-                'were not set either. See tokenstemplate.py / .env.template.'
+                '**ERROR** Missing required environment variables (GATEKEEPER_AMP_USER, '
+                'GATEKEEPER_AMP_PASSWORD, GATEKEEPER_AMP_URL). See .env.template.'
             )
             input("Press any Key to Exit")
             sys.exit(0)

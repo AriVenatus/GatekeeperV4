@@ -1,24 +1,5 @@
-'''
-   Copyright (C) 2021-2022 Katelynn Cadwallader.
-
-   This file is part of Gatekeeper, the AMP Minecraft Discord Bot.
-
-   Gatekeeper is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3, or (at your option)
-   any later version.
-
-   Gatekeeper is distributed in the hope that it will be useful, but WITHOUT
-   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-   License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with Gatekeeper; see the file COPYING.  If not, write to the Free
-   Software Foundation, 51 Franklin Street - Fifth Floor, Boston, MA
-   02110-1301, USA. 
-
-'''
+# Copyright (C) 2021-2022 Katelynn Cadwallader
+# SPDX-License-Identifier: GPL-3.0-or-later
 import os
 import logging
 import pathlib
@@ -29,7 +10,7 @@ import traceback
 import discord
 
 #custom scripts
-import AMP_Handler
+from core import AMP_Handler
 
 #loop = asyncio.new_event_loop()
 loaded = []
@@ -154,17 +135,6 @@ class Handler():
 
                     self.logger.dev(f'**FINISHED LOADING** {self.name} -> **{cog}**')
 
-                #If the cog is already loaded; we still need to remove it from the list.
-                # except discord.ext.commands.errors.ExtensionAlreadyLoaded:
-                #     cur_cog_file_list.remove(script) 
-                #     self.logger.error(f"**ERROR** Loading Cog {script.name}** - Extension Already Loaded {traceback.format_exc()}")
-                #     continue
-
-                # except FileNotFoundError as e:
-                #     cur_cog_file_list.remove(script) 
-                #     self.logger.error(f'**ERROR** Loading Cog {script.name}** - File Not Found {traceback.format_exc()}')
-                #We just need to catch the error; we won't do anything else with it.
-                
                 except Exception as e:
                     cur_cog_file_list.remove(script) 
                     self.logger.dev(f'Removed cog from loader list: {script.name}')

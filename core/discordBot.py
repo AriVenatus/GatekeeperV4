@@ -1,24 +1,5 @@
-'''
-   Copyright (C) 2021-2022 Katelynn Cadwallader.
-
-   This file is part of Gatekeeper, the AMP Minecraft Discord Bot.
-
-   Gatekeeper is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3, or (at your option)
-   any later version.
-
-   Gatekeeper is distributed in the hope that it will be useful, but WITHOUT
-   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-   License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with Gatekeeper; see the file COPYING.  If not, write to the Free
-   Software Foundation, 51 Franklin Street - Fifth Floor, Boston, MA
-   02110-1301, USA. 
-
-'''
+# Copyright (C) 2021-2022 Katelynn Cadwallader
+# SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 import sys
 import logging
@@ -30,12 +11,12 @@ from discord.ext import commands, tasks
 from discord.app_commands import Choice
 
 # Custom scripts
-import utils
-import utils_embeds
-import utils_ui
-import AMP_Handler
-import DB
-import i18n
+from core import utils
+from core import utils_embeds
+from core import utils_ui
+from core import AMP_Handler
+from core import DB
+from core import i18n
 from typing import Union
 
 Version = 'beta-4.7.5'
@@ -80,7 +61,7 @@ class Gatekeeper(commands.Bot):
         if self.Bot_Version != Version:
             self.update_loop.start()
 
-        import loader
+        from core import loader
         self.Handler = loader.Handler(self)
         await self.Handler.module_auto_loader()
         await self.Handler.cog_auto_loader()
@@ -117,7 +98,7 @@ class Gatekeeper(commands.Bot):
     async def permissions_update(self):
         """Loads the Custom Permission Cog and Validates the File."""
         try:
-            await self.load_extension('cogs.Permissions_cog')
+            await self.load_extension('cogs.permissions_cog')
 
         except discord.ext.commands.errors.ExtensionAlreadyLoaded:
             pass
@@ -180,8 +161,8 @@ async def bot_permissions(context: commands.Context, permission: Choice[int]):
         await context.send(i18n.t('messages.bot.permissions.selected_default'), ephemeral=True, delete_after=client.Message_Timeout)
         parent_command = client.get_command('user')
         parent_command.remove_command('role')
-        if 'cogs.Permissions_cog' in client.extensions:
-            await client.unload_extension('cogs.Permissions_cog')
+        if 'cogs.permissions_cog' in client.extensions:
+            await client.unload_extension('cogs.permissions_cog')
 
     # If we set to 1; we are using `Custom` Permissions.
     elif permission.value == 1:
@@ -280,18 +261,6 @@ async def bot_utils_userid(context: commands.Context, user: Union[discord.User, 
     client.logger.command(f'{context.author.name} used Bot Utils User ID...')
 
     await context.send(i18n.t('messages.bot.utils.userid.result', user_name=user.name, display_name=user.display_name, user_id=user.id), ephemeral=True, delete_after=client.Message_Timeout)
-
-#!TODO! Need to finish developing this command.
-# @bot_utils.command(name='steamid')
-# @utils.role_check()
-# async def bot_utils_steamid(context:commands.Context, name:str):
-#     """Gets the SteamID of the Name provided."""
-#     client.logger.command(f'{context.author.name} used Bot Utils SteamID...')
-#     steam_id = client.uBot.name_to_steam_id(steamname= name)
-#     if steam_id:
-#         await context.send(content= f'**{name}** has the Steam ID of `{steam_id}`', ephemeral= True, delete_after= client.Message_Timeout)
-#     else:
-#         await context.send(content= f'Well I was unable to find that Steam User {name}.', ephemeral= True, delete_after= client.Message_Timeout)
 
 
 @bot_utils.command(name='uuid', description=i18n.t('commands.bot.utils.uuid.description'))
@@ -442,6 +411,6 @@ async def bot_cog_reload(context: commands.Context):
 
 
 def client_run(tokens):
-    client.logger.info('Gatekeeper v3.1 Intializing...')
-    client.logger.info(f'Discord Version: {discord.__version__}  // Gatekeeper v3.1 Version: {client.Bot_Version} // Python Version {sys.version}')
+    client.logger.info('Gatekeeper v4 Intializing...')
+    client.logger.info(f'Discord Version: {discord.__version__}  // Gatekeeper v4 Version: {client.Bot_Version} // Python Version {sys.version}')
     client.run(tokens.token, reconnect=True, log_handler=None)

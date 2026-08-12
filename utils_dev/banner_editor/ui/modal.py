@@ -7,16 +7,16 @@ import difflib
 
 from typing import TYPE_CHECKING
 
-import AMP_Handler
+from core import AMP_Handler
 from utils_dev.banner_editor.ui.textinput import Copy_To_TextInput, Banner_Color_Input, Banner_Blur_Input
 from utils_dev.banner_editor.ui.view2 import Copy_To_View
 
-from utils_ui import banner_file_handler
+from core.utils_ui import banner_file_handler
 import modules.banner_creator as BC
-import i18n
+from core import i18n
 
 if TYPE_CHECKING:
-    from AMP import AMPInstance
+    from core.AMP import AMPInstance
     from utils_dev.banner_editor.edited_banner import Edited_DB_Banner
     from utils_dev.banner_editor.ui.view import Banner_Editor_View
 

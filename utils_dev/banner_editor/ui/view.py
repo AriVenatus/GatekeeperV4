@@ -13,9 +13,9 @@ from utils_dev.banner_editor.ui.button import Save_Banner_Button, Reset_Banner_B
 
 
 if TYPE_CHECKING:
-    from AMP import AMPInstance
-    from AMP_Handler import AMPHandler
-    from DB import DBBanner
+    from core.AMP import AMPInstance
+    from core.AMP_Handler import AMPHandler
+    from core.DB import DBBanner
 
 
 class Banner_Editor_View(View):

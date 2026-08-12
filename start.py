@@ -1,24 +1,5 @@
-'''
-   Copyright (C) 2021-2022 Katelynn Cadwallader.
-
-   This file is part of Gatekeeper, the AMP Minecraft Discord Bot.
-
-   Gatekeeper is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3, or (at your option)
-   any later version.
-
-   Gatekeeper is distributed in the hope that it will be useful, but WITHOUT
-   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-   License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with Gatekeeper; see the file COPYING.  If not, write to the Free
-   Software Foundation, 51 Franklin Street - Fifth Floor, Boston, MA
-   02110-1301, USA. 
-
-'''
+# Copyright (C) 2021-2022 Katelynn Cadwallader
+# SPDX-License-Identifier: GPL-3.0-or-later
 import sys
 import subprocess
 import argparse
@@ -51,7 +32,7 @@ class Setup:
 
         # Custom Logger functionality.
         import logging
-        import logger
+        from core import logger
         logger.init(self.args)
         self.logger = logging.getLogger()
 
@@ -67,14 +48,14 @@ class Setup:
             self.logger.critical("***ATTENTION*** Discord Intergration has been DISABLED!")
 
         # This sets up our SQLite Database!
-        import DB
+        from core import DB
         self.DBHandler = DB.getDBHandler()
         self.DB = self.DBHandler.DB
         self.DB_Config = self.DB.DBConfig
         self.logger.info(f'SQL Database Version: {self.DB.DBHandler.DB_Version} // SQL Database: {self.DB.DBHandler.SuccessfulDatabase}')
 
         # This connects and creates all our AMP related parts
-        import AMP_Handler
+        from core import AMP_Handler
         # Run AMP handler in a background thread. For normal bot runs we make it daemon so shutdown cannot hang.
         self.AMP_Thread = threading.Thread(target=AMP_Handler.AMP_init, name='AMP Handler', args=[self.args, ], daemon=self.args.discord)
         self.AMP_Thread.start()
@@ -83,7 +64,7 @@ class Setup:
             while (AMP_Handler.AMP_setup == False):
                 time.sleep(.5)
 
-            import discordBot
+            from core import discordBot
             try:
                 discordBot.client_run(AMP_Handler.getAMPHandler().tokens)
             except (KeyboardInterrupt, SystemExit):

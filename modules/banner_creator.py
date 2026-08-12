@@ -3,8 +3,8 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageColor
 import pathlib
 import random
 
-import DB
-import AMP_Handler
+from core import DB
+from core import AMP_Handler
 import logging
         
 class Banner_Generator():
@@ -141,7 +141,7 @@ class Banner_Generator():
         return 
 
     def _word_wrap(self, text:str, text_font:ImageFont.ImageFont, text_size:int, limit:int, find_char:str, truncate:bool=True):
-        """Custom Word Wrap. \n
+        """Custom Word Wrap.
         Returns a `list` when `truncate` is `False`"""
         #No need to word wrap if the length is less than our cutoff.
         if ImageFont.truetype(text_font, text_size).getlength(text) <= limit:

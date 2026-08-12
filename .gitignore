@@ -1,11 +1,9 @@
 __pycache__
 logs
-tokens.py
 todo.txt
 *.db
 /dev
 .vscode
-tokens_dev.py
 cogs/dev_cog.py
 cogs/testcog.py
 *.disabled
@@ -15,3 +13,6 @@ sqlite3.exe
 local.py
 .venv/*
 .pip_install.marker
+graphify-out/cost.json        # local only
+.DS_Store
+

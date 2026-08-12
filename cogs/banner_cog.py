@@ -1,24 +1,5 @@
-'''
-   Copyright (C) 2021-2022 Katelynn Cadwallader.
-
-   This file is part of Gatekeeper, the AMP Minecraft Discord Bot.
-
-   Gatekeeper is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3, or (at your option)
-   any later version.
-
-   Gatekeeper is distributed in the hope that it will be useful, but WITHOUT
-   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-   License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with Gatekeeper; see the file COPYING.  If not, write to the Free
-   Software Foundation, 51 Franklin Street - Fifth Floor, Boston, MA
-   02110-1301, USA. 
-
-'''
+# Copyright (C) 2021-2022 Katelynn Cadwallader
+# SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
 import asyncio
@@ -37,17 +18,17 @@ from discord.app_commands import Choice
 from discord.ext import commands, tasks
 from PIL import Image
 
-import AMP_Handler
-import DB as DB
+from core import AMP_Handler
+from core import DB as DB
 import modules.banner_creator as BC
-import utils
-import utils_embeds
-import utils_ui
+from core import utils
+from core import utils_embeds
+from core import utils_ui
 from utils_dev.banner_editor.ui.view import Banner_Editor_View
-import i18n
+from core import i18n
 
 # This is used to force cog order to prevent missing methods.
-Dependencies = ["AMP_server_cog.py"]
+Dependencies = ["amp_server_cog.py"]
 
 
 class Banner(commands.Cog):
@@ -182,7 +163,6 @@ class Banner(commands.Cog):
         ratio = math.ceil((len(embed_list) / 10))
         # compare ratio to len(message_list)
         # If our message list is way larger than our embeds; lets remove the extras. (1 msg to 10 embeds)
-        # Lets also delete the Messages in discord
         if len(message_list) > ratio:
             for message in message_list[ratio:]:
                 self.DB.Remove_Message_from_BannerGroup(messageid=message.id)
@@ -190,7 +170,6 @@ class Banner(commands.Cog):
 
         # We have no Message IDs in the Database; so lets send new messages and store the IDs.
         # We have too many Embeds for the amount of Messages; we need to create some new ones.
-        # Lets also delete the Messages in discord
         elif not len(message_list) or len(message_list) < ratio:
             # If we have messages; but we clearly didn't have enough. Lets remove all of them and send new ones.
             if len(message_list):
@@ -443,12 +422,12 @@ class Banner(commands.Cog):
 
         if not c_status or not s_status:
             server_part = f' `{db_server.InstanceName}`' if server != None else ''
-            and_part = ' and ' if server != None and channel != None else ''
+            and_part = i18n.t('common.and_joiner') if server != None and channel != None else ''
             channel_part = channel.mention if channel != None else ''
             return await context.send(content=i18n.t('messages.banner.group.add.already_exists', server_part=server_part, and_part=and_part, channel_part=channel_part, group_name=group_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
         server_part = f'` {db_server.InstanceName}`' if server != None else ''
-        and_part = ' and ' if server != None and channel != None else ''
+        and_part = i18n.t('common.and_joiner') if server != None and channel != None else ''
         channel_part = channel.mention if channel != None else ''
         c_str = i18n.t('messages.banner.group.add.success', group_name=group_name, server_part=server_part, and_part=and_part, channel_part=channel_part)
         return await context.send(content=c_str, ephemeral=True, delete_after=self._client.Message_Timeout)
@@ -458,6 +437,9 @@ class Banner(commands.Cog):
     @app_commands.autocomplete(channel=autocomplete_bannergroups_channels)
     @app_commands.autocomplete(group_name=autocomplete_bannergroups)
     async def banner_group_remove(self, context: commands.Context, group_name, server: str = None, channel: str = None):
+        if server == None and channel == None:
+            return await context.send(content=i18n.t('messages.banner.group.remove.need_selection'), ephemeral=True, delete_after=self._client.Message_Timeout)
+
         if server != None:
             db_server = self.DB.GetServer(InstanceID=server)
             self.DB.Remove_Server_from_BannerGroup(banner_groupname=group_name, instanceID=server)
@@ -484,7 +466,7 @@ class Banner(commands.Cog):
             self.DB.Remove_Channel_from_BannerGroup(channelid=int(channel), guildid=context.guild.id)
 
         server_part = f'` {db_server.InstanceName}`' if server != None else ''
-        and_part = ' and ' if server != None and channel != None else ''
+        and_part = i18n.t('common.and_joiner') if server != None and channel != None else ''
         channel_part = f'`{self._client.get_channel(int(channel)).mention}`' if channel != None else ''
         c_str = i18n.t('messages.banner.group.remove.success', group_name=group_name, server_part=server_part, and_part=and_part, channel_part=channel_part)
         return await context.send(content=c_str, ephemeral=True, delete_after=self._client.Message_Timeout)

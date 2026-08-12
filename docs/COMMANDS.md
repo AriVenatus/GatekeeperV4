@@ -10,7 +10,7 @@ ___
     - **TIP**: Please see `/bot permissions` for more control. 
 - `/bot permissions (type)` - Sets the Bot Permissions to either `Default` or `Custom`.
     - **ATTENTION**: Requires Discord Administrator to use!
-    - **TIP**: Please see **[Permissions](/PERMISSIONS.md)** if you want `Custom` control over command usage.
+    - **TIP**: Please see **[Permissions](/docs/PERMISSIONS.md)** if you want `Custom` control over command usage.
 - `/bot settings` - Lists Bot settings such as channels and whitelist status.
 - `/bot donator (role)` - Sets the Donator Role for Donator Only AMP Server access.
     - **TIP**: This will prevent people without the role from requesting whitelist to Donator only Servers.
@@ -50,7 +50,7 @@ ___
 - `/bot bannergroup delete_group (group_name)` - Allows the User to Delete an entire Banner Group.
 
 ### <u>Bot Regex_Pattern Commands</u>:
-- See [Regex How-to](/REGEX.md) for full documentation.
+- See [Regex How-to](/docs/REGEX.md) for full documentation.
 - `/bot regex_pattern list` - Displays an Embed list of All Regex Patterns
 - `/bot regex_pattern add (name, filter_type, pattern)` - Adds a Regex pattern to the Database
     - **TIP**: `pattern` is used in a re.search().
@@ -60,7 +60,7 @@ ___
     - `filter_type` dictates where the match will be sent. (eg. `Event` would send all matches to the `Event Channel` for said Server - See [Regex](/README.md) for examples.)
 
 ### <u>Bot Whitelist Commands</u>:
-- See [Whitelist How-to](/WHITELIST.md) for full documentation.
+- See [Whitelist How-to](/docs/WHITELIST.md) for full documentation.
 - `/bot whitelist auto (flag)` - Allows the bot to automatically Whitelist a Users request.
     - **ATTENTION**: `flag` must be *True or False*. Default is False.
         - **TIP**: This will not instantly whitelist the user if whitelist waittime is not set to zero.
@@ -89,7 +89,7 @@ ___
     - **ATTENTION**: Only you can respond to your own confirmation prompt.
 - `/link steam (steam)` - Links your Discord account to a Steam account.
     - **TIP**: Accepts a vanity name, a full profile URL (`steamcommunity.com/id/...` or `/profiles/...`), or a raw SteamID64.
-    - **ATTENTION**: Requires Staff to have configured a Steam Web API Key in `tokens.py` first, otherwise the command will let you know it isn't set up yet.
+    - **ATTENTION**: Requires Staff to have configured a Steam Web API Key (`GATEKEEPER_STEAM_API_KEY`) first, otherwise the command will let you know it isn't set up yet.
     - Shows a preview (persona name, avatar, profile link) with Confirm/Deny buttons before saving anything, same as `/link minecraft`.
 - `/link show` - Shows your currently linked Minecraft/Steam accounts.
 - `/link remove (identity)` - Removes one of your linked accounts. `identity` is either `Minecraft` or `Steam`.
@@ -129,7 +129,7 @@ ___
         - The Description gets set to the current Date and Time in UTC
 
 ### <u>AMP Server Regex Commands</u>:
-- See [Regex How-to](/REGEX.md) for full documentation.
+- See [Regex How-to](/docs/REGEX.md) for full documentation.
 - `/server regex add (server, name)` - Adds a Regex Pattern to the Server Regex List
 - `/server regex delete (server, name)` - Deletes a Regex pattern from the Server Regex List.
 - `/server regex list (server)` - Displays an Embed list of all the Server Regex Patterns.
@@ -157,7 +157,7 @@ ___
     - **ATTENTION**: Any messages from Discord to a Server will be prefixed with `[DISCORD]`, otherwise if it comes from another AMP Server it will use the server's prefix.
 - `/server settings status (server)` - Displays a embedded message of the AMP Dedicated server with status information and buttons for start, stop, kill and restart. 
     - **ATTENTION**: Everyone can see the buttons, but only people with proper permission can interact with the buttons.
-    - **TIP**: To interact with the buttons the user must have the respective permisisons. See [Server Status Button Permissions](/PERMISSIONS.md#server-status-button-permissions).
+    - **TIP**: To interact with the buttons the user must have the respective permisisons. See [Server Status Button Permissions](/docs/PERMISSIONS.md#server-status-button-permissions).
 - `/server settings displayname (server, name)` - Sets the display name of the AMP Dedicated server in the Database.
     - **ATTENTION**: This is used and displayed when commands such as `/server status` and `/server list` are used in place of the Instance Name.
     - **TIP**: You can use the `display name` in place of any `server` paramater for commands.
@@ -173,7 +173,7 @@ ___
 - `/server console filter (server, flag, filter_type)` - Set Console filtering for the AMP Dedicated server.
     - `flag` supports *True or False*. Simply enables/disabled filtering.
     - **TIP**: Setting the `filter_type` to either `whitelist` or `blacklist` can have mixed results depending on the `regex` patterns you have set.
-        - See [Regex](/REGEX.md#how-console-filtering-can-affect-your-regex-patterns)
+        - See [Regex](/docs/REGEX.md#how-console-filtering-can-affect-your-regex-patterns)
 
 ### <u>AMP Server Chat Commands</u>: 
 - `/server chat channel (server, channel)` - Sets the Discord Channel for the AMP Dedicated server to output its chat messages to.
@@ -184,7 +184,7 @@ ___
     - **ATTENTION**: This is events such as join/leave and achievements. Currently experimental, some may be missed.
 
 ### <u>AMP Server Whitelist Commands</u>: 
-- See [Whitelist How-to](/WHITELIST.md) for full documentation.
+- See [Whitelist How-to](/docs/WHITELIST.md) for full documentation.
 - `/server whitelist add (server, user)` - Adds the IGN to the AMP Dedicated server whitelist.
     - `user` only supports in-game names.
 - `/server whitelist remove (server, user)` - Removes the IGN from the AMP Dedicated server whitelist.
@@ -208,8 +208,8 @@ ___
     - `/server chat channel (server, channel)`
     - `/server event channel (server, channel)`
 - After setting your Discord Console Channel you should see console messages be displayed to the Discord Channel.
-    - **TIP**: You can filter these messages. See [/server console filter (server, flag, filter_type)](/COMMANDS.md#console-commands)
-        - Also take a look at [Regex Filtering](/REGEX.md)
+    - **TIP**: You can filter these messages. See [/server console filter (server, flag, filter_type)](/docs/COMMANDS.md#console-commands)
+        - Also take a look at [Regex Filtering](/docs/REGEX.md)
     - **TIP**: You can type commands in the set channel similar to typing in AMP Console web GUI.
         - You must prefix any command with `.`; example `./list` would pass `/list` to the Console.
 

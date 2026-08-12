@@ -1,24 +1,5 @@
-'''
-   Copyright (C) 2021-2022 Katelynn Cadwallader.
-
-   This file is part of Gatekeeper, the AMP Minecraft Discord Bot.
-
-   Gatekeeper is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 3, or (at your option)
-   any later version.
-
-   Gatekeeper is distributed in the hope that it will be useful, but WITHOUT
-   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-   License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with Gatekeeper; see the file COPYING.  If not, write to the Free
-   Software Foundation, 51 Franklin Street - Fifth Floor, Boston, MA
-   02110-1301, USA. 
-
-'''
+# Copyright (C) 2021-2022 Katelynn Cadwallader
+# SPDX-License-Identifier: GPL-3.0-or-later
 from __future__ import annotations
 
 import logging
@@ -34,21 +15,21 @@ from discord import app_commands
 from discord.app_commands import Choice
 from discord.ext import commands, tasks
 
-import AMP_Handler
-import DB
-import utils
-import utils_embeds
-import utils_ui
-import i18n
-from discordBot import Gatekeeper
+from core import AMP_Handler
+from core import DB
+from core import utils
+from core import utils_embeds
+from core import utils_ui
+from core import i18n
+from core.discordBot import Gatekeeper
 
 if TYPE_CHECKING:
-    from discordBot import Gatekeeper
+    from core.discordBot import Gatekeeper
 
 
 # This is used to force cog order to prevent missing methods.
 # MUST USE ENTIRE FILENAME!
-Dependencies = ["AMP_server_cog.py"]
+Dependencies = ["amp_server_cog.py"]
 
 Whitelist_settings_choices = [app_commands.Choice(name='True', value=True),
                               app_commands.Choice(name='False', value=False)

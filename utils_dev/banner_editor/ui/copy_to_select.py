@@ -1,11 +1,11 @@
 from discord.ui import Select
 from discord import SelectOption, Interaction, utils
 from numpy import delete
-from DB import DBServer
+from core.DB import DBServer
 from ..edited_banner import Edited_DB_Banner
-import AMP_Handler
-from AMP_Handler import AMPHandler
-import i18n
+from core import AMP_Handler
+from core.AMP_Handler import AMPHandler
+from core import i18n
 
 
 class Copy_To_Select(Select):

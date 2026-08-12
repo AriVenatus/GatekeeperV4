@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 from discord.ui import TextInput
 from discord import TextStyle
 
-import i18n
+from core import i18n
 
 if TYPE_CHECKING:
     from utils_dev.banner_editor.ui.view import Banner_Editor_View

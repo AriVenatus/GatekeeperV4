@@ -1,5 +1,5 @@
 from __future__ import annotations
-from DB import DBBanner
+from core.DB import DBBanner
 
 
 class Edited_DB_Banner(DBBanner):
