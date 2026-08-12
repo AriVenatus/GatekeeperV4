@@ -1,0 +1,567 @@
+{
+  ".claude/settings.local.json": {
+    "mtime": 1786316403.404063,
+    "ast_hash": "",
+    "semantic_hash": ""
+  },
+  "AMP.py": {
+    "mtime": 1786321410.8046958,
+    "ast_hash": "2647b6ddf7747045be039aab5f9d106b",
+    "semantic_hash": ""
+  },
+  "AMP_Console.py": {
+    "mtime": 1786323129.5563495,
+    "ast_hash": "a88bd3ca6f3b24154c7c36b2ca195942",
+    "semantic_hash": ""
+  },
+  "AMP_Handler.py": {
+    "mtime": 1786320910.5516708,
+    "ast_hash": "44e924b3b55c2ba25e101cc0468601e7",
+    "semantic_hash": ""
+  },
+  "DB.py": {
+    "mtime": 1786323139.743158,
+    "ast_hash": "f1c4ee048a74ebf537535ac1cfc4d7f9",
+    "semantic_hash": ""
+  },
+  "DB_Update.py": {
+    "mtime": 1786058524.3555515,
+    "ast_hash": "1cd84316abbfed5cec60782031084308",
+    "semantic_hash": "1cd84316abbfed5cec60782031084308"
+  },
+  "amp_permissions.py": {
+    "mtime": 1786320910.5520716,
+    "ast_hash": "12a6937e3b03e62c7b2e72e8998b3cd3",
+    "semantic_hash": ""
+  },
+  "bot_perms.json": {
+    "mtime": 1786058524.3562987,
+    "ast_hash": "",
+    "semantic_hash": ""
+  },
+  "cogs/AMP_server_cog.py": {
+    "mtime": 1786320910.5525613,
+    "ast_hash": "2d3933ff9e15fa74e2e9d1e0535af121",
+    "semantic_hash": ""
+  },
+  "cogs/AMP_tasks_cog.py": {
+    "mtime": 1786320910.5532122,
+    "ast_hash": "c24a5f0aeb64106ca22f8bb1170a92a3",
+    "semantic_hash": ""
+  },
+  "cogs/DB_server_cog.py": {
+    "mtime": 1786320910.5542421,
+    "ast_hash": "aa7ed13b60990bb81c75b9fe25f7ba80",
+    "semantic_hash": ""
+  },
+  "cogs/DB_user_cog.py": {
+    "mtime": 1786320910.554652,
+    "ast_hash": "69a43c4db9cfa6ed75e3007fdbc48c75",
+    "semantic_hash": ""
+  },
+  "cogs/Permissions_cog.py": {
+    "mtime": 1786320910.555076,
+    "ast_hash": "dd8663915e5f1ec4f7c120e3da09b93c",
+    "semantic_hash": ""
+  },
+  "cogs/banner_cog.py": {
+    "mtime": 1786320910.5538206,
+    "ast_hash": "34bac68af9cb4c53f9a16d05cc297412",
+    "semantic_hash": ""
+  },
+  "cogs/regex_cog.py": {
+    "mtime": 1786320910.555326,
+    "ast_hash": "0b47ac6280efc9a5f7e2af8b6124a483",
+    "semantic_hash": ""
+  },
+  "cogs/whitelist_cog.py": {
+    "mtime": 1786320910.5556,
+    "ast_hash": "28f7a17d4cdc289184bc63060c231823",
+    "semantic_hash": ""
+  },
+  "cogs/whitelist_sync_cog.py": {
+    "mtime": 1786320910.555949,
+    "ast_hash": "4c54e95831f63e719fdcc72504d71fd6",
+    "semantic_hash": ""
+  },
+  "discordBot.py": {
+    "mtime": 1786321429.784678,
+    "ast_hash": "805c83f8d86462c93350de265c047f6b",
+    "semantic_hash": ""
+  },
+  "i18n.py": {
+    "mtime": 1786320910.557363,
+    "ast_hash": "47cbadbd4a6f45c1e47ea07b4bab8a25",
+    "semantic_hash": ""
+  },
+  "loader.py": {
+    "mtime": 1786321447.8860497,
+    "ast_hash": "de951d6dfa9b3d1393e1775e8b316864",
+    "semantic_hash": ""
+  },
+  "locales/de.json": {
+    "mtime": 1786315938.8901868,
+    "ast_hash": "",
+    "semantic_hash": ""
+  },
+  "locales/en.json": {
+    "mtime": 1786316326.5036287,
+    "ast_hash": "",
+    "semantic_hash": ""
+  },
+  "logger.py": {
+    "mtime": 1786320910.5581622,
+    "ast_hash": "a7b7b02f42965ab8dd69fefd11e4c720",
+    "semantic_hash": ""
+  },
+  "modules/Counter-Strike_Go/amp_csgo.py": {
+    "mtime": 1786320910.5584917,
+    "ast_hash": "c5379fcbbb1dfe7974aad3b329a6d1df",
+    "semantic_hash": ""
+  },
+  "modules/Counter-Strike_Go/cog_csgo.py": {
+    "mtime": 1786320910.5588038,
+    "ast_hash": "faf5a4235366787bf34921767ab31394",
+    "semantic_hash": ""
+  },
+  "modules/Factorio/amp_factorio.py": {
+    "mtime": 1786320910.559115,
+    "ast_hash": "665331f0457a34c13fcc7e6a0b6d35bc",
+    "semantic_hash": ""
+  },
+  "modules/Factorio/cog_factorio.py": {
+    "mtime": 1786320910.5593336,
+    "ast_hash": "9ceb94604c8eab8a3c851d7d755d9820",
+    "semantic_hash": ""
+  },
+  "modules/Generic/amp_generic.py": {
+    "mtime": 1786320910.559546,
+    "ast_hash": "06645938cb1ff7409835f4325043eb79",
+    "semantic_hash": ""
+  },
+  "modules/Generic/generic.py": {
+    "mtime": 1786320910.5597322,
+    "ast_hash": "83b313980433b582ddbcde035d31c913",
+    "semantic_hash": ""
+  },
+  "modules/Minecraft/amp_minecraft.py": {
+    "mtime": 1786320910.5600696,
+    "ast_hash": "91364b6eadd410a76fc96049038222cf",
+    "semantic_hash": ""
+  },
+  "modules/Minecraft/cog_minecraft.py": {
+    "mtime": 1786320910.5604248,
+    "ast_hash": "9f788843327d8f4174fd84a912c97c5f",
+    "semantic_hash": ""
+  },
+  "modules/ProjectZomboid/amp_projectzomboid.py": {
+    "mtime": 1786320910.5607598,
+    "ast_hash": "b9179daeae648cecac3b9d94f33c2eca",
+    "semantic_hash": ""
+  },
+  "modules/ProjectZomboid/cog_projectzomboid.py": {
+    "mtime": 1786320910.5610096,
+    "ast_hash": "fa510f5d043c8a1e4f791dc680646ad7",
+    "semantic_hash": ""
+  },
+  "modules/SevenDaystoDie/amp_sevendays.py": {
+    "mtime": 1786320910.5611598,
+    "ast_hash": "a31882077e5613ae4bf8f077eb83c268",
+    "semantic_hash": ""
+  },
+  "modules/SevenDaystoDie/cog_sevendays.py": {
+    "mtime": 1786320910.5614383,
+    "ast_hash": "303df3cd7c4516f4e5ddfb88f94aa047",
+    "semantic_hash": ""
+  },
+  "modules/StarBound/amp_starbound.py": {
+    "mtime": 1786320910.5616114,
+    "ast_hash": "561e6e8b902721892fce58f98e58d27d",
+    "semantic_hash": ""
+  },
+  "modules/StarBound/cog_starbound.py": {
+    "mtime": 1786320910.5617957,
+    "ast_hash": "496503f3946793e3aa2abe6ebbfb87ee",
+    "semantic_hash": ""
+  },
+  "modules/Terraria/amp_terraria.py": {
+    "mtime": 1786320910.562111,
+    "ast_hash": "516997024edad84090ad44c8a952784a",
+    "semantic_hash": ""
+  },
+  "modules/Terraria/cog_terraria.py": {
+    "mtime": 1786320910.562425,
+    "ast_hash": "756209bbe3aaaf24922e00c3bc241048",
+    "semantic_hash": ""
+  },
+  "modules/Valheim/amp_valheim.py": {
+    "mtime": 1786320910.5627615,
+    "ast_hash": "89ec6786e944d407ec3263ed6354c10c",
+    "semantic_hash": ""
+  },
+  "modules/Valheim/cog_valheim.py": {
+    "mtime": 1786320910.5631015,
+    "ast_hash": "ac52e56d7cf90ce8e2996c07c66eb32e",
+    "semantic_hash": ""
+  },
+  "modules/banner_creator.py": {
+    "mtime": 1786058524.360472,
+    "ast_hash": "0c10217752fb4d9cb00ed2fc8500008f",
+    "semantic_hash": "0c10217752fb4d9cb00ed2fc8500008f"
+  },
+  "pyproject.toml": {
+    "mtime": 1786058524.3605611,
+    "ast_hash": "df459d82c06fdc535be5d47697494e36",
+    "semantic_hash": "df459d82c06fdc535be5d47697494e36"
+  },
+  "resources/templates/amp_template.py": {
+    "mtime": 1786320910.5633433,
+    "ast_hash": "7c031b1343442e5e8179a843990a3f6d",
+    "semantic_hash": ""
+  },
+  "resources/templates/cog_template.py": {
+    "mtime": 1786320910.5637155,
+    "ast_hash": "e3985fe7a5e2a4ce3575bd66d174dc55",
+    "semantic_hash": ""
+  },
+  "start.py": {
+    "mtime": 1786320910.5640619,
+    "ast_hash": "b0f7470fc50c3923e633a2df98ea0ace",
+    "semantic_hash": ""
+  },
+  "tokenstemplate.py": {
+    "mtime": 1786058524.3824956,
+    "ast_hash": "d1e70a06124a690706de1bf8e07f616e",
+    "semantic_hash": "d1e70a06124a690706de1bf8e07f616e"
+  },
+  "utils.py": {
+    "mtime": 1786321334.181107,
+    "ast_hash": "010697d5e271b90fbe9fa1963f0a7c86",
+    "semantic_hash": ""
+  },
+  "utils_dev/__init__.py": {
+    "mtime": 1786058524.382698,
+    "ast_hash": "d41d8cd98f00b204e9800998ecf8427e",
+    "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
+  },
+  "utils_dev/banner_editor/edited_banner.py": {
+    "mtime": 1786058524.3828328,
+    "ast_hash": "89fc8626bad085b26ac66db19d6ddc95",
+    "semantic_hash": "89fc8626bad085b26ac66db19d6ddc95"
+  },
+  "utils_dev/banner_editor/ui/button.py": {
+    "mtime": 1786248333.4764707,
+    "ast_hash": "a10ae9a1d05bb90769014915feac306a",
+    "semantic_hash": "a10ae9a1d05bb90769014915feac306a"
+  },
+  "utils_dev/banner_editor/ui/copy_to_select.py": {
+    "mtime": 1786248363.2161393,
+    "ast_hash": "93377d64436ac6feba44d51c3976cad4",
+    "semantic_hash": "93377d64436ac6feba44d51c3976cad4"
+  },
+  "utils_dev/banner_editor/ui/modal.py": {
+    "mtime": 1786248293.325932,
+    "ast_hash": "95d833b9e261c6651b6988142c35ee05",
+    "semantic_hash": "95d833b9e261c6651b6988142c35ee05"
+  },
+  "utils_dev/banner_editor/ui/select.py": {
+    "mtime": 1786248271.2339566,
+    "ast_hash": "9a30e7941af06faa978c1025d003e521",
+    "semantic_hash": "9a30e7941af06faa978c1025d003e521"
+  },
+  "utils_dev/banner_editor/ui/textinput.py": {
+    "mtime": 1786248351.6544785,
+    "ast_hash": "33b9ece4b3aeb1504fb53a7bf18007cf",
+    "semantic_hash": "33b9ece4b3aeb1504fb53a7bf18007cf"
+  },
+  "utils_dev/banner_editor/ui/view.py": {
+    "mtime": 1786058524.3834543,
+    "ast_hash": "3acec1c0b8dfe852dec5b371e756a2d6",
+    "semantic_hash": "3acec1c0b8dfe852dec5b371e756a2d6"
+  },
+  "utils_dev/banner_editor/ui/view2.py": {
+    "mtime": 1786058524.3835337,
+    "ast_hash": "6553b39322eb96b06d44fcbb4d4f2295",
+    "semantic_hash": "6553b39322eb96b06d44fcbb4d4f2295"
+  },
+  "utils_embeds.py": {
+    "mtime": 1786320910.5645099,
+    "ast_hash": "f3a2f2057f9a6925471e0e4a2049d74b",
+    "semantic_hash": ""
+  },
+  "utils_ui.py": {
+    "mtime": 1786321314.959745,
+    "ast_hash": "ce508f59da73fe41782cec9b081bba59",
+    "semantic_hash": ""
+  },
+  ".github/ISSUE_TEMPLATE/bug_report.md": {
+    "mtime": 1786058524.3541028,
+    "ast_hash": "d9624477c368058e64f45f001f8b1e8a",
+    "semantic_hash": "d9624477c368058e64f45f001f8b1e8a"
+  },
+  "BANNER.md": {
+    "mtime": 1786058524.3548748,
+    "ast_hash": "1e4c75e0031cd6564e3a7c7d9545e1d6",
+    "semantic_hash": "1e4c75e0031cd6564e3a7c7d9545e1d6"
+  },
+  "CLAUDE.md": {
+    "mtime": 1786317446.5794742,
+    "ast_hash": "18e2fc01af63686769584d457ee3e948",
+    "semantic_hash": ""
+  },
+  "COMMANDS.md": {
+    "mtime": 1786278139.190202,
+    "ast_hash": "fa811ae0220a526f049f4db44fcc7ef1",
+    "semantic_hash": "fa811ae0220a526f049f4db44fcc7ef1"
+  },
+  "PERMISSIONS.md": {
+    "mtime": 1786249804.7391162,
+    "ast_hash": "a51e5456121fde47cd9afcfc2e6ab2f0",
+    "semantic_hash": "a51e5456121fde47cd9afcfc2e6ab2f0"
+  },
+  "README.md": {
+    "mtime": 1786061206.0453405,
+    "ast_hash": "b4598449a12787c91cc0acce4f4bfc48",
+    "semantic_hash": "b4598449a12787c91cc0acce4f4bfc48"
+  },
+  "REGEX.md": {
+    "mtime": 1786058524.3560057,
+    "ast_hash": "72ebe82e22ca88dc68bcdd694aea7d53",
+    "semantic_hash": "72ebe82e22ca88dc68bcdd694aea7d53"
+  },
+  "WHITELIST.md": {
+    "mtime": 1786278151.9816039,
+    "ast_hash": "923004cd36b751e0c3427301dc96c0bd",
+    "semantic_hash": "923004cd36b751e0c3427301dc96c0bd"
+  },
+  "changelog.md": {
+    "mtime": 1786058524.3564286,
+    "ast_hash": "653e050c877b48cb013f1ac083dd7852",
+    "semantic_hash": "653e050c877b48cb013f1ac083dd7852"
+  },
+  "discord-role-synced-whitelist.md": {
+    "mtime": 1786058524.3578954,
+    "ast_hash": "c2533f867de1daa293bbfe5223bbcce2",
+    "semantic_hash": "c2533f867de1daa293bbfe5223bbcce2"
+  },
+  "requirements.txt": {
+    "mtime": 1786073478.9498916,
+    "ast_hash": "36882a67622c84aff9f0986a6e8cb455",
+    "semantic_hash": "36882a67622c84aff9f0986a6e8cb455"
+  },
+  "CLEANUP.md": {
+    "mtime": 1786323186.7135603,
+    "ast_hash": "b0fd5b6af6c89553b6e3e78037501f5f",
+    "semantic_hash": ""
+  },
+  "resources/Bot Permissions.png": {
+    "mtime": 1786058524.3612547,
+    "ast_hash": "9992a73c23f192f0da48fa21a0de9b3e",
+    "semantic_hash": ""
+  },
+  "resources/Gatekeeperv2_Banner.jpg": {
+    "mtime": 1786058524.3615203,
+    "ast_hash": "b12b217f3cbbe6ad3c64cee26549d0f7",
+    "semantic_hash": ""
+  },
+  "resources/avatars/7days_avatar.png": {
+    "mtime": 1786058524.3616745,
+    "ast_hash": "fd8ef08396550a279ed6f2e53fe347e4",
+    "semantic_hash": ""
+  },
+  "resources/avatars/amp_avatar.jpg": {
+    "mtime": 1786058524.3618138,
+    "ast_hash": "7bafa00012750c03f5031bced8b323eb",
+    "semantic_hash": ""
+  },
+  "resources/avatars/csgo_avatar.png": {
+    "mtime": 1786058524.361931,
+    "ast_hash": "5bc3896c517fa7ffa89ac60fa8f0678c",
+    "semantic_hash": ""
+  },
+  "resources/avatars/factorio_avatar.png": {
+    "mtime": 1786058524.3620565,
+    "ast_hash": "de874f3e7cdf30441135d91d905f84b6",
+    "semantic_hash": ""
+  },
+  "resources/avatars/mc_avatar.jpg": {
+    "mtime": 1786058524.3621929,
+    "ast_hash": "0bfa1cac9aafe20c6f5cd059887541bc",
+    "semantic_hash": ""
+  },
+  "resources/avatars/project_zomboid_avatar.png": {
+    "mtime": 1786058524.3623352,
+    "ast_hash": "35cb87c013ff4ca172ce341b05eb56ec",
+    "semantic_hash": ""
+  },
+  "resources/avatars/starbound_avatar.png": {
+    "mtime": 1786058524.362458,
+    "ast_hash": "c44c74122b07bd5fac3e663ba1548679",
+    "semantic_hash": ""
+  },
+  "resources/avatars/terraria_avatar.jpg": {
+    "mtime": 1786058524.362663,
+    "ast_hash": "27a77c9718ad61b9372ff5662f2a5de9",
+    "semantic_hash": ""
+  },
+  "resources/avatars/valheim_avatar.png": {
+    "mtime": 1786058524.3627818,
+    "ast_hash": "dda0d85fd9fad6c6fd0f13be330ab992",
+    "semantic_hash": ""
+  },
+  "resources/banners/7Days_Banner_1.jpg": {
+    "mtime": 1786058524.3631055,
+    "ast_hash": "f2caa3e1e1cac571c30846a03f63dc76",
+    "semantic_hash": ""
+  },
+  "resources/banners/7Days_Banner_2.jpg": {
+    "mtime": 1786058524.3633637,
+    "ast_hash": "d1d0fd96c9939588f38227dd86da4aae",
+    "semantic_hash": ""
+  },
+  "resources/banners/7Days_Banner_3.jpg": {
+    "mtime": 1786058524.3636389,
+    "ast_hash": "e22f1770067061b2febe788a8861aa1b",
+    "semantic_hash": ""
+  },
+  "resources/banners/AMP_Banner.jpg": {
+    "mtime": 1786058524.364116,
+    "ast_hash": "fd6923589385752a97d3a66cf64b7c91",
+    "semantic_hash": ""
+  },
+  "resources/banners/CS_Go_Banner_1.png": {
+    "mtime": 1786058524.3645916,
+    "ast_hash": "28c7cb29f2cae2cb56f67df98d38c31a",
+    "semantic_hash": ""
+  },
+  "resources/banners/CS_Go_Banner_2.png": {
+    "mtime": 1786058524.3650906,
+    "ast_hash": "e37df9e6bb029f3c8af88ac19e79c392",
+    "semantic_hash": ""
+  },
+  "resources/banners/CS_Go_Banner_3.png": {
+    "mtime": 1786058524.3656,
+    "ast_hash": "fa6e36ca3c9eac129bfd1844c1cabe64",
+    "semantic_hash": ""
+  },
+  "resources/banners/Factorio_Banner.jpg": {
+    "mtime": 1786058524.3664312,
+    "ast_hash": "20c9af7658ee692ffc8b2df3a1a3062f",
+    "semantic_hash": ""
+  },
+  "resources/banners/Minecraft_banner.png": {
+    "mtime": 1786058524.367563,
+    "ast_hash": "634a16ac57b3d18a45dc1d1ac27e6a73",
+    "semantic_hash": ""
+  },
+  "resources/banners/Minecraft_banner2.jpg": {
+    "mtime": 1786058524.3690195,
+    "ast_hash": "e8758a7f8d6aedd08d9a78c0eedb6f3a",
+    "semantic_hash": ""
+  },
+  "resources/banners/Project_Zomboid_Banner.jpg": {
+    "mtime": 1786058524.3697913,
+    "ast_hash": "04f242513fdf15ff4a95e5b6a3fef4e8",
+    "semantic_hash": ""
+  },
+  "resources/banners/Project_Zomboid_banner_1.jpg": {
+    "mtime": 1786058524.3701794,
+    "ast_hash": "be73364f8951b7e0ed7c1cad69ac7001",
+    "semantic_hash": ""
+  },
+  "resources/banners/Starbound_banner.jpg": {
+    "mtime": 1786058524.3709326,
+    "ast_hash": "7a6ff3645d16b6f09a8f59665c8bf1d5",
+    "semantic_hash": ""
+  },
+  "resources/banners/Terraria_Banner.png": {
+    "mtime": 1786058524.3716848,
+    "ast_hash": "e571d9fdfa4c61d44f54c9257fa25078",
+    "semantic_hash": ""
+  },
+  "resources/banners/Valheim_Banner.png": {
+    "mtime": 1786058524.3728716,
+    "ast_hash": "9c8b8ce3763104aafa417b645997add0",
+    "semantic_hash": ""
+  },
+  "resources/intents.jpg": {
+    "mtime": 1786058524.3744144,
+    "ast_hash": "32c7268d9eece1c5832c2325a60a80d5",
+    "semantic_hash": ""
+  },
+  "resources/wiki/banner/banner_description_location.png": {
+    "mtime": 1786058524.3750856,
+    "ast_hash": "ae3eef2a363413349e813d753bb69a7e",
+    "semantic_hash": ""
+  },
+  "resources/wiki/banner/banner_editor_example.png": {
+    "mtime": 1786058524.3753927,
+    "ast_hash": "fd01563fc36e75efd325ed4f7528f4f6",
+    "semantic_hash": ""
+  },
+  "resources/wiki/banner/custom_banner_everything_on_example.png": {
+    "mtime": 1786058524.3758814,
+    "ast_hash": "a621ad27af43f985ad75fb42e57668e7",
+    "semantic_hash": ""
+  },
+  "resources/wiki/banner/custom_banner_example.png": {
+    "mtime": 1786058524.376407,
+    "ast_hash": "2036594e78c3d2dd9384b0652f13c8ed",
+    "semantic_hash": ""
+  },
+  "resources/wiki/banner/description_example.png": {
+    "mtime": 1786058524.376677,
+    "ast_hash": "8f515a88549dca9013a41875767f5445",
+    "semantic_hash": ""
+  },
+  "resources/wiki/banner/embed_example.png": {
+    "mtime": 1786058524.3771129,
+    "ast_hash": "d35ecd78b25a6c7995709edac3b548a1",
+    "semantic_hash": ""
+  },
+  "resources/wiki/banner/header_example.png": {
+    "mtime": 1786058524.37883,
+    "ast_hash": "ba4c682484be3c8bbc07151218b578f0",
+    "semantic_hash": ""
+  },
+  "resources/wiki/banner/host_example.png": {
+    "mtime": 1786058524.3790677,
+    "ast_hash": "bc34bda51215fcde268afcf6445478f0",
+    "semantic_hash": ""
+  },
+  "resources/wiki/banner/status_example.png": {
+    "mtime": 1786058524.379689,
+    "ast_hash": "a09861d47cb9c6413834d71d7e072b6c",
+    "semantic_hash": ""
+  },
+  "resources/wiki/banner/whitelist_donator_example.png": {
+    "mtime": 1786058524.379944,
+    "ast_hash": "7fb846357a85209196ac34c2de191bd3",
+    "semantic_hash": ""
+  },
+  "resources/wiki/regex/regex_blacklist_comparison.png": {
+    "mtime": 1786058524.3805556,
+    "ast_hash": "8fb01a17c86eec1055bc80d5375614e4",
+    "semantic_hash": ""
+  },
+  "resources/wiki/regex/regex_blacklist_example.png": {
+    "mtime": 1786058524.3812554,
+    "ast_hash": "e920cc309cb36c68a4ea92e8470971ef",
+    "semantic_hash": ""
+  },
+  "resources/wiki/regex/regex_list_example.png": {
+    "mtime": 1786058524.3815584,
+    "ast_hash": "a3389b3cc47466306903b2adc894d00e",
+    "semantic_hash": ""
+  },
+  "resources/wiki/regex/regex_whitelist_console_1.png": {
+    "mtime": 1786058524.3817039,
+    "ast_hash": "6338abe53b5b33b668caabf5b1356021",
+    "semantic_hash": ""
+  },
+  "resources/wiki/regex/regex_whitelist_example.png": {
+    "mtime": 1786058524.3822997,
+    "ast_hash": "ed7c3e5addc0375d6df96d439010b842",
+    "semantic_hash": ""
+  }
+}

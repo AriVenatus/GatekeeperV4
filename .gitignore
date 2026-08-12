@@ -13,6 +13,7 @@ sqlite3.exe
 local.py
 .venv/*
 .pip_install.marker
-graphify-out/cost.json        # local only
+# local only
+graphify-out/cost.json
 .DS_Store
 
