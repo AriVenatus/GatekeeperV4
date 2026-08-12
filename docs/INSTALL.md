@@ -60,8 +60,8 @@ ___
 ### **AMP Instance Instructions**
 1. Create an AMP user for the Bot with `Super Admins` role, must be done on the Global AMP Home Screen GUI.
     - Usually this is the URL ending in **8080** when connecting to AMP. *(eg. `http://X.X.X.X:8080`)*
-2. Create a new instance of GatekeeperV2 in a container. *(The container option can be found under `Configuration -> New Instance Defaults`)*
-3. Configure the settings in the GatekeeperV2 Instance under the `Configuration -> Bot Settings`, click `Update`, then start the bot.
+2. Create a new instance of Gatekeeper in a container. *(The container option can be found under `Configuration -> New Instance Defaults`)*
+3. Configure the settings in the Gatekeeper Instance under the `Configuration -> Bot Settings`, click `Update`, then start the bot.
 4. See **[Interacting with the Bot~](#interacting-with-the-bot)**
 ___
 
@@ -136,22 +136,23 @@ ______
     - `-discord` - Disables Discord Intigration *(used for testing)*
 
 ___
-## **Using Gatekeeperv2 as a Service**
-- **Secrets hygiene**: run Gatekeeper under a dedicated, non-root system user (not your personal SSH account, not `root`). Restrict `.env` to that user with `chmod 600 .env`, owned by the service user.
+## **Using Gatekeeper as a Service**
+- **Secrets hygiene**: run Gatekeeper under a dedicated, non-root system user (not your personal SSH account, not `root`). For a systemd setup, keep your `.env` file **outside** the repo checkout entirely (e.g. a sibling directory like `/opt/gatekeeper/gatekeeper.env` next to `/opt/gatekeeper/app`) and load it via the unit's `EnvironmentFile=` directive below — this way secrets never live inside a git-tracked directory. Restrict it with `chmod 600 gatekeeper.env`, owned by the service user. *(For simple manual runs without systemd, `.env` in the repo root next to `start.py` — as in the Manual Instructions above — works fine; `python-dotenv` finds it automatically since Gatekeeper always runs from the repo root.)*
 - Log into your dedicated server/VPS via root. 
 - You are then going to use the following command to create a service script for your Gatekeeper `nano /etc/systemd/system/gatekeeper.service`
     - Once done, input the following information into the service file.
 
 ```ini
 [Unit]
-Description= GateKeeperv2
+Description= Gatekeeper
 After= network.service
 
 [Service]
 Type= simple
 User= # Dedicated non-root service user (eg. 'gatekeeper'), not root/your personal SSH user
-WorkingDirectory= # This points to the directory of Gatekeeperv2 files (eg. '/home/gatekeeper')
-ExecStart= #This points to the python3 script. (eg. 'ExecStart=/usr/bin/python3.9 /home/gatekeeper/start.py')
+WorkingDirectory= # This points to the directory of Gatekeeper files (eg. '/opt/gatekeeper/app')
+EnvironmentFile= # Absolute path to your secrets file, kept OUTSIDE the repo checkout (eg. '/opt/gatekeeper/gatekeeper.env')
+ExecStart= #This points to the python3 script. (eg. 'ExecStart=/usr/bin/python3.13 /opt/gatekeeper/app/start.py')
 Restart= always 
 RestartSec= 15
 

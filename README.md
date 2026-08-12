@@ -34,7 +34,7 @@ ___
 - Control AMP Servers via Discord slash commands, with Console/Chat/Event channel bridging.
 - SQL Database-backed User and Server storage.
 - Full AMP Template support with constant updates — see [AMP Instance Instructions](/docs/INSTALL.md#amp-instance-instructions).
-- Cross-platform: Windows or Linux — see [Running as a Service](/docs/INSTALL.md#using-gatekeeperv2-as-a-service).
+- Cross-platform: Windows or Linux — see [Running as a Service](/docs/INSTALL.md#using-gatekeeper-as-a-service).
 - Extensible via custom Cogs / your own AMP Dedicated Server module.
 - Autocomplete for Discord Channels, Roles, and AMP Servers.
 - Custom Banner displays (Discord Embeds or Images) with AMP Server info.

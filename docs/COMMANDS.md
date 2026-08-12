@@ -21,7 +21,7 @@ ___
 - `/bot utils restart` - Restarts the Bot.
 - `/bot utils status` - Replies with **AMP version** and if setup is complete, **DB version** and if setup is complete and **Displays Bot version information**.
     - **TIP**: This information is useful when reporting bugs/errors on Github!
-- `/bot utils sync (reset, local)` - Sync functionality for Gatekeeperv2
+- `/bot utils sync (reset, local)` - Sync functionality for Gatekeeper
     - `reset` `(true/false)` if `True` will clear all commands from the Command Tree and then re-sync's the command tree.
     - `local` `(true/false)` if `True` makes the sync or reset happen to the `guild` the command is used in.
 - `/bot utils roleid (role)` - Returns the role ID for the selected Discord Role.
@@ -30,7 +30,7 @@ ___
 - `/bot utils uuid (mc_ign)` - This will convert a Minecraft IGN to a UUID if it exists.
 - `/bot utils clear (channel, amountm, all)` - Delete(s) the specified amount of Messages Sent by the Bot.
     - If `all` is set to `True` this will clear ALL messages regardless of sender.
-- `/bot utils message_timeout (time)` - Sets the Delete After time in seconds for ephemeral messages sent from Gatekeeperv2.
+- `/bot utils message_timeout (time)` - Sets the Delete After time in seconds for ephemeral messages sent from Gatekeeper.
 
 ### <u>Bot Cog Commands</u>: 
 - `/bot cog load (path)` - Loads a specific Cog. *(eg. path = `/cogs/cog_template`)*

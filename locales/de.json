@@ -215,7 +215,7 @@
   "messages.bot.utils.disconnect.message": "Verbindung zum Server wird getrennt...",
   "messages.bot.utils.restart.message": "**Bot wird gerade neu gestartet, bitte warten...**",
   "messages.bot.utils.status.versions": "**Discord-Version**: {discord_version}  //  **Python-Version**: {python_version}",
-  "messages.bot.utils.status.bot_db_version": "**Gatekeeperv2-Version**: {bot_version} // **SQL-Datenbank-Version**: {db_version}",
+  "messages.bot.utils.status.bot_db_version": "**Gatekeeper v4-Version**: {bot_version} // **SQL-Datenbank-Version**: {db_version}",
   "messages.bot.utils.status.connections": "**AMP verbunden**: {amp_connected} // **SQL-Datenbank**: {db_connected}",
   "messages.bot.utils.message_timeout.will_delete": "werden `{time}` Sekunden nach dem Senden gelöscht",
   "messages.bot.utils.message_timeout.will_not_delete": "werden nach dem Senden nicht mehr gelöscht",

@@ -53,7 +53,7 @@ class DBHandler:
         # This handles version checks and calling all updates from version 1.0
         if self.DB_Version > float(self.DBConfig.GetSetting("DB_Version")):
             self.logger.warning(
-                f"**ATTENTION** Gatekeeperv2 Database is on Version: {self.DB_Version}, your Database is on Version: {self.DBConfig.GetSetting('DB_Version')}"
+                f"**ATTENTION** Gatekeeper Database is on Version: {self.DB_Version}, your Database is on Version: {self.DBConfig.GetSetting('DB_Version')}"
             )
             self.DBUpdate = DB_Update(self.DB, float(self.DBConfig.GetSetting("DB_Version")))
 

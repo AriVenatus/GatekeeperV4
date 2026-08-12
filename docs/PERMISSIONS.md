@@ -4,7 +4,7 @@ This section is for those wanting to really "Fine Tune" your permissions.
 
 ## **Features**
 ___
-- Gatekeeperv2 has the ability to set permissions *per command* or *globally* across a command tree.
+- Gatekeeper has the ability to set permissions *per command* or *globally* across a command tree.
     - *See below for [How to use!](#using-your-permission-nodes)*
 - You can make as many "Roles" as you want and can assign them to Discord users however you want! 
     - The only restriction is that **ANY ROLE** you give a Discord User via the `/role (user, role)` command **MUST EXIST** in the `bot_perms` file or it won't work.

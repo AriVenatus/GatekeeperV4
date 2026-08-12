@@ -14,7 +14,7 @@ Handler = None
 # Language codes only -- never numeric. `DBConfig.__getattribute__` auto-coerces any
 # numeric-string config value to `int` on read, which would silently break an int-coded setting.
 _SUPPORTED_LANGUAGES = ('en', 'de')
-_LOCALES_DIR = pathlib.Path(__file__).parent / 'locales'
+_LOCALES_DIR = pathlib.Path(__file__).parent.parent / 'locales'
 
 
 class I18nHandler():
