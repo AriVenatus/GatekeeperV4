@@ -129,15 +129,6 @@ async def main_bot(context: commands.Context):
         await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=client.Message_Timeout)
 
 
-@main_bot.command(name='donator', description=i18n.t('commands.bot.donator.description'))
-@utils.role_check()
-async def bot_donator(context: commands.Context, role: discord.Role):
-    client.logger.command(f'{context.author.name} used Bot Donator Role...')
-
-    client.DBConfig.SetSetting('Donator_role_id', role.id)
-    await context.send(i18n.t('messages.bot.donator.success', role_mention=role.mention), ephemeral=True, delete_after=client.Message_Timeout)
-
-
 @main_bot.command(name='moderator', description=i18n.t('commands.bot.moderator.description'))
 @commands.has_guild_permissions(administrator=True)
 async def bot_moderator(context: commands.Context, role: discord.Role):

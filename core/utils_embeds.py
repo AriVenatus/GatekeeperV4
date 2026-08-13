@@ -240,11 +240,7 @@ class botEmbeds():
                   "message_timeout",
                   "banner_type",
                   "banner_auto_update",
-                  "auto_whitelist",
-                  "whitelist_wait_time",
-                  "whitelist_request_channel",
-                  "donator_role_id",
-                  "donator_bypass"]
+                  "whitelist_request_channel"]
 
         # Take our list and store it in a seperate list and lowercase the strings.
         db_config_settingslist = [x.lower() for x in self.DBConfig.GetSettingList()]
@@ -256,14 +252,7 @@ class botEmbeds():
             db_config_settingslist.remove(key)
             value = self.DBConfig.GetSetting(key)
             key = key.lower()
-            if key == 'auto_whitelist':
-                embed.add_field(name=i18n.t('embeds.bot_settings.auto_whitelist'), value=self._bool_str(value == 1))
-
-            elif key == 'whitelist_wait_time':
-                wait_time = i18n.t('embeds.bot_settings.whitelist_wait_time_instant') if value == 0 else i18n.t_plural('common.minutes', count=int(value))
-                embed.add_field(name=i18n.t('embeds.bot_settings.whitelist_wait_time'), value=f'{wait_time} ', inline=False)
-
-            elif key == 'whitelist_request_channel':
+            if key == 'whitelist_request_channel':
                 if value != 'None':
                     value = context.guild.get_channel(value)
 
@@ -306,15 +295,6 @@ class botEmbeds():
                     value = context.guild.get_role(value)
 
                 embed.add_field(name=i18n.t('embeds.bot_settings.moderator_role'), value=f'{value.name.title() if value != None else i18n.t("common.embed.not_set")}', inline=True)
-
-            elif key == "donator_role_id":
-                if value != 'None':
-                    value = context.guild.get_role(value)
-
-                embed.add_field(name=i18n.t('embeds.bot_settings.donator_role_id'), value=f'{value.name.title() if value != None else i18n.t("common.embed.not_set")}', inline=True)
-
-            elif key == 'donator_bypass':
-                embed.add_field(name=i18n.t('embeds.bot_settings.donator_bypass'), value=self._bool_str(value == 1), inline=True)
 
         # This iterates through the remaining keys of the Settings List and adds them to the Embed.
         # NOTE: these field NAMES stay English-only by design -- they're auto-titled from

@@ -407,6 +407,8 @@ class AMPInstance:
         self.Whitelist = self.DB_Server.Whitelist
         self.Whitelist_disabled = self.DB_Server.Whitelist_disabled
         self.Donator = self.DB_Server.Donator
+        self.Auto_Whitelist = self.DB_Server.Auto_Whitelist
+        self.Whitelist_Wait_Time = self.DB_Server.Whitelist_Wait_Time
         self.Console_Flag = self.DB_Server.Console_Flag
         self.Console_Filtered = self.DB_Server.Console_Filtered
         self.Console_Filtered_Type = self.DB_Server.Console_Filtered_Type

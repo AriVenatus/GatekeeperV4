@@ -98,13 +98,14 @@ ___
     - Events are when a player Joins or Leaves and Achievements.
 
 ### **Setting your Whitelist Channel and Auto Whitelist Settings**
-- Use `/whitelist request_channel (channel)` to set a channel for the bot to send Whitelist Request Approvals to.
-    - **ATTENTION**: By default Auto-Whitelist is turned off, meaning someone with Discord Admin or Bot `Moderator` role or higher must approve the request.
-- Use `/whitelist auto true` to allow the bot to handle whitelist requests.
-    - **ATTENTION**: Gatekeeper has a **default wait time of 5 minutes**, after the wait time is up requests are auto-approved.
-    - **TIP**: You can enable `Donators` to bypass the wait time after setting the `/bot donator` role.
-- Use `/whitelist wait_time (time)` to adjust the Bot's wait time after a whitelist request.
-    - **TIP**: You can set this value to `0` to allow the bot to instantly approve the users whitelist request..
+- Use `/bot whitelist request_channel (channel)` to set a channel for the bot to send Whitelist Request Approvals to.
+    - **ATTENTION**: This channel is bot-wide (one channel for every Server). Whether a request is auto-approved or needs Staff approval is set **per Server**, see below.
+- Use `/server settings whitelist_auto (server, flag)` to allow the bot to auto-handle Whitelist requests for that specific Server.
+    - **ATTENTION**: By default this is turned off, meaning someone with Discord Admin or Bot `Moderator` role or higher must approve the request. Each Server has its own setting, so you can auto-approve on one Server and require approval on another.
+    - **ATTENTION**: Gatekeeper has a **default wait time of 5 minutes** per Server, after which requests are auto-approved.
+- Use `/server settings whitelist_wait_time (server, time)` to adjust that Server's wait time after a whitelist request.
+    - **TIP**: You can set this value to `0` to allow the bot to instantly approve the users whitelist request.
+    - **TIP**: Members with a configured Donator Role skip this flow entirely and get Whitelisted automatically -- see [Setting up Donator Roles](#setting-up-donator-roles) below.
 
 ### **Setting up Discord Role Whitelist Syncing**
 - Have your players link their game account first via `/link minecraft (ign)` or `/link steam (steam)`.
@@ -112,8 +113,15 @@ ___
 - Use `/server settings whitelist_role_add (server, role)` to pick which Discord Role(s) grant Whitelist access to a Server.
     - **TIP**: You can add more than one Role per Server, and reuse the same Role across multiple Servers.
 - Use `/whitelist_sync enabled true` to turn the sync on bot-wide.
-    - **ATTENTION**: Gaining a configured Role Whitelists the Member automatically (as long as they've linked their account); losing the Role, or leaving the Guild, removes them again.
+    - **ATTENTION**: Gaining a configured Role Whitelists the Member automatically (as long as they've linked their account); losing the Role, or leaving the Guild, removes them again -- as long as they still hold at least one OTHER Role gating that Server (Whitelist Sync or Donator, see below), they stay Whitelisted.
     - **TIP**: Use `/whitelist_sync interval (minutes)` to control how often the safety-net reconciliation pass runs (default `15` minutes), which catches any Role/Whitelist drift that happened while the bot was offline.
+
+### **Setting up Donator Roles**
+- Donator Roles work exactly like Discord Role Whitelist Syncing above (same automatic grant/revoke, same `/whitelist_sync enabled true` master switch, same linked-account requirement), just tracked as their own list per Server, separate from the general Whitelist Sync Roles.
+- Use `/server settings donator_role_add (server, role)` to pick which Discord Role(s) count as Donator for a Server.
+    - **TIP**: You can add more than one Donator Role per Server, and use different Donator Roles on different Servers. A Member only needs to hold ONE of them to be auto-Whitelisted.
+    - Manage the list with `/server settings donator_role_remove` and `/server settings donator_role_list`.
+- Optionally use `/server settings donator (server, flag)` to make a Server "Donator only" -- this additionally blocks non-Donators from using `/whitelist_request` on that Server at all (Donators still get Whitelisted automatically either way, via Role Sync).
 
 ### **Setting up your Server Banner Displays**
 - First, set all your servers settings/information. See [Server Commands](/docs/COMMANDS.md#uamp-server-commandsu)

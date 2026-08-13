@@ -47,6 +47,9 @@ class WhitelistSync(commands.Cog):
         self.uBot.sub_group_command_handler('server settings', self.whitelist_role_add)
         self.uBot.sub_group_command_handler('server settings', self.whitelist_role_remove)
         self.uBot.sub_group_command_handler('server settings', self.whitelist_role_list)
+        self.uBot.sub_group_command_handler('server settings', self.donator_role_add)
+        self.uBot.sub_group_command_handler('server settings', self.donator_role_remove)
+        self.uBot.sub_group_command_handler('server settings', self.donator_role_list)
 
         if self.DBConfig.GetSetting('Whitelist_Role_Sync'):
             interval = int(self.DBConfig.GetSetting('Whitelist_Role_Sync_Interval') or 15)
@@ -115,6 +118,23 @@ class WhitelistSync(commands.Cog):
             amp_server.removeWhitelist(db_user=db_user)
             self.logger.command(f'Whitelist Role Sync: Removed {member.name} from the Whitelist on {amp_server.FriendlyName}')
 
+    def _member_still_qualifies(self, member: discord.Member, ServerID: int) -> bool:
+        """Returns True if `member` currently holds ANY Role -- Whitelist-Sync OR Donator, either
+        category counts -- that still gates Whitelist access for `ServerID`. Used to decide whether
+        losing ONE qualifying Role should actually trigger a removal, or whether another still-held
+        Role keeps them qualified."""
+        try:
+            db_server = self.DB.GetServer(ServerID=ServerID)
+        except Exception:
+            # ServerID no longer exists in Servers (eg. removed via `/dbserver cleanup`, which doesn't
+            # clean up ServerWhitelistRoles/ServerDonatorRoles) -- nothing left to qualify them for.
+            return False
+        if db_server is None:
+            return False
+        qualifying_role_ids = set(db_server.GetWhitelistRoles()) | set(db_server.GetDonatorRoles())
+        member_role_ids = {role.id for role in member.roles}
+        return not qualifying_role_ids.isdisjoint(member_role_ids)
+
     async def _cleanup_minecraft_whitelist(self, context: commands.Context):
         """Removes `db_user` from any role-synced Minecraft Whitelist before their linked IGN/UUID is cleared via `/link remove`.
         Must be called *before* nulling `MC_IngameName`/`MC_UUID`, since removal still needs the old identity to know who to remove."""
@@ -127,6 +147,7 @@ class WhitelistSync(commands.Cog):
         server_ids = set()
         for role in context.author.roles:
             server_ids.update(self.DB.GetServersByWhitelistRole(role.id))
+            server_ids.update(self.DB.GetServersByDonatorRole(role.id))
 
         for server_id in server_ids:
             amp_server = self._get_amp_instance_by_server_id(server_id)
@@ -139,7 +160,9 @@ class WhitelistSync(commands.Cog):
 
     @commands.Cog.listener('on_member_update')
     async def on_member_update(self, before: discord.Member, after: discord.Member):
-        """Keeps AMP Whitelists in sync when a Member gains or loses a configured Whitelist Sync Role."""
+        """Keeps AMP Whitelists in sync when a Member gains or loses a configured Whitelist-Sync
+        or Donator Role. Losing a Role only triggers a removal if the Member doesn't still hold
+        some OTHER qualifying Role for that same Server (`_member_still_qualifies`)."""
         if not self.DBConfig.GetSetting('Whitelist_Role_Sync'):
             return
 
@@ -149,12 +172,21 @@ class WhitelistSync(commands.Cog):
         gained_roles = after_roles - before_roles
         lost_roles = before_roles - after_roles
 
+        gained_server_ids = set()
         for role_id in gained_roles:
-            for server_id in self.DB.GetServersByWhitelistRole(role_id):
-                await self._sync_add(after, server_id)
+            gained_server_ids.update(self.DB.GetServersByWhitelistRole(role_id))
+            gained_server_ids.update(self.DB.GetServersByDonatorRole(role_id))
 
+        lost_server_ids = set()
         for role_id in lost_roles:
-            for server_id in self.DB.GetServersByWhitelistRole(role_id):
+            lost_server_ids.update(self.DB.GetServersByWhitelistRole(role_id))
+            lost_server_ids.update(self.DB.GetServersByDonatorRole(role_id))
+
+        for server_id in gained_server_ids:
+            await self._sync_add(after, server_id)
+
+        for server_id in lost_server_ids:
+            if not self._member_still_qualifies(after, server_id):
                 await self._sync_remove(after, server_id)
 
     @commands.Cog.listener('on_member_remove')
@@ -166,6 +198,7 @@ class WhitelistSync(commands.Cog):
         server_ids = set()
         for role in member.roles:
             server_ids.update(self.DB.GetServersByWhitelistRole(role.id))
+            server_ids.update(self.DB.GetServersByDonatorRole(role.id))
 
         for server_id in server_ids:
             await self._sync_remove(member, server_id)
@@ -189,7 +222,7 @@ class WhitelistSync(commands.Cog):
         self.logger.dev('Whitelist Role Sync: Running reconciliation pass...')
         for amp_server in list(self.AMPHandler.AMP_Instances.values()):
             db_server = amp_server.DB_Server
-            role_ids = db_server.GetWhitelistRoles()
+            role_ids = set(db_server.GetWhitelistRoles()) | set(db_server.GetDonatorRoles())
             if not len(role_ids):
                 continue
 
@@ -311,6 +344,26 @@ class WhitelistSync(commands.Cog):
 
         return choices[:25]
 
+    async def autocomplete_donator_roles(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
+        """Autocomplete for Discord Roles currently gating Donator access on the already-selected `server` option."""
+        server = interaction.namespace.server
+        if not server:
+            return []
+
+        amp_server = self.uBot.serverparse(server)
+        if amp_server == None:
+            return []
+
+        db_server = self.DB.GetServer(amp_server.InstanceID)
+        choices = []
+        for role_id in db_server.GetDonatorRoles():
+            role = interaction.guild.get_role(role_id)
+            name = role.name if role != None else i18n.t('messages.donator_role.deleted_role_placeholder', role_id=role_id)
+            if current.lower() in name.lower():
+                choices.append(app_commands.Choice(name=name, value=str(role_id)))
+
+        return choices[:25]
+
     # Whitelist Role Management Commands (attached to `server settings`) ----------------------------------------------------------------------
 
     @commands.hybrid_command(name='whitelist_role_add', description=i18n.t('commands.server.settings.whitelist_role_add.description'))
@@ -375,6 +428,72 @@ class WhitelistSync(commands.Cog):
                 role_mentions.append(role.mention if role != None else i18n.t('messages.whitelist_role.deleted_role_mention', role_id=role_id))
 
             await context.send(i18n.t('messages.whitelist_role.list.result', server_name=server_name, role_mentions=", ".join(role_mentions)), ephemeral=True, delete_after=self._client.Message_Timeout)
+
+    # Donator Role Management Commands (attached to `server settings`) -- any one of these Roles automatically
+    # grants Whitelist access via the same Whitelist-Sync mechanism as `whitelist_role_add` above -----------------
+
+    @commands.hybrid_command(name='donator_role_add', description=i18n.t('commands.server.settings.donator_role_add.description'))
+    @utils.role_check()
+    @app_commands.autocomplete(server=utils.autocomplete_servers)
+    async def donator_role_add(self, context: commands.Context, server: str, role: discord.Role):
+        self.logger.command(f'{context.author.name} used Donator Role Add')
+
+        amp_server = await self.uBot._serverCheck(context, server, False)
+        if amp_server:
+            db_server = self.DB.GetServer(amp_server.InstanceID)
+            server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
+
+            if role.id in db_server.GetDonatorRoles():
+                return await context.send(i18n.t('messages.donator_role.add.already_gating', role_name=role.name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
+
+            db_server.AddDonatorRole(role.id)
+            await context.send(i18n.t('messages.donator_role.add.success', role_name=role.name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
+
+    @commands.hybrid_command(name='donator_role_remove', description=i18n.t('commands.server.settings.donator_role_remove.description'))
+    @utils.role_check()
+    @app_commands.autocomplete(server=utils.autocomplete_servers, role=autocomplete_donator_roles)
+    async def donator_role_remove(self, context: commands.Context, server: str, role: str):
+        self.logger.command(f'{context.author.name} used Donator Role Remove')
+
+        amp_server = await self.uBot._serverCheck(context, server, False)
+        if amp_server:
+            db_server = self.DB.GetServer(amp_server.InstanceID)
+            server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
+
+            if not role.isdigit():
+                return await context.send(i18n.t('messages.donator_role.remove.not_a_role', role=role), ephemeral=True, delete_after=self._client.Message_Timeout)
+
+            role_id = int(role)
+            discord_role = context.guild.get_role(role_id)
+            role_name = discord_role.name if discord_role != None else i18n.t('messages.donator_role.deleted_role_placeholder', role_id=role_id)
+
+            if role_id not in db_server.GetDonatorRoles():
+                return await context.send(i18n.t('messages.donator_role.remove.not_gating', role_name=role_name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
+
+            db_server.DelDonatorRole(role_id)
+            await context.send(i18n.t('messages.donator_role.remove.success', role_name=role_name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
+
+    @commands.hybrid_command(name='donator_role_list', description=i18n.t('commands.server.settings.donator_role_list.description'))
+    @utils.role_check()
+    @app_commands.autocomplete(server=utils.autocomplete_servers)
+    async def donator_role_list(self, context: commands.Context, server: str):
+        self.logger.command(f'{context.author.name} used Donator Role List')
+
+        amp_server = await self.uBot._serverCheck(context, server, False)
+        if amp_server:
+            db_server = self.DB.GetServer(amp_server.InstanceID)
+            server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
+            role_ids = db_server.GetDonatorRoles()
+
+            if not len(role_ids):
+                return await context.send(i18n.t('messages.donator_role.list.none_configured', server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
+
+            role_mentions = []
+            for role_id in role_ids:
+                role = context.guild.get_role(role_id)
+                role_mentions.append(role.mention if role != None else i18n.t('messages.donator_role.deleted_role_mention', role_id=role_id))
+
+            await context.send(i18n.t('messages.donator_role.list.result', server_name=server_name, role_mentions=", ".join(role_mentions)), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     # Whitelist Sync Global Settings --------------------------------------------------------------------------------------------------------
 

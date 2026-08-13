@@ -7,7 +7,7 @@ ___
 - Gatekeeper has the ability to set permissions *per command* or *globally* across a command tree.
     - *See below for [How to use!](#using-your-permission-nodes)*
 - You can make as many "Roles" as you want and can assign them to Discord users however you want! 
-    - The only restriction is that **ANY ROLE** you give a Discord User via the `/role (user, role)` command **MUST EXIST** in the `bot_perms` file or it won't work.
+    - The only restriction is that **ANY ROLE** you give a Discord User via the `/user role (user, role)` command **MUST EXIST** in the `bot_perms` file or it won't work.
         - **TIP**: `role` autocompletes with the Role names currently defined in your `bot_perms.json`.
 
 ## **Enabling Custom Permissons**
@@ -22,15 +22,15 @@ ___
 ### **Setting up your Permissions File**
 - Each role must have a `name`, `discord_role_id`, `prefix` and `permissions`. 
     - **ATTENTION**: All these values must exist! `discord_role_id` and `prefix` are the only ones that can be set to `"None"`
-    - **TIP**: You can get a Discord role's ID via the `/bot roleid (role)` command.
+    - **TIP**: You can get a Discord role's ID via the `/bot utils roleid (role)` command.
     ```python
     "name": "Admin", #This field can be set to any name/phrase you want to set as a "role" 
     "discord_role_id": "1004516841932214373", #This must be the numeric value you get from Copy Role ID in developer mode.
     "prefix": "Admin", #This will be displayed when a User with this role talks On Discord and is sent to the Dedicated Server.
     "permissions": [
-        "bot.status",
-        "bot.ping",
-        "bot.sync"]
+        "bot.utils.status",
+        "bot.utils.ping",
+        "bot.utils.sync"]
     ```
 
 ### **Using your Permission Nodes**
@@ -38,40 +38,40 @@ ___
 
 ### Adding Permissions:
 - Simply place the permission node inside the Roles permissions list.
-    - **REMINDER**: You want to place the permission node inside the `opening "[" and closing "]"`, each entry needs `quotes("double")` and between each entry needs to be a `comma(,)`. *(eg `'-bot.status', '-bot.)*
+    - **REMINDER**: You want to place the permission node inside the `opening "[" and closing "]"`, each entry needs `quotes("double")` and between each entry needs to be a `comma(,)`. *(eg `"-bot.utils.status", "-bot.utils.ping"`)*
     
     ```python
     {"name": "Admin",
     "discord_role_id": "1004516841932214373", #Must be a Discord Role ID.
     "prefix":
     "permissions": 
-        ["bot.status", #This is ALLOWING the command '/bot status'
-        "bot.ping",
-        "bot.sync"]} 
+        ["bot.utils.status", #This is ALLOWING the command '/bot utils status'
+        "bot.utils.ping",
+        "bot.utils.sync"]} 
     ```
 ### Removing Permissions:
-- Simply place the permission node inside the Roles permissions list with a `-` in front of it. *(eg. `-bot.status`)*
-    - **REMINDER**: You want to place the permission node inside the `opening "[" and closing "]"`, each entry needs `quotes("double")` and between each entry needs to be a `comma(,)`. *(eg `"-bot.status", "-bot.ping"`)*
+- Simply place the permission node inside the Roles permissions list with a `-` in front of it. *(eg. `-bot.utils.status`)*
+    - **REMINDER**: You want to place the permission node inside the `opening "[" and closing "]"`, each entry needs `quotes("double")` and between each entry needs to be a `comma(,)`. *(eg `"-bot.utils.status", "-bot.utils.ping"`)*
     ```python
     {"name": "Admin",
     "discord_role_id": "1004516841932214373",
     "permissions": 
-        ["-bot.status", #This is REMOVING the permissions node bot.status preventing the role from using the command '/bot status'
-        "bot.ping",
-        "bot.restart"]} 
+        ["-bot.utils.status", #This is REMOVING the permissions node bot.utils.status preventing the role from using the command '/bot utils status'
+        "bot.utils.ping",
+        "bot.utils.restart"]} 
     ```
 
 ### Adding Wildcard Permissions:
 - Adding the permission node `server.*` would give the Role full access to any `/server` command.
     - *Location of the wildcard does not matter.*
-- **TIP**: You can __REMOVE__ permission for a specific command simply by adding a `-` before the permission node *(eg. `-server.list`)* 
-    - The user would still have access to all other `/server` commands __EXCEPT__ `/server list`.
+- **TIP**: You can __REMOVE__ permission for a specific command simply by adding a `-` before the permission node *(eg. `-server.status`)* 
+    - The user would still have access to all other `/server` commands __EXCEPT__ `/server status`.
     ```python
     {"name": "Admin",
     "discord_role_id": "1004516841932214373",
     "permissions": 
         ["bot.*", #This is my wildcard, allowing me to use any command that starts with '/bot'
-        "-bot.status"]} #This is REMOVING the permission to use the command '/bot status' even though the wildcard exists.
+        "-bot.utils.status"]} #This is REMOVING the permission to use the command '/bot utils status' even though the wildcard exists.
     ```
 
 ___
@@ -88,15 +88,15 @@ ___
 ___
 #### **Full Permission Node List**
 - This list may be missing permissions. You have been warned, check your logger for permission nodes.
+- **NOTE**: A node is always the command's own Discord path with spaces replaced by dots (eg. `/server settings donator` -> `server.settings.donator`). Wildcards (`x.*`) only ever match the **first** dot-segment.
 ___
 ```py
-whitelist.buttons #For Approve, Deny Buttons
+whitelist_buttons #For Approve, Deny Buttons
 
 staff #Changes layout of Server Autocomplete to show IDs
 
 bot.*
 bot.settings
-bot.donator
 bot.moderator
 bot.permissions
 bot.language #Administrator-only, see note above -- not delegable via Custom Permissions
@@ -131,6 +131,9 @@ bot.regex_pattern.delete
 bot.banner_settings.*
 bot.banner_settings.type
 bot.banner_settings.auto_update
+bot.banner_settings.auto_remove
+bot.banner_settings.timeformat
+bot.banner_settings.timezone
 
 bot.cog.*
 bot.cog.reload
@@ -147,7 +150,6 @@ server.users
 server.status
 server.backup
 server.kill
-server.display
 server.msg
 
 server.regex.*
@@ -168,20 +170,19 @@ server.settings.role
 server.settings.host
 server.settings.avatar
 server.settings.prefix
-server.settings.donator
+server.settings.donator #Donator-only vs everyone gate for /whitelist_request on this Server
 server.settings.info
 server.settings.hidden
 server.settings.displayname
+server.settings.whitelist
 server.settings.whitelist_role_add
 server.settings.whitelist_role_remove
 server.settings.whitelist_role_list
-
-server.whitelist.*
-server.whitelist.add
-server.whitelist.true
-server.whitelist.false
-server.whitelist.remove
-server.whitelist.disabled
+server.settings.donator_role_add #Which Discord Role(s) auto-whitelist as a Donator on this Server -- any one is enough
+server.settings.donator_role_remove
+server.settings.donator_role_list
+server.settings.whitelist_auto #Per-Server: auto-whitelist /whitelist_request or require Staff approval
+server.settings.whitelist_wait_time
 
 server.chat.*
 server.chat.channel
@@ -189,11 +190,17 @@ server.chat.channel
 server.event.*
 server.event.channel
 
-bot.whitelist.*
-bot.whitelist.auto
-bot.whitelist.wait_time
+server.whitelist.* #`/server whitelist add|remove` -- manually add/remove one IGN on one Server's whitelist
+                    #(`server.settings.whitelist` above is the separate open/closed/hidden flag command)
+server.whitelist.add
+server.whitelist.remove
+
+bot.whitelist.* #`/bot whitelist request_channel` -- the one remaining bot-wide setting for the
+                 #`/whitelist_request` self-service flow; `auto`/`wait_time` are now per-Server
+                 #(see `server.settings.whitelist_auto`/`whitelist_wait_time` above), and
+                 #`donator_bypass` is gone (superseded by `server.settings.donator_role_add` --
+                 #Donator Roles auto-whitelist via Whitelist Sync, they never reach this flow)
 bot.whitelist.request_channel
-bot.whitelist.donator_bypass
 
 bot.whitelist_reply.*
 bot.whitelist_reply.list
@@ -213,7 +220,10 @@ dbserver.cleanup
 dbserver.change_instance_id
 
 user.*
+user.role #The `/user role (user, role)` command referenced above under "Features"
 user.update
-user.info
+user.info.discord #NOTE: `/user info` has 3 separate leaf permission nodes, not one `user.info`
+user.info.minecraft
+user.info.steam
 user.add
 ```

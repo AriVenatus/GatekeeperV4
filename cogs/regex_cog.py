@@ -100,11 +100,12 @@ class Regex(commands.Cog):
     async def regex_pattern_update(self, context: commands.Context, name: str, new_name: str = None, filter_type: Choice[int] = None, pattern: str = None):
         self.logger.command(f'{context.author.name} used Regex Pattern Update')
 
-        try:
-            re.compile(pattern=pattern)
-        except re.error as e:
-            self.logger.error(f'Regex Error: {traceback.format_exc()}')
-            return await context.send(content=i18n.t('messages.regex.invalid_pattern', pattern=pattern), ephemeral=True, delete_after=self._client.Message_Timeout)
+        if pattern != None:
+            try:
+                re.compile(pattern=pattern)
+            except re.error as e:
+                self.logger.error(f'Regex Error: {traceback.format_exc()}')
+                return await context.send(content=i18n.t('messages.regex.invalid_pattern', pattern=pattern), ephemeral=True, delete_after=self._client.Message_Timeout)
 
         filter_value = None
         filter_name = None

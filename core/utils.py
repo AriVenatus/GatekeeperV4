@@ -67,8 +67,7 @@ async def async_rolecheck(context: Union[commands.Context, discord.Interaction, 
             perm_node = str(context.command).replace(" ", ".")
 
         bPerms = get_botPerms()
-        bPerms.perm_node_check(perm_node, context)
-        if bPerms.perm_node_check == False:
+        if bPerms.perm_node_check(perm_node, context) is not True:
             logger.command(f'*Custom* Permission Check Failed on {author} missing {perm_node}')
             return False
         else:
@@ -121,7 +120,7 @@ def guild_check(guild_id: int = None):
 async def autocomplete_servers(interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
     """Autocomplete for AMP Instance Names"""
     choice_list = __AMP_Handler.get_AMP_instance_names()
-    if await async_rolecheck(interaction, perm_node='Staff') == True:
+    if await async_rolecheck(interaction, perm_node='staff') == True:
         return [app_commands.Choice(name=f"{value} | ID: {key}", value=key)for key, value in choice_list.items() if current.lower().lstrip() in value.lower()][:25]
     else:
         return [app_commands.Choice(name=f"{value}", value=key)for key, value in choice_list.items() if current.lower().lstrip() in value.lower()][:25]
@@ -650,13 +649,17 @@ class botPerms():
                 if command_super_node in role['permissions']:
                     command_perm_node_false_check = '-' + command_perm_node
                     if command_perm_node_false_check in role['permissions']:
-                        if command_perm_node_false_check[1:] == command_perm_node:
-                            self.logger.dev('This perm node has been denied even though you have global permissions.', command_perm_node_false_check, command_perm_node)
-                            return False
+                        self.logger.dev('This perm node has been denied even though you have global permissions.', command_perm_node_false_check, command_perm_node)
+                        return False
+
+                    self.logger.dev('Found super permission node in Roles Permissions list.', command_super_node)
+                    return True
 
                 if command_perm_node in role['permissions']:
                     self.logger.dev('Found command perm node in Roles Permissions list.', command_perm_node)
                     return True
+
+        return False
 
     def get_roles(self) -> list[str]:
         """Pre build my Permissions Role Name List"""

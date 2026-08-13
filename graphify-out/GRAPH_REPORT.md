@@ -1,16 +1,16 @@
-# Graph Report - GatekeeperV3.1  (2026-08-11)
+# Graph Report - GatekeeperV3.1  (2026-08-12)
 
 ## Corpus Check
-- 72 files · ~325,686 words
+- 72 files · ~327,779 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1308 nodes · 2574 edges · 85 communities (64 shown, 21 thin omitted)
+- 1334 nodes · 2624 edges · 82 communities (63 shown, 19 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 79 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2d43ba7f`
+- Built from commit: `fbabd342`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -24,14 +24,14 @@
 - Whitelist
 - .Login
 - Cog_Template
-- I18nHandler
+- Edited_DB_Banner
 - AMPMinecraft
 - AMP.py
 - DB_Update
 - Banner_Generator
 - AMPInstance
-- ._fetchall
-- .Get_BannerGroup
+- Database
+- ._fetchone
 - DB_User
 - botUtils
 - botEmbeds
@@ -47,14 +47,14 @@
 - Cancel_Banner_Button
 - .__init__
 - discordBot
-- amp_generic.py
+- I18nHandler
 - Python 3.13 Bootstrap Compatibility Fixes
 - Banner_Editor_View
 - DBConfig
-- .AddServerWhitelistRole
+- amp_starbound.py
 - .getStatus
 - .check_GatekeeperRole_Permissions
-- cog_minecraft.py
+- Minecraft
 - **Enabling Custom Permissons**
 - .role_parse
 - **Whitelist**
@@ -63,7 +63,7 @@
 - AMPConsole
 - Context
 - botPerms
-- Database
+- Banner_Editor_Select
 - cog_sevendays.py
 - DBUser
 - AMP_Tasks
@@ -75,7 +75,7 @@
 - **Banner**
 - Production deployment log (Hetzner, `fullsendhub.de`)
 - **Adding a Language**
-- Edited_DB_Banner
+- .AddServerWhitelistRole
 - cog_factorio.py
 - cog_starbound.py
 - cog_csgo.py
@@ -91,25 +91,22 @@
 - .RestartInstance
 - cog_projectzomboid.py
 - cog_terraria.py
-- .user_role
-- Handler
-- Banner_Editor_Select
+- permissions_cog.py
 - amp_permissions.py
-- request_shutdown
 - start.py (Setup / startup sequence)
 - Bug Report Issue Template
 
 ## God Nodes (most connected - your core abstractions)
 1. `AMPInstance` - 107 edges
-2. `role_check()` - 99 edges
-3. `Database` - 54 edges
-4. `Edited_DB_Banner` - 40 edges
-5. `DB_Update` - 37 edges
+2. `role_check()` - 100 edges
+3. `Database` - 57 edges
+4. `DB_Update` - 41 edges
+5. `Edited_DB_Banner` - 40 edges
 6. `AMP_Server` - 36 edges
 7. `Banner` - 34 edges
-8. `Banner_Editor_View` - 28 edges
-9. `AMPHandler` - 27 edges
-10. `t()` - 26 edges
+8. `WhitelistSync` - 30 edges
+9. `Banner_Editor_View` - 28 edges
+10. `AMPHandler` - 27 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `AMP_Tasks` --uses--> `AMPInstance`  [INFERRED]
@@ -130,15 +127,15 @@
 ## Hyperedges (group relationships)
 - **Python 3.13 / Hetzner Deployment Compatibility Fix Batch** — claude_python313_compatibility_fixes, requirements_dependencies, claude_logger, claude_amp_instance, claude_amp_permissions [EXTRACTED 1.00]
 
-## Communities (85 total, 21 thin omitted)
+## Communities (82 total, 19 thin omitted)
 
 ### Community 0 - "discordBot.py"
-Cohesion: 0.09
-Nodes (45): autocomplete_loadedcogs(), bot_cog(), bot_cog_loader(), bot_cog_reload(), bot_cog_unloader(), bot_donator(), bot_language(), bot_moderator() (+37 more)
+Cohesion: 0.07
+Nodes (49): autocomplete_loadedcogs(), bot_cog(), bot_cog_loader(), bot_cog_reload(), bot_cog_unloader(), bot_language(), bot_moderator(), bot_permissions() (+41 more)
 
 ### Community 1 - "role_check"
-Cohesion: 0.14
-Nodes (16): AMP_Server, autocomplete, Choice, choices, Client, command, Context, group (+8 more)
+Cohesion: 0.11
+Nodes (21): AMP_Server, autocomplete, Choice, choices, Client, command, Context, group (+13 more)
 
 ### Community 2 - "Banner"
 Cohesion: 0.08
@@ -150,14 +147,14 @@ Nodes (33): Accept_Whitelist_Button, Approve_Button, Cancel_Button, Confirm_Link
 
 ### Community 4 - "WhitelistSync"
 Cohesion: 0.08
-Nodes (27): before_loop, autocomplete, Bot, Choice, choices, command, Context, DBUser (+19 more)
+Nodes (29): before_loop, autocomplete, Bot, Choice, choices, command, Context, DBUser (+21 more)
 
 ### Community 5 - "DB.py"
-Cohesion: 0.25
-Nodes (9): setup(), datetime, get_language(), getI18nHandler(), # NOTE: `Command._params` is a private/undocumented discord.py attribute…, retranslate_command_tree(), set_language(), t_plural() (+1 more)
+Cohesion: 0.21
+Nodes (11): setup(), Request the AMP handler background loops to stop., request_shutdown(), datetime, get_language(), getI18nHandler(), # NOTE: `Command._params` is a private/undocumented discord.py attribute…, retranslate_command_tree() (+3 more)
 
 ### Community 6 - "Whitelist"
-Cohesion: 0.09
+Cohesion: 0.10
 Nodes (22): autocomplete, Bot, Choice, choices, command, Context, describe, GuildChannel (+14 more)
 
 ### Community 7 - ".Login"
@@ -168,9 +165,9 @@ Nodes (14): This is the main API Call function, This gets all Instances on AMP.,
 Cohesion: 0.08
 Nodes (24): guild_check(), Use this before any commands to limit it to a certain guild usage., guilds, Reaction, Cog_Template, autocomplete, Client, command (+16 more)
 
-### Community 9 - "I18nHandler"
-Cohesion: 0.21
-Nodes (3): I18nHandler, Re-derives each command/param/choice's locale key from its live…, Loads locale files and resolves translation keys for the currently active…
+### Community 9 - "Edited_DB_Banner"
+Cohesion: 0.19
+Nodes (8): DBBanner, Edited_DB_Banner, DB_Banner for Banner Editor All `attrs` inside this class must have a `_`…, Copy_To_Select, Interaction, Select, Copy_To_View, View
 
 ### Community 10 - "AMPMinecraft"
 Cohesion: 0.09
@@ -178,11 +175,11 @@ Nodes (15): AMPMinecraft, AMPMinecraftConsole, DBUser, Gets a Users Player Head 
 
 ### Community 11 - "AMP.py"
 Cohesion: 0.19
-Nodes (4): AMPCsgo, AMPCsgoConsole, AMPStarbound, AMPStarboundConsole
+Nodes (4): AMPCsgo, AMPCsgoConsole, AMPGeneric, AMPGenericConsole
 
 ### Community 12 - "DB_Update"
-Cohesion: 0.11
-Nodes (3): DB_Update, SQLITE does not support dropping UNIQUE constraint, SQLITE does not support adding UNIQUE constraint
+Cohesion: 0.10
+Nodes (4): DB_Update, SQLITE does not support dropping UNIQUE constraint, SQLITE does not support adding UNIQUE constraint, Seeds every Server row's new Auto_Whitelist/Whitelist_Wait_Time from the old…
 
 ### Community 13 - "Banner_Generator"
 Cohesion: 0.14
@@ -192,13 +189,13 @@ Nodes (10): ImageFont, Banner_Generator, Image, Custom Banner Generator for Gate
 Cohesion: 0.08
 Nodes (13): AMPInstance, DBUser, Base Function for AMP.addWhitelist, Base Function for AMP.getWhitelist, Base Function for AMP.removeWhitelist, Base Function for AMP.name_Conversion, Base Function for AMP.name_History, Base Function for Discord Chat Messages to AMP ADS (+5 more)
 
-### Community 15 - "._fetchall"
-Cohesion: 0.10
-Nodes (9): Gets all Regex Patterns related to Server Returns `dict['ID': {'Name':…, Gets all Discord Role IDs gating Whitelist access for this Server., Gets all Servers current in the DB, Returns all ServerIDs that the provided Discord Role ID gates Whitelist access…, Gets all Regex Patterns from the RegexPatterns Table. Returns…, Gets all Whitelist Replies currently in the DB, Gets all BannerGroups Names/IDs returns `Banners[entry["ID"]] = entry["name"]`, Gets all the BannerGroups and sorts them by `Discord_Channel_ID`. `example:… (+1 more)
+### Community 15 - "Database"
+Cohesion: 0.12
+Nodes (11): Database, Gets all Servers current in the DB, Returns all ServerIDs that the provided Discord Role ID gates Whitelist access…, Returns all ServerIDs that the provided Discord Role ID gates Donator access…, Gets all Regex Patterns from the RegexPatterns Table. Returns…, Gets all Whitelist Replies currently in the DB, Gets a Specific Banner Groups full information return…, Gets all BannerGroups Names/IDs returns `Banners[entry["ID"]] = entry["name"]` (+3 more)
 
-### Community 16 - ".Get_BannerGroup"
-Cohesion: 0.11
-Nodes (9): Selects a Banner Group Table matching the `name` provided., Update a Banner Group, Gets a Specific Banner Groups full information return…, Removes a Banner Group., Add a Server to an existing Banner Group., Removes a Server from an existing Banner Group., Add a Channel to a BannerGroups listing., Adds a Discord Message ID to a BannerGroup (+1 more)
+### Community 16 - "._fetchone"
+Cohesion: 0.09
+Nodes (13): DBServer, Removes a entry RegexPatterns Table using either its `Name` or `ID`, Returns RegexPatterns Table Returns `row['ID'] = {'Name': row['Name'], 'Type':…, Update a Regex Pattern in the RegexPatterns Table using either its `Name` or…, Selects a Banner Group Table matching the `name` provided., Update a Banner Group, Removes a Banner Group., Add a Server to an existing Banner Group. (+5 more)
 
 ### Community 17 - "DB_User"
 Cohesion: 0.20
@@ -222,15 +219,19 @@ Nodes (12): autocomplete, Choice, choices, Client, command, Context, describe, h
 
 ### Community 22 - "**Interacting with the Bot**"
 Cohesion: 0.08
-Nodes (23): **AMP Instance Instructions**, **Creating a Discord Bot Account**, **First Time Startup**, **Installation Methods**, Installing Python 3.13, Installing Python on Linux, Installing Python on  Windows, **Interacting with the Bot** (+15 more)
+Nodes (24): **AMP Instance Instructions**, **Creating a Discord Bot Account**, **First Time Startup**, **Installation Methods**, Installing Python 3.13, Installing Python on Linux, Installing Python on  Windows, **Interacting with the Bot** (+16 more)
 
 ### Community 23 - "AMPTemplate"
 Cohesion: 0.12
 Nodes (8): AMPTemplate, AMPTemplateConsole, Sets the Permissions for Template Modules, Sends a message in a way to mimic that of in-game Chat Messages., Base Function for Broadcast Messages to AMP ADS, Base Function for AMP.addWhitelist, Base Function for AMP.getWhitelist, Base Function for AMP.removeWhitelist
 
+### Community 24 - "._execute"
+Cohesion: 0.17
+Nodes (6): dump_to_json(), Adds a entry to table RegexPatterns, else Updates a matching pattern., Adds a Whitelist Reply to the DB, Deletes a Whitelist Reply from the DB, Creates a Banner Group Table with the provided `name`, Removes a Discord Message ID from a BannerGroup
+
 ### Community 25 - "DBServer"
-Cohesion: 0.12
-Nodes (9): DBServer, DBServer, DB Server Attributes: `InstanceID: str` `InstanceName: str` `FriendlyName: str`…, Adds the provided RegexPattern ID/Name to the ServerRegexPatterns Table., Removes the provided RegexPattern ID/Name from the ServerRegexPatterns Table., Removes a entry RegexPatterns Table using either its `Name` or `ID`, Returns RegexPatterns Table Returns `row['ID'] = {'Name': row['Name'], 'Type':…, Remove a Channel from a BannerGroups listing, this also removes any related… (+1 more)
+Cohesion: 0.09
+Nodes (11): DBServer, DB Server Attributes: `InstanceID: str` `InstanceName: str` `FriendlyName: str`…, Adds the provided RegexPattern ID/Name to the ServerRegexPatterns Table., Removes the provided RegexPattern ID/Name from the ServerRegexPatterns Table., Gets all Regex Patterns related to Server Returns `dict['ID': {'Name':…, Gets all Discord Role IDs gating Whitelist access for this Server., Adds a Discord Role ID to this Server's Donator Role gate list. Any one of…, Removes a Discord Role ID from this Server's Donator Role gate list. (+3 more)
 
 ### Community 26 - "AMPHandler"
 Cohesion: 0.16
@@ -256,6 +257,10 @@ Nodes (6): Creates the `Gatekeeper` role, Adds us to the Membership of that Role
 Cohesion: 0.15
 Nodes (9): discordBot, Client, Embed, Message, Deletes `message`. Deleting another user's message requires the…, Edits `message`; `content` must be convertible to `str`., Sends `content` to `parameter`. Only one of `file`/`files` may be given, not…, The name and ID of a custom emoji can be found with the client by prefixing… (+1 more)
 
+### Community 32 - "I18nHandler"
+Cohesion: 0.21
+Nodes (3): I18nHandler, Re-derives each command/param/choice's locale key from its live…, Loads locale files and resolves translation keys for the currently active…
+
 ### Community 33 - "Python 3.13 Bootstrap Compatibility Fixes"
 Cohesion: 0.06
 Nodes (43): AMP_Handler.py (AMPHandler singleton), AMP.py (AMPInstance base class), AMP Integration Layer, amp_permissions.py (AMP permission profiles), AMP Bot Role/Permission Bootstrap Ordering Bug, Core.UserManagement.ViewUserInfo Self-Check Crash Fix, Database Layer, DB.py (Database wrapper) (+35 more)
@@ -276,7 +281,7 @@ Nodes (6): Use this to check if the AMP Dedicated Server(ADS) is running, NOT TH
 Cohesion: 0.17
 Nodes (6): - Will check `Gatekeeper Role` for `Permission Nodes` when we have `Super…, Gets AMP user info. if IdOnly is True; returns AMP User ID only!, Returns AMP Users ID Only., Gets full permission spec for Role (returns permission nodes), Gets a List of all Roles, if set_roleID is true; it checks for `Gatekeeper` and…, Sets `self.AMP_BotRoleID` and `self.super_AdminID` (if they exist)
 
-### Community 39 - "cog_minecraft.py"
+### Community 39 - "Minecraft"
 Cohesion: 0.20
 Nodes (8): Minecraft, Bot, listener, Member, User, Called when a User updates any part of their Discord Profile; this provides…, Called when a member is kicked or leaves the Server/Guild. Returns a…, setup()
 
@@ -289,8 +294,8 @@ Cohesion: 0.22
 Nodes (6): Member, Role, Adds `role` to `user`., Removes `role` from `user`., This is the bot utils Role Parse Function It handles finding the specificed…, This is the bot utils User Parse Function It handles finding the specificed…
 
 ### Community 42 - "**Whitelist**"
-Cohesion: 0.20
-Nodes (9): **Account Linking**, Behavior:, **Discord Role Whitelist Sync**, Player-facing:, Setup:, Staff Setup:, **Troubleshooting**, **Whitelist** (+1 more)
+Cohesion: 0.15
+Nodes (12): **Account Linking**, Behavior:, Behavior:, **Discord Role Whitelist Sync**, **Donator Roles**, Player-facing:, Setup:, Setup: (+4 more)
 
 ### Community 44 - "async_rolecheck"
 Cohesion: 0.28
@@ -308,9 +313,9 @@ Nodes (5): Context, Fills whitelist reply placeholders: `<user>`, `<server>`, `<
 Cohesion: 0.36
 Nodes (4): botPerms, Validates the contents of bot_perms.json., Checks a Users for a DB Role then checks for that Role inside of bot_perms.py,…, Pre build my Permissions Role Name List
 
-### Community 48 - "Database"
-Cohesion: 0.14
-Nodes (7): Database, Adds a entry to table RegexPatterns, else Updates a matching pattern., Update a Regex Pattern in the RegexPatterns Table using either its `Name` or…, Adds a Whitelist Reply to the DB, Deletes a Whitelist Reply from the DB, Creates a Banner Group Table with the provided `name`, Removes a Discord Message ID from a BannerGroup
+### Community 48 - "Banner_Editor_Select"
+Cohesion: 0.33
+Nodes (5): banner_field_label(), Banner_Editor_Select, Interaction, Message, Select
 
 ### Community 51 - "AMP_Tasks"
 Cohesion: 0.15
@@ -344,10 +349,6 @@ Nodes (5): **Banner**, **Editing your Server Banner/Embed**, **How to Display yo
 Cohesion: 0.33
 Nodes (5): **Adding a Language**, How it works, Key naming (for anything you add later, not for translating existing keys), Steps, Things to watch for
 
-### Community 60 - "Edited_DB_Banner"
-Cohesion: 0.19
-Nodes (8): DBBanner, Edited_DB_Banner, DB_Banner for Banner Editor All `attrs` inside this class must have a `_`…, Copy_To_Select, Interaction, Select, Copy_To_View, View
-
 ### Community 61 - "cog_factorio.py"
 Cohesion: 0.50
 Nodes (3): Factorio, Bot, setup()
@@ -368,37 +369,29 @@ Nodes (3): Bot, setup(), Valheim
 Cohesion: 0.28
 Nodes (5): banner_file_handler(), Image, Saves the Banners current settings to the DB., This is called when a button is interacted with., Save_Banner_Button
 
-### Community 77 - ".user_role"
-Cohesion: 0.14
-Nodes (11): Permissions, autocomplete, Choice, Client, Context, hybrid_command, Interaction, Member (+3 more)
-
-### Community 78 - "Handler"
-Cohesion: 0.22
-Nodes (5): Handler, Client, This is the Basic Module Loader for AMP to Discord Integration/Interactions, This loads all the required Cogs/Scripts for each unique AMPInstance.Module type, This will load all Cogs inside of the cogs folder.
-
-### Community 79 - "Banner_Editor_Select"
-Cohesion: 0.33
-Nodes (5): banner_field_label(), Banner_Editor_Select, Interaction, Message, Select
+### Community 77 - "permissions_cog.py"
+Cohesion: 0.25
+Nodes (6): Permissions, Choice, Client, Interaction, This is for roles inside of the bot_perms file. Returns a list of all the…, setup()
 
 ## Knowledge Gaps
-- **93 isolated node(s):** `GatekeeperV4`, `**What is a Banner?**`, `Using the Custom Banner Image Editor:`, `**How to Display your Banners**`, `**Using your commands!**` (+88 more)
+- **96 isolated node(s):** `GatekeeperV4`, `**What is a Banner?**`, `Using the Custom Banner Image Editor:`, `**How to Display your Banners**`, `**Using your commands!**` (+91 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **21 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **19 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `AMPInstance` connect `AMPInstance` to `Banner`, `.__init__`, `WhitelistSync`, `Whitelist`, `.Login`, `AMP.py`, `Banner_Generator`, `botUtils`, `botEmbeds`, `AMPHandler`, `Cancel_Banner_Button`, `.__init__`, `Banner_Editor_View`, `.getStatus`, `.check_GatekeeperRole_Permissions`, `AMPConsole`, `Context`, `AMP_Tasks`, `.CurrentSessionHasPermission`, `.ConsoleMessage_withUpdate`, `modal.py`, `.RestartInstance`, `Banner_Editor_Select`?**
-  _High betweenness centrality (0.213) - this node is a cross-community bridge._
-- **Why does `Database` connect `Database` to `DBConfig`, `.AddServerWhitelistRole`, `DB.py`, `.RemoveServerWhitelistRole`, `DB_Update`, `._fetchall`, `.Get_BannerGroup`, `DBUser`, `._execute`, `DBServer`?**
-  _High betweenness centrality (0.127) - this node is a cross-community bridge._
-- **Why does `role_check()` connect `role_check` to `discordBot.py`, `Banner`, `WhitelistSync`, `DB.py`, `Whitelist`, `Cog_Template`, `async_rolecheck`, `.user_role`, `DB_User`, `Regex`, `DB_Server`?**
-  _High betweenness centrality (0.117) - this node is a cross-community bridge._
+- **Why does `AMPInstance` connect `AMPInstance` to `Banner`, `.__init__`, `WhitelistSync`, `Whitelist`, `.Login`, `AMP.py`, `Banner_Generator`, `botUtils`, `botEmbeds`, `AMPHandler`, `Cancel_Banner_Button`, `.__init__`, `Banner_Editor_View`, `.getStatus`, `.check_GatekeeperRole_Permissions`, `AMPConsole`, `Context`, `Banner_Editor_Select`, `AMP_Tasks`, `.CurrentSessionHasPermission`, `.ConsoleMessage_withUpdate`, `modal.py`, `.RestartInstance`?**
+  _High betweenness centrality (0.214) - this node is a cross-community bridge._
+- **Why does `role_check()` connect `role_check` to `discordBot.py`, `Banner`, `WhitelistSync`, `DB.py`, `Whitelist`, `Cog_Template`, `async_rolecheck`, `DB_User`, `Regex`, `DB_Server`?**
+  _High betweenness centrality (0.131) - this node is a cross-community bridge._
+- **Why does `Database` connect `Database` to `DBConfig`, `DB.py`, `.RemoveServerWhitelistRole`, `DB_Update`, `._fetchone`, `DBUser`, `._execute`, `DBServer`, `.AddServerWhitelistRole`?**
+  _High betweenness centrality (0.128) - this node is a cross-community bridge._
 - **Are the 13 inferred relationships involving `AMPInstance` (e.g. with `AMP_Tasks` and `AMPHandler`) actually correct?**
   _`AMPInstance` has 13 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 14 inferred relationships involving `Edited_DB_Banner` (e.g. with `DBBanner` and `Cancel_Banner_Button`) actually correct?**
-  _`Edited_DB_Banner` has 14 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 6 inferred relationships involving `DB_Update` (e.g. with `Database` and `DBBanner`) actually correct?**
   _`DB_Update` has 6 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 14 inferred relationships involving `Edited_DB_Banner` (e.g. with `DBBanner` and `Cancel_Banner_Button`) actually correct?**
+  _`Edited_DB_Banner` has 14 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `GatekeeperV4`, `**What is a Banner?**`, `Using the Custom Banner Image Editor:` to the rest of the system?**
-  _93 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _96 weakly-connected nodes found - possible documentation gaps or missing edges._

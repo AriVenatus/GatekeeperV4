@@ -1,8 +1,8 @@
 # **Whitelist**
 Welcome to Gatekeeper's Whitelist section. Gatekeeper actually has **two separate Whitelist systems** that can be used together or independently:
 
-1. **Whitelist Requests** - a player asks for access via `/whitelist_request`, and Staff (or the bot, if Auto-Whitelist is on) approve it.
-2. **Discord Role Whitelist Sync** - an admin picks a Discord Role, and the bot keeps Whitelist access in sync with who holds that Role automatically, no request needed.
+1. **Whitelist Requests** - a player asks for access via `/whitelist_request`, and Staff (or the bot, if Auto-Whitelist is on for that Server) approve it.
+2. **Discord Role Whitelist Sync** - an admin picks Discord Role(s), and the bot keeps Whitelist access in sync with who holds them automatically, no request needed. **Donator Roles** (see below) are a specialized flavor of this same mechanism - one Server can have both a general Whitelist Sync Role list and a separate Donator Role list.
 
 Both rely on the same underlying Player Identity Database (Discord ID \<-\> Minecraft IGN/UUID \<-\> SteamID), so setting one up doesn't get in the way of the other.
 
@@ -17,15 +17,16 @@ This is the original request/approval flow - a player asks, and either Staff or 
     - `ign` is optional if the player has already linked their Minecraft account (via `/link minecraft`) or been added to the Database before.
 
 ### Staff Setup:
-- `/bot whitelist request_channel (channel)` - Sets the channel the bot posts Whitelist requests to for Staff Approval (Accept/Deny buttons).
-- `/bot whitelist auto (flag)` - Turns Auto-Whitelist `ON`/`OFF`.
-    - **ATTENTION**: Default is `OFF`, meaning a Staff member (Discord Admin, or `Moderator` Role or higher) must click Accept on each request.
-- `/bot whitelist wait_time (time)` - When Auto-Whitelist is `ON`, how many minutes the bot waits before auto-approving a request (default `5`). Set to `0` for instant approval.
-- `/bot whitelist donator_bypass (flag)` - Lets players with the `/bot donator` Role skip the wait time entirely.
+- `/bot whitelist request_channel (channel)` - Sets the channel the bot posts Whitelist requests to for Staff Approval (Accept/Deny buttons). Bot-wide - one channel for every Server.
+- `/server settings whitelist_auto (server, flag)` - Turns Auto-Whitelist `ON`/`OFF` **for that Server**.
+    - **ATTENTION**: Default is `OFF`, meaning a Staff member (Discord Admin, or `Moderator` Role or higher) must click Accept on each request. Each Server has its own setting - one Server can auto-approve while another still requires Staff approval.
+- `/server settings whitelist_wait_time (server, time)` - When that Server's Auto-Whitelist is `ON`, how many minutes the bot waits before auto-approving a request (default `5`). Set to `0` for instant approval.
+    - **TIP**: Players with a Donator Role for that Server skip this entire flow and get Whitelisted automatically via Role Sync - see [Donator Roles](#donator-roles) below.
 - `/bot whitelist_reply add/remove/list (message)` - Manage a pool of custom messages the bot randomly picks from when it whitelists someone. See [Bot Whitelist Commands](/docs/COMMANDS.md#bot-whitelist-commands) for the supported `<user>`/`<server>`/`<guild>`/`<#channelid>` parameters.
 - `/server settings whitelist (server, flag)` - Opens (`True`), closes (`False`), or hides (`Disabled`) Whitelisting for a specific Server.
-- `/server settings role (server, role)` - *(Optional)* A Discord Role the bot grants a player as a reward **after** they get Whitelisted on that Server (in either direction, requests or sync). This is separate from the Role Sync Roles below - it doesn't gate anything, it's just a badge.
-- `/server whitelist add/remove (server, user)` - Manually add or remove an in-game name from a Server's Whitelist yourself, bypassing the request flow entirely.
+- `/server settings donator (server, flag)` - *(Optional)* Restricts `/whitelist_request` on that Server to players who hold one of that Server's Donator Roles. Players without one can't even submit a request there. Doesn't affect Role Sync/Donator auto-Whitelisting itself.
+- `/server settings role (server, role)` - *(Optional)* A Discord Role the bot grants a player as a reward **after** they get Whitelisted on that Server (in either direction, requests or sync). This is separate from the Role Sync/Donator Roles below - it doesn't gate anything, it's just a badge.
+- `/server whitelist add/remove (server, name)` - Manually add or remove an in-game name from a Server's Whitelist yourself, bypassing the request flow entirely.
 
 ## **Account Linking**
 ___
@@ -42,7 +43,7 @@ Both Whitelist systems need to know a player's in-game identity. Rather than Sta
 
 ## **Discord Role Whitelist Sync**
 ___
-This automates Whitelisting entirely around Discord Role membership - no request needed. A player gains the Role, they're Whitelisted; they lose it (or leave the Guild), they're removed.
+This automates Whitelisting entirely around Discord Role membership - no request needed. A player gains a configured Role, they're Whitelisted; they lose it (or leave the Guild), they're removed - **unless they still hold some other configured Role (Whitelist Sync or Donator, either counts) that also gates that same Server**, in which case they correctly stay Whitelisted.
 
 ### Setup:
 1. Have players link their game account first via `/link minecraft` or `/link steam` (see above) - Sync can't act on a player without a linked identity, it'll just DM them asking to `/link` first.
@@ -54,11 +55,25 @@ This automates Whitelisting entirely around Discord Role membership - no request
 
 ### Behavior:
 - Gaining a configured Role Whitelists the player automatically, as long as they have a linked identity.
-- Losing the Role, or leaving the Guild, removes them from that Server's Whitelist.
+- Losing the Role, or leaving the Guild, removes them from that Server's Whitelist, unless another qualifying Role (see above) keeps them eligible.
 - **ATTENTION**: Today this is fully functional for **Minecraft** Servers (the only Module with real Whitelist file support). Other Server types safely no-op until their Modules add real Whitelist support - Sync won't error, it just won't have anything to actually add/remove yet.
+
+## **Donator Roles**
+___
+Donator Roles are a separate, dedicated Role list per Server that works through the exact same automatic mechanism as Whitelist Role Sync above - same instant grant/revoke, same `/whitelist_sync enabled` master switch, same linked-identity requirement, same "any one of them is enough" logic. They're tracked separately from the general Whitelist Sync Roles so you can offer Donator perks without opening up general Whitelist Sync access, and vice versa.
+
+### Setup:
+1. Use `/server settings donator_role_add (server, role)` to pick which Discord Role(s) count as Donator for a Server.
+    - **TIP**: A Server can have multiple Donator Roles (any one is enough), and the same Role can be a Donator Role on multiple Servers.
+    - Manage the list with `/server settings donator_role_remove` and `/server settings donator_role_list`.
+2. Make sure `/whitelist_sync enabled true` is set bot-wide - this is the same switch that controls Whitelist Sync above.
+3. *(Optional)* `/server settings donator (server, flag)` - if `True`, only players holding one of that Server's Donator Roles may even submit a `/whitelist_request` there at all. Donators don't need this to get Whitelisted (they're covered by the automatic Role Sync mechanism regardless), it only restricts *non*-Donators from the manual request flow on that Server.
+
+### Behavior:
+Identical to Whitelist Role Sync above - gaining a Donator Role Whitelists the player automatically (once linked); losing it removes them, unless another qualifying Role (Whitelist Sync or Donator) still gates that Server.
 
 ## **Troubleshooting**
 ___
-- **A player isn't getting auto-Whitelisted after gaining their Role**: Confirm `/whitelist_sync enabled` is `true`, that they've run `/link` for the correct game, and that the Server is running the Minecraft Module (see above).
-- **A player lost access unexpectedly**: Check whether they lost a Role Sync Role, left and rejoined the Guild, or ran `/link remove`.
+- **A player isn't getting auto-Whitelisted after gaining their Role**: Confirm `/whitelist_sync enabled` is `true`, that they've run `/link` for the correct game, and that the Server is running the Minecraft Module (see above). This applies equally to Whitelist Sync Roles and Donator Roles.
+- **A player lost access unexpectedly**: Check whether they lost their *last* qualifying Role (Whitelist Sync or Donator - losing just one of several is fine), left and rejoined the Guild, or ran `/link remove`.
 - **Custom Permissions**: All of the commands above respect Gatekeeper's permission system - see [Permissions](/docs/PERMISSIONS.md) if you want finer-grained control over who can use them.

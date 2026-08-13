@@ -9,7 +9,6 @@
      "user.*",
      "server.*",
      "server.whitelist.*",
-     "server.donator.*",
      "server.console.*",
      "server.chat.channel"
     ]
@@ -23,7 +22,6 @@
      "user.*",
      "server.*",
      "server.whitelist.*",
-     "server.donator.*",
      "server.console.*",
      "server.chat.channel"
     ]
@@ -33,11 +31,8 @@
     "discord_role_id": "None",
     "prefix": "Mod",
     "permissions": [
-     "bot.whitelist.waittime",
-     "bot.whitelist.auto",
      "user.*",
      "server.*",
-     "server.list",
      "server.start",
      "server.stop",
      "server.restart",
@@ -55,7 +50,7 @@
     "discord_role_id": "None",
     "prefix": "Staff",
     "permissions": [
-     "bot.whitelist.auto",
+     "server.settings.whitelist_auto",
      "user.*",
      "server.msg",
      "server.status",

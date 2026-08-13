@@ -148,6 +148,21 @@ class DB_Update:
             self.DBConfig.AddSetting('Whitelist_Role_Sync_Interval', 15)
             self.DBConfig.SetSetting('DB_Version', '3.1')
 
+        if 3.2 > Version:
+            """Replaces the single global Donator Role/Bypass with per-Server Donator Roles
+            (ServerDonatorRoles, mirroring ServerWhitelistRoles), and moves Auto_Whitelist/
+            Whitelist_Wait_Time from bot-wide Config to per-Server columns."""
+            self.logger.info('**ATTENTION** Updating DB to Version 3.2')
+            self.server_donator_roles_table_creation()
+            self.server_auto_whitelist_column()
+            self.server_whitelist_wait_time_column()
+            self.migrate_donator_settings_to_per_server()
+            self.DBConfig.DeleteSetting('Donator_role_id')
+            self.DBConfig.DeleteSetting('Donator_Bypass')
+            self.DBConfig.DeleteSetting('Auto_Whitelist')
+            self.DBConfig.DeleteSetting('Whitelist_Wait_Time')
+            self.DBConfig.SetSetting('DB_Version', '3.2')
+
 
     def user_roles(self):
         try:
@@ -347,6 +362,57 @@ class DB_Update:
             self.DB._execute(SQL, ())
         except Exception as e:
             self.logger.critical(f'server_whitelist_roles_table_creation {e}')
+            sys.exit(-1)
+
+    def server_donator_roles_table_creation(self):
+        try:
+            SQL = 'create table ServerDonatorRoles (ID integer primary key, ServerID integer not null, Discord_Role_ID text not null collate nocase, foreign key (ServerID) references Servers(ID) UNIQUE(ServerID, Discord_Role_ID))'
+            self.DB._execute(SQL, ())
+        except Exception as e:
+            self.logger.critical(f'server_donator_roles_table_creation {e}')
+            sys.exit(-1)
+
+    def server_auto_whitelist_column(self):
+        try:
+            SQL = 'alter table Servers add column Auto_Whitelist integer not null default 0'
+            self.DB._execute(SQL, ())
+        except Exception as e:
+            self.logger.critical(f'server_auto_whitelist_column {e}')
+            sys.exit(-1)
+
+    def server_whitelist_wait_time_column(self):
+        try:
+            SQL = 'alter table Servers add column Whitelist_Wait_Time integer not null default 5'
+            self.DB._execute(SQL, ())
+        except Exception as e:
+            self.logger.critical(f'server_whitelist_wait_time_column {e}')
+            sys.exit(-1)
+
+    def migrate_donator_settings_to_per_server(self):
+        """Seeds every Server row's new Auto_Whitelist/Whitelist_Wait_Time from the old bot-wide
+        DBConfig values, and seeds ServerDonatorRoles for every currently Donator=True Server from
+        the old single Donator_role_id -- so upgrading doesn't silently lose existing configuration.
+        Must run BEFORE the old settings are deleted."""
+        try:
+            old_auto_whitelist = self.DBConfig.GetSetting('Auto_Whitelist')
+            old_wait_time = self.DBConfig.GetSetting('Whitelist_Wait_Time')
+            old_donator_role_id = self.DBConfig.GetSetting('Donator_role_id')
+
+            (rows, cur) = self.DB._fetchall('select ID, Donator from Servers', ())
+            for row in rows:
+                server_id = row['ID']
+                if old_auto_whitelist is not None:
+                    self.DB._execute('update Servers set Auto_Whitelist=? where ID=?', (int(bool(old_auto_whitelist)), server_id))
+                if old_wait_time is not None:
+                    self.DB._execute('update Servers set Whitelist_Wait_Time=? where ID=?', (int(old_wait_time), server_id))
+                if bool(row['Donator']) and old_donator_role_id not in (None, 'None'):
+                    try:
+                        self.DB._execute('insert into ServerDonatorRoles(ServerID, Discord_Role_ID) values(?, ?)', (server_id, str(int(old_donator_role_id))))
+                    except Exception:
+                        pass  # already seeded / duplicate -- harmless
+            cur.close()
+        except Exception as e:
+            self.logger.critical(f'migrate_donator_settings_to_per_server {e}')
             sys.exit(-1)
 
     def server_console_filter_type(self):

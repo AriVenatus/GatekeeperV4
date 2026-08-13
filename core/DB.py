@@ -25,7 +25,7 @@ def dump_to_json(data):
 
 Handler = None
 #!DB Version
-DB_Version = 3.1
+DB_Version = 3.2
 
 
 class DBHandler:
@@ -82,6 +82,7 @@ _SERVERS_ALLOWED_COLUMNS = frozenset({
     "Whitelist", "Whitelist_disabled", "Donator", "Console_Flag", "Console_Filtered",
     "Console_Filtered_Type", "Discord_Console_Channel", "Discord_Chat_Channel",
     "Discord_Chat_Prefix", "Discord_Event_Channel", "Discord_Role", "Avatar_url", "Hidden",
+    "Auto_Whitelist", "Whitelist_Wait_Time",
 })
 _USERS_ALLOWED_COLUMNS = frozenset({
     "DiscordID", "DiscordName", "MC_IngameName", "MC_UUID", "SteamID", "Role",
@@ -123,6 +124,8 @@ class Database:
                         Whitelist integer not null,
                         Whitelist_disabled integer not null,
                         Donator integer not null,
+                        Auto_Whitelist integer not null,
+                        Whitelist_Wait_Time integer not null,
                         Console_Flag integer not null,
                         Console_Filtered integer not null,
                         Console_Filtered_Type integer not null,
@@ -151,6 +154,14 @@ class Database:
                         )""")
 
         cur.execute("""create table ServerWhitelistRoles (
+                        ID integer primary key,
+                        ServerID integer not null,
+                        Discord_Role_ID text not null collate nocase,
+                        foreign key (ServerID) references Servers(ID)
+                        UNIQUE(ServerID, Discord_Role_ID)
+                        )""")
+
+        cur.execute("""create table ServerDonatorRoles (
                         ID integer primary key,
                         ServerID integer not null,
                         Discord_Role_ID text not null collate nocase,
@@ -238,17 +249,12 @@ class Database:
         self._AddConfig("Moderator_role_id", None)
         self._AddConfig("Permissions", 0)  # 0 = Default | 1 = Custom
         self._AddConfig("Whitelist_Request_Channel", None)
-        self._AddConfig("WhiteList_Wait_Time", 5)
-        self._AddConfig("Auto_Whitelist", False)
         self._AddConfig("Whitelist_Role_Sync", False)
         self._AddConfig("Whitelist_Role_Sync_Interval", 15)
         self._AddConfig("Banner_Auto_Update", True)
         self._AddConfig("Banner_Type", 0)  # 0 = Discord embeds | 1 = Custom Banner Images
         self._AddConfig("Bot_Version", None)
         self._AddConfig("Message_Timeout", 60)
-        # Donator Settings
-        self._AddConfig("Donator_Bypass", False)
-        self._AddConfig("Donator_role_id", None)
         # Prevent Server being removed from Banner Group
         self._AddConfig("Auto_BG_Remove", False)
         # Banner timestamp timezone/format
@@ -492,6 +498,27 @@ class Database:
     def GetServersByWhitelistRole(self, RoleID: int) -> list[int]:
         """Returns all ServerIDs that the provided Discord Role ID gates Whitelist access for."""
         (rows, cur) = self._fetchall("SELECT ServerID FROM ServerWhitelistRoles WHERE Discord_Role_ID=?", (RoleID,))
+        ret = [entry["ServerID"] for entry in rows]
+        cur.close()
+        return ret
+
+    def AddServerDonatorRole(self, ServerID: int, RoleID: int) -> bool:
+        """Adds a Discord Role to a Server's Donator Role gate list."""
+        try:
+            self._execute("INSERT into ServerDonatorRoles(ServerID, Discord_Role_ID) values(?, ?)", (ServerID, RoleID))
+        except Exception as e:
+            print(e)
+            return False
+        return True
+
+    def RemoveServerDonatorRole(self, ServerID: int, RoleID: int) -> bool:
+        """Removes a Discord Role from a Server's Donator Role gate list."""
+        self._execute("DELETE FROM ServerDonatorRoles WHERE ServerID=? and Discord_Role_ID=?", (ServerID, RoleID))
+        return True
+
+    def GetServersByDonatorRole(self, RoleID: int) -> list[int]:
+        """Returns all ServerIDs that the provided Discord Role ID gates Donator access for."""
+        (rows, cur) = self._fetchall("SELECT ServerID FROM ServerDonatorRoles WHERE Discord_Role_ID=?", (RoleID,))
         ret = [entry["ServerID"] for entry in rows]
         cur.close()
         return ret
@@ -1030,6 +1057,8 @@ class DBServer:
     `Whitelist: bool (0/1)`
     `Whitelist_disabled: bool`
     `Donator: bool (0/1)`
+    `Auto_Whitelist: bool (0/1)`
+    `Whitelist_Wait_Time: int (minutes, 0 = instant)`
     `Discord_Console_Channel: int`
     `Discord_Chat_Channel: int`
     `Discord_Chat_Prefix: str`
@@ -1060,6 +1089,8 @@ class DBServer:
             "Whitelist": False,
             "Whitelist_disabled": 0,
             "Donator": 0,
+            "Auto_Whitelist": 0,
+            "Whitelist_Wait_Time": 5,
             "Console_Flag": 1,
             "Console_Filtered": 0,
             "Console_Filtered_Type": 0,
@@ -1147,7 +1178,7 @@ class DBServer:
         if (name in ["ID"]) or (name[0] == "_"):
             return
 
-        elif name in ["Whitelist", "Donator", "Console_Flag", "Console_Filtered"]:
+        elif name in ["Whitelist", "Donator", "Auto_Whitelist", "Console_Flag", "Console_Filtered"]:
             # convert to bool
             value = bool(value)
 
@@ -1157,6 +1188,7 @@ class DBServer:
             "Discord_Event_Channel",
             "Discord_Role",
             "Console_Filtered_Type",
+            "Whitelist_Wait_Time",
         ]:
             if value is not None:
                 value = int(value)
@@ -1234,6 +1266,21 @@ class DBServer:
     def GetWhitelistRoles(self) -> list[int]:
         """Gets all Discord Role IDs gating Whitelist access for this Server."""
         (rows, cur) = self._db._fetchall("SELECT Discord_Role_ID FROM ServerWhitelistRoles WHERE ServerID=?", (self.ID,))
+        ret = [int(entry["Discord_Role_ID"]) for entry in rows]
+        cur.close()
+        return ret
+
+    def AddDonatorRole(self, RoleID: int) -> bool:
+        """Adds a Discord Role ID to this Server's Donator Role gate list. Any one of these roles grants Whitelist access."""
+        return self._db.AddServerDonatorRole(self.ID, RoleID)
+
+    def DelDonatorRole(self, RoleID: int) -> bool:
+        """Removes a Discord Role ID from this Server's Donator Role gate list."""
+        return self._db.RemoveServerDonatorRole(self.ID, RoleID)
+
+    def GetDonatorRoles(self) -> list[int]:
+        """Gets all Discord Role IDs gating Donator access for this Server."""
+        (rows, cur) = self._db._fetchall("SELECT Discord_Role_ID FROM ServerDonatorRoles WHERE ServerID=?", (self.ID,))
         ret = [int(entry["Discord_Role_ID"]) for entry in rows]
         cur.close()
         return ret
