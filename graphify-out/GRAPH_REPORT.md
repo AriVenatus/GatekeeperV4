@@ -1,7 +1,7 @@
 # Graph Report - GatekeeperV3.1  (2026-08-14)
 
 ## Corpus Check
-- 72 files · ~327,730 words
+- 72 files · ~327,943 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `be1e3827`
+- Built from commit: `ecb2f288`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -63,7 +63,7 @@
 - AMPConsole
 - Context
 - botPerms
-- amp_valheim.py
+- .GetServer
 - cog_sevendays.py
 - DBUser
 - AMP_Tasks
@@ -81,10 +81,10 @@
 - cog_csgo.py
 - cog_valheim.py
 - Setup
-- .RemoveServerWhitelistRole
+- amp_valheim.py
 - .CurrentSessionHasPermission
 - .ConsoleMessage_withUpdate
-- .GetServer
+- .RemoveServerWhitelistRole
 - .RestartInstance
 - GatekeeperV4
 - changelog.md
@@ -302,6 +302,10 @@ Nodes (5): Context, Fills whitelist reply placeholders: `<user>`, `<server>`, `<
 Cohesion: 0.36
 Nodes (4): botPerms, Validates the contents of bot_perms.json., Checks a Users for a DB Role then checks for that Role inside of bot_perms.py,…, Pre build my Permissions Role Name List
 
+### Community 48 - ".GetServer"
+Cohesion: 0.33
+Nodes (4): DBHandler, getDBHandler(), DBServer, This sets the DB Server Console_Flag, Console_Filtered and…
+
 ### Community 51 - "AMP_Tasks"
 Cohesion: 0.15
 Nodes (10): AMP_Tasks, Bot, Client, listener, loop, Message, This handles AMP Console messages and sends them to discord., This handles AMP Console Event messages and sends them to discord. (+2 more)
@@ -350,10 +354,6 @@ Nodes (3): Csgo, Bot, setup()
 Cohesion: 0.50
 Nodes (3): Bot, setup(), Valheim
 
-### Community 69 - ".GetServer"
-Cohesion: 0.33
-Nodes (4): DBHandler, getDBHandler(), DBServer, This sets the DB Server Console_Flag, Console_Filtered and…
-
 ### Community 77 - ".user_role"
 Cohesion: 0.14
 Nodes (11): Permissions, autocomplete, Choice, Client, Context, hybrid_command, Interaction, Member (+3 more)
@@ -370,7 +370,7 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.208) - this node is a cross-community bridge._
 - **Why does `role_check()` connect `role_check` to `discordBot.py`, `Banner`, `WhitelistSync`, `DB.py`, `Whitelist`, `Cog_Template`, `async_rolecheck`, `.user_role`, `DB_User`, `Regex`, `DB_Server`?**
   _High betweenness centrality (0.131) - this node is a cross-community bridge._
-- **Why does `Database` connect `Database` to `.RemoveServerWhitelistRole`, `DBConfig`, `DB.py`, `.GetServer`, `DB_Update`, `._fetchone`, `DBUser`, `._execute`, `DBServer`, `.AddServerWhitelistRole`?**
+- **Why does `Database` connect `Database` to `DBConfig`, `DB.py`, `.RemoveServerWhitelistRole`, `DB_Update`, `._fetchone`, `.GetServer`, `DBUser`, `._execute`, `DBServer`, `.AddServerWhitelistRole`?**
   _High betweenness centrality (0.129) - this node is a cross-community bridge._
 - **Are the 13 inferred relationships involving `AMPInstance` (e.g. with `AMP_Tasks` and `AMPHandler`) actually correct?**
   _`AMPInstance` has 13 INFERRED edges - model-reasoned connections that need verification._

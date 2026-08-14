@@ -5238,7 +5238,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "core_db_dbhandler",
-      "community": 69,
+      "community": 48,
       "community_name": ".GetServer",
       "norm_label": "dbhandler"
     },
@@ -5262,7 +5262,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "core_db_dbhandler_dbserverconsolesetup",
-      "community": 69,
+      "community": 48,
       "community_name": ".GetServer",
       "norm_label": ".dbserverconsolesetup()"
     },
@@ -5274,7 +5274,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "core_db_getdbhandler",
-      "community": 69,
+      "community": 48,
       "community_name": ".GetServer",
       "norm_label": "getdbhandler()"
     },
@@ -5419,7 +5419,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "core_db_database_getserver",
-      "community": 69,
+      "community": 48,
       "community_name": ".GetServer",
       "norm_label": ".getserver()"
     },
@@ -5430,7 +5430,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "core_db_py_dbserver",
-      "community": 69,
+      "community": 48,
       "community_name": ".GetServer",
       "norm_label": "dbserver"
     },
@@ -5550,7 +5550,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "core_db_database_removeserverwhitelistrole",
-      "community": 66,
+      "community": 69,
       "community_name": ".RemoveServerWhitelistRole",
       "norm_label": ".removeserverwhitelistrole()"
     },
@@ -6079,7 +6079,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "core_db_dbserver_delwhitelistrole",
-      "community": 66,
+      "community": 69,
       "community_name": ".RemoveServerWhitelistRole",
       "norm_label": ".delwhitelistrole()"
     },
@@ -6284,7 +6284,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "core_db_rationale_63",
-      "community": 69,
+      "community": 48,
       "community_name": ".GetServer",
       "norm_label": "this sets the db server console_flag, console_filtered and..."
     },
@@ -6372,7 +6372,7 @@
       "source_location": "L494",
       "_origin": "ast",
       "id": "core_db_rationale_494",
-      "community": 66,
+      "community": 69,
       "community_name": ".RemoveServerWhitelistRole",
       "norm_label": "removes a discord role from a server's whitelist role gate list."
     },
@@ -6702,7 +6702,7 @@
       "source_location": "L1263",
       "_origin": "ast",
       "id": "core_db_rationale_1263",
-      "community": 66,
+      "community": 69,
       "community_name": ".RemoveServerWhitelistRole",
       "norm_label": "removes a discord role id from this server's whitelist role gate list."
     },
@@ -11762,7 +11762,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "modules_valheim_amp_valheim",
-      "community": 48,
+      "community": 66,
       "community_name": "amp_valheim.py",
       "norm_label": "amp_valheim.py"
     },
@@ -11775,7 +11775,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "modules_valheim_amp_valheim_ampvalheim",
-      "community": 48,
+      "community": 66,
       "community_name": "amp_valheim.py",
       "norm_label": "ampvalheim"
     },
@@ -11787,7 +11787,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "modules_valheim_amp_valheim_ampvalheim_init",
-      "community": 48,
+      "community": 66,
       "community_name": "amp_valheim.py",
       "norm_label": ".__init__()"
     },
@@ -11800,7 +11800,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "id": "modules_valheim_amp_valheim_ampvalheimconsole",
-      "community": 48,
+      "community": 66,
       "community_name": "amp_valheim.py",
       "norm_label": "ampvalheimconsole"
     },
@@ -11812,7 +11812,7 @@
       "_callable": true,
       "_origin": "ast",
       "id": "modules_valheim_amp_valheim_ampvalheimconsole_init",
-      "community": 48,
+      "community": 66,
       "community_name": "amp_valheim.py",
       "norm_label": ".__init__()"
     },
@@ -45974,5 +45974,5 @@
       "source_file": "CLAUDE.md"
     }
   ],
-  "built_at_commit": "be1e3827568cf7fffebbc871ed376262a32dfa51"
+  "built_at_commit": "ecb2f288bd58a2682b52f909723219637887bbad"
 }
