@@ -1,7 +1,7 @@
 {
   ".claude/settings.local.json": {
     "mtime": 1786316403.404063,
-    "ast_hash": "",
+    "ast_hash": "b526ef6be4969df161408c5f15c7a3f1",
     "semantic_hash": ""
   },
   "bot_perms.json": {
@@ -571,7 +571,7 @@
   },
   ".claude/settings.json": {
     "mtime": 1786317446.579787,
-    "ast_hash": "",
+    "ast_hash": "291adbce6080033a921f9f283d6a6ea4",
     "semantic_hash": ""
   }
 }
