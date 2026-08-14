@@ -29,7 +29,14 @@ class botEmbeds():
         self.AMPServer_Avatar_urls = []
 
     def _bool_str(self, value) -> str:
-        return i18n.t('common.bool.true') if bool(value) else i18n.t('common.bool.false')
+        """Renders the literal word True/False -- this reflects raw internal state, not UI
+        copy, so it must stay fixed and not change with the active language."""
+        return f'`{bool(value)}`'
+
+    def _filter_type_str(self, value) -> str:
+        """Console_Filtered_Type: 0 = Blacklist, 1 = Whitelist."""
+        key = 'embeds.common.filter_type.whitelist' if bool(value) else 'embeds.common.filter_type.blacklist'
+        return f'`{i18n.t(key)}`'
 
     def default_embedmsg(self, title, context: commands.Context, description=None, field=None, field_value=None) -> discord.Embed:
         """This Embed has only one Field Entry."""
@@ -55,33 +62,33 @@ class botEmbeds():
         if avatar != None:
             embed.set_thumbnail(url=avatar)
 
-        embed.add_field(name=i18n.t('embeds.server_info.host'), value=str(db_server.Host), inline=False)
+        embed.add_field(name=i18n.t('embeds.server_info.host'), value=f'`{db_server.Host}`', inline=False)
         embed.add_field(name=i18n.t('common.embed.donator_only'), value=self._bool_str(db_server.Donator), inline=True)
         embed.add_field(name=i18n.t('common.embed.whitelist_open'), value=self._bool_str(db_server.Whitelist), inline=True)
-        embed.add_field(name=i18n.t('embeds.server_info.role'), value=str(discord_role), inline=False)
+        embed.add_field(name=i18n.t('embeds.server_info.role'), value=f'`{discord_role}`', inline=False)
         embed.add_field(name=i18n.t('embeds.server_info.hidden'), value=self._bool_str(db_server.Hidden), inline=True)
         embed.add_field(name=i18n.t('embeds.server_info.whitelist_hidden'), value=self._bool_str(db_server.Whitelist_disabled), inline=True)
 
         embed.add_field(name=i18n.t('embeds.server_info.filtered_console'), value=self._bool_str(db_server.Console_Filtered), inline=False)
-        embed.add_field(name=i18n.t('embeds.server_info.console_filter_type'), value=self._bool_str(db_server.Console_Filtered_Type), inline=True)
+        embed.add_field(name=i18n.t('embeds.server_info.console_filter_type'), value=self._filter_type_str(db_server.Console_Filtered_Type), inline=True)
         if db_server.Discord_Console_Channel != None:
             discord_channel = context.guild.get_channel(db_server.Discord_Console_Channel)
-            embed.add_field(name=i18n.t('embeds.server_info.console_channel'), value=discord_channel.name, inline=False)
+            embed.add_field(name=i18n.t('embeds.server_info.console_channel'), value=f'`{discord_channel.name}`', inline=False)
         else:
-            embed.add_field(name=i18n.t('embeds.server_info.console_channel'), value=db_server.Discord_Console_Channel, inline=False)
+            embed.add_field(name=i18n.t('embeds.server_info.console_channel'), value=f'`{db_server.Discord_Console_Channel}`', inline=False)
 
-        embed.add_field(name=i18n.t('embeds.server_info.chat_prefix'), value=str(db_server.Discord_Chat_Prefix), inline=False)
+        embed.add_field(name=i18n.t('embeds.server_info.chat_prefix'), value=f'`{db_server.Discord_Chat_Prefix}`', inline=False)
         if db_server.Discord_Chat_Channel != None:
             discord_channel = context.guild.get_channel(db_server.Discord_Chat_Channel)
-            embed.add_field(name=i18n.t('embeds.server_info.chat_channel'), value=discord_channel.name, inline=True)
+            embed.add_field(name=i18n.t('embeds.server_info.chat_channel'), value=f'`{discord_channel.name}`', inline=True)
         else:
-            embed.add_field(name=i18n.t('embeds.server_info.chat_channel'), value=db_server.Discord_Chat_Channel, inline=True)
+            embed.add_field(name=i18n.t('embeds.server_info.chat_channel'), value=f'`{db_server.Discord_Chat_Channel}`', inline=True)
 
         if db_server.Discord_Event_Channel != None:
             discord_channel = context.guild.get_channel(db_server.Discord_Event_Channel)
-            embed.add_field(name=i18n.t('embeds.server_info.event_channel'), value=discord_channel.name, inline=True)
+            embed.add_field(name=i18n.t('embeds.server_info.event_channel'), value=f'`{discord_channel.name}`', inline=True)
         else:
-            embed.add_field(name=i18n.t('embeds.server_info.event_channel'), value=db_server.Discord_Event_Channel, inline=True)
+            embed.add_field(name=i18n.t('embeds.server_info.event_channel'), value=f'`{db_server.Discord_Event_Channel}`', inline=True)
         embed.set_footer(text=f'InstanceID: {server.InstanceID}')
         return embed
 
@@ -130,16 +137,16 @@ class botEmbeds():
             avatar = await self.uBot.validate_avatar(db_server)
             if avatar != None:
                 embed.set_thumbnail(url=avatar)
-            embed.add_field(name=i18n.t('embeds.server_display.instance_status_label'), value=instance_status, inline=False)
-            embed.add_field(name=i18n.t('common.embed.dedicated_server_status'), value=dedicated_status, inline=False)
-            embed.add_field(name=i18n.t('common.embed.host_bold'), value=str(db_server.Host), inline=True)
+            embed.add_field(name=i18n.t('embeds.server_display.instance_status_label'), value=f'`{instance_status}`', inline=False)
+            embed.add_field(name=i18n.t('common.embed.dedicated_server_status'), value=f'`{dedicated_status}`', inline=False)
+            embed.add_field(name=i18n.t('common.embed.host_bold'), value=f'`{db_server.Host}`', inline=True)
             embed.add_field(name=i18n.t('embeds.server_display.donator'), value=self._bool_str(db_server.Donator), inline=True)
             embed.add_field(name=i18n.t('embeds.server_display.whitelist_open'), value=self._bool_str(db_server.Whitelist), inline=True)
             if Users != None:
-                embed.add_field(name=i18n.t('embeds.server_display.players'), value=f'{Users[0]}/{Users[1]}', inline=True)
+                embed.add_field(name=i18n.t('embeds.server_display.players'), value=f'`{Users[0]}/{Users[1]}`', inline=True)
             else:
-                embed.add_field(name=i18n.t('embeds.server_display.player_limit'), value=str(Users), inline=True)
-            embed.add_field(name=i18n.t('embeds.server_display.players_online'), value=str(User_list), inline=False)
+                embed.add_field(name=i18n.t('embeds.server_display.player_limit'), value=f'`{Users}`', inline=True)
+            embed.add_field(name=i18n.t('embeds.server_display.players_online'), value=f'`{User_list}`', inline=False)
             embed.set_footer(text=discord.utils.utcnow().strftime('%Y-%m-%d | %H:%M') + " UTC")
             embed_list.append(embed)
 
@@ -175,10 +182,10 @@ class botEmbeds():
         if avatar != None:
             embed.set_thumbnail(url=avatar)
 
-        embed.add_field(name=i18n.t('common.embed.dedicated_server_status'), value=server_status, inline=True)
+        embed.add_field(name=i18n.t('common.embed.dedicated_server_status'), value=f'`{server_status}`', inline=True)
 
         if db_server.Host != None:
-            embed.add_field(name=i18n.t('embeds.server_status.host'), value=db_server.Host, inline=True)
+            embed.add_field(name=i18n.t('embeds.server_status.host'), value=f'`{db_server.Host}`', inline=True)
 
         # embed.add_field(name='\u1CBC\u1CBC',value='\u1CBC\u1CBC',inline=False)
         embed.add_field(name=i18n.t('common.embed.donator_only'), value=self._bool_str(db_server.Donator), inline=True)
@@ -186,44 +193,15 @@ class botEmbeds():
         # embed.add_field(name='\u1CBC\u1CBC',value='\u1CBC\u1CBC',inline=False) #This Generates a BLANK Field entirely.
 
         if server.ADS_Running:
-            embed.add_field(name=i18n.t('embeds.server_status.tps'), value=TPS, inline=True)
-            embed.add_field(name=i18n.t('embeds.server_status.player_count'), value=f'{Users[0]}/{Users[1]}', inline=True)
-            embed.add_field(name=i18n.t('embeds.server_status.memory_usage'), value=f'{Memory[0]}/{Memory[1]}', inline=True)
-            embed.add_field(name=i18n.t('embeds.server_status.cpu_usage'), value=f'{CPU}/100%', inline=True)
+            embed.add_field(name=i18n.t('embeds.server_status.tps'), value=f'`{TPS}`', inline=True)
+            embed.add_field(name=i18n.t('embeds.server_status.player_count'), value=f'`{Users[0]}/{Users[1]}`', inline=True)
+            embed.add_field(name=i18n.t('embeds.server_status.memory_usage'), value=f'`{Memory[0]}/{Memory[1]}`', inline=True)
+            embed.add_field(name=i18n.t('embeds.server_status.cpu_usage'), value=f'`{CPU}/100%`', inline=True)
             #!UPTIME is disabled until AMP Impliments the feature.
             #embed.add_field(name='Uptime', value=Uptime, inline=True)
-            embed.add_field(name=i18n.t('embeds.server_status.players_online'), value=Users_Online, inline=True)
+            embed.add_field(name=i18n.t('embeds.server_status.players_online'), value=f'`{Users_Online}`', inline=True)
         embed.set_footer(text=f'InstanceID: {server.InstanceID}')
         return embed
-
-    # Depreciated; no longer in use.
-    async def server_whitelist_embed(self, context: commands.Context, server: AMP_Handler.AMP.AMPInstance) -> discord.Embed:
-        """Default Embed Reply for Successful Whitelist requests"""
-        db_server = self.DB.GetServer(InstanceID=server.InstanceID)
-
-        embed_color = 0x71368a
-        if db_server != None:
-            if db_server.Discord_Role != None:
-                db_server_role = context.guild.get_role(int(db_server.Discord_Role))
-                if db_server_role != None:
-                    embed_color = db_server_role.color
-
-            User_list = None
-            if len(server.getUserList()) > 1:
-                User_list = (', ').join(server.getUserList())
-
-            server_name = server.FriendlyName
-            if server.DisplayName != None:
-                server_name = db_server.DisplayName
-
-            embed = discord.Embed(title=f'**=======  {server_name}  =======**', description=db_server.Description, color=embed_color)
-            avatar = await self.uBot.validate_avatar(db_server)
-            if avatar != None:
-                embed.set_thumbnail(url=avatar)
-
-            embed.add_field(name=i18n.t('common.embed.host_bold'), value=str(db_server.Host), inline=True)
-            embed.add_field(name=i18n.t('embeds.server_whitelist.users_online'), value=str(User_list), inline=False)
-            return embed
 
     def bot_settings_embed(self, context: commands.Context) -> discord.Embed:
         """Default Embed Reply for command /bot settings, please pass in a List of Dictionaries eg {'setting_name': 'value'}"""
@@ -256,45 +234,45 @@ class botEmbeds():
                 if value != 'None':
                     value = context.guild.get_channel(value)
 
-                embed.add_field(name=i18n.t('embeds.bot_settings.whitelist_request_channel'), value=f'{value.name.title() if value != None else i18n.t("common.embed.not_set")}', inline=False)
+                embed.add_field(name=i18n.t('embeds.bot_settings.whitelist_request_channel'), value=f'`{value.name.title() if value != None else i18n.t("common.embed.not_set")}`', inline=False)
 
             elif key == 'message_timeout':
-                embed.add_field(name=i18n.t('embeds.bot_settings.message_timeout'), value=i18n.t('embeds.bot_settings.seconds', value=value), inline=False)
+                embed.add_field(name=i18n.t('embeds.bot_settings.message_timeout'), value=f'`{i18n.t("embeds.bot_settings.seconds", value=value)}`', inline=False)
 
             elif key == 'permissions':
                 if value == 0:
                     value = i18n.t('embeds.bot_settings.permissions_default')
                 elif value == 1:
                     value = i18n.t('embeds.bot_settings.permissions_custom')
-                embed.add_field(name=i18n.t('embeds.bot_settings.permissions'), value=f'{value}', inline=True)
+                embed.add_field(name=i18n.t('embeds.bot_settings.permissions'), value=f'`{value}`', inline=True)
 
             elif key == 'banner_type':
                 if value == 0:
                     value = i18n.t('embeds.bot_settings.banner_type_embeds')
                 elif value == 1:
                     value = i18n.t('embeds.bot_settings.banner_type_images')
-                embed.add_field(name=i18n.t('embeds.bot_settings.banner_type'), value=f'{value}', inline=False)
+                embed.add_field(name=i18n.t('embeds.bot_settings.banner_type'), value=f'`{value}`', inline=False)
 
             elif key == 'banner_auto_update':
                 embed.add_field(name=i18n.t('embeds.bot_settings.banner_auto_update'), value=self._bool_str(value == 1), inline=True)
 
             elif key == 'db_version':
-                embed.add_field(name=i18n.t('embeds.bot_settings.db_version'), value=f'{value}', inline=True)
+                embed.add_field(name=i18n.t('embeds.bot_settings.db_version'), value=f'`{value}`', inline=True)
 
             elif key == 'bot_version':
-                embed.add_field(name=i18n.t('embeds.bot_settings.bot_version'), value=f'{value}', inline=True)
+                embed.add_field(name=i18n.t('embeds.bot_settings.bot_version'), value=f'`{value}`', inline=True)
 
             elif key == 'guild_id':
                 if self._client != None and value != 'None':
                     value = self._client.get_guild(value)
 
-                    embed.add_field(name=i18n.t('embeds.bot_settings.guild_id'), value=f'{value.name.title() if value != None else i18n.t("common.embed.not_set")}', inline=False)
+                    embed.add_field(name=i18n.t('embeds.bot_settings.guild_id'), value=f'`{value.name.title() if value != None else i18n.t("common.embed.not_set")}`', inline=False)
 
             elif key == 'moderator_role_id':
                 if value != 'None':
                     value = context.guild.get_role(value)
 
-                embed.add_field(name=i18n.t('embeds.bot_settings.moderator_role'), value=f'{value.name.title() if value != None else i18n.t("common.embed.not_set")}', inline=True)
+                embed.add_field(name=i18n.t('embeds.bot_settings.moderator_role'), value=f'`{value.name.title() if value != None else i18n.t("common.embed.not_set")}`', inline=True)
 
         # This iterates through the remaining keys of the Settings List and adds them to the Embed.
         # NOTE: these field NAMES stay English-only by design -- they're auto-titled from
@@ -309,7 +287,7 @@ class botEmbeds():
             if type(value) == int:
                 embed.add_field(name=key, value=self._bool_str(value != 0), inline=False)
             else:
-                embed.add_field(name=key, value=value, inline=False)
+                embed.add_field(name=key, value=f'`{value}`', inline=False)
 
         return embed
 
