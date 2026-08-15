@@ -49,7 +49,7 @@ class Minecraft(commands.Cog):
 
         db_user = self.DB.GetUser(str(member.id))
         if db_user != None and db_user.InGameName != None:
-            for server in self.AMPInstances:
+            for server in list(self.AMPInstances):
                 if self.AMPInstances[server].Module == 'Minecraft':
                     if db_user.MC_IngameName != None:
                         self.AMPInstances[server].removeWhitelist(db_user.MC_IngameName)

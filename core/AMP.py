@@ -594,7 +594,7 @@ class AMPInstance:
                     "AvailableInstances"
                 ]:  # entry = name['result']['AvailableInstances'][0]['InstanceIDs']
                     # This should be a list of my AMP Servers [{'InstanceID': '<AMP Instance Object>'}]
-                    for amp_instance in self.AMPHandler.AMP_Instances:
+                    for amp_instance in list(self.AMPHandler.AMP_Instances):
                         # This should be the <AMP Instance Object> comparing to the Instance Objects we got from `getInstances()`
                         if self.AMPHandler.AMP_Instances[amp_instance].InstanceID == instance["InstanceID"]:
                             for entry in instance:
@@ -607,7 +607,7 @@ class AMPInstance:
     def _instance_ThreadManager(self):
         """AMP Instance(s) Thread Manager"""
         self.Login()
-        for instance in self.AMPHandler.AMP_Instances:
+        for instance in list(self.AMPHandler.AMP_Instances):
             server = self.AMPHandler.AMP_Instances[instance]
 
             # Lets validate our ADS Running before we check for console threads.
@@ -1021,6 +1021,10 @@ class AMPInstance:
     def name_History(self, user):
         """Base Function for AMP.name_History"""
         return user
+
+    def resolve_canonical_IGN(self, name: str) -> str:
+        """Base Function for AMP.resolve_canonical_IGN"""
+        return name
 
     def check_Whitelist(self, db_user=None, in_gamename: str = None):
         self.logger.dev(

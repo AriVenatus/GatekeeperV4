@@ -113,7 +113,7 @@ class Whitelist(commands.Cog):
 
         db_user: None | DB.DBUser = self.DB.GetUser(value=str(member.id))
         if db_user != None and db_user.MC_IngameName != None:
-            for instance_id, amp_instance in self.AMPHandler.AMP_Instances.items():
+            for instance_id, amp_instance in list(self.AMPHandler.AMP_Instances.items()):
                 if amp_instance.Module == 'Minecraft':
                     self.logger.info(f"Removing {db_user.MC_IngameName} from {amp_instance.FriendlyName} Whitelist.")
                     amp_instance.removeWhitelist(in_gamename=db_user.MC_IngameName)
@@ -204,8 +204,9 @@ class Whitelist(commands.Cog):
             whitelist = amp_server.check_Whitelist(in_gamename=name)
             server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
             if whitelist:
-                amp_server.addWhitelist(in_gamename=name)
-                await context.send(i18n.t('messages.whitelist.add.success', server_name=server_name, name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
+                canonical_name = amp_server.resolve_canonical_IGN(name)
+                amp_server.addWhitelist(in_gamename=canonical_name)
+                await context.send(i18n.t('messages.whitelist.add.success', server_name=server_name, name=canonical_name), ephemeral=True, delete_after=self._client.Message_Timeout)
             if whitelist == False:
                 await context.send(i18n.t('messages.whitelist.uuid_not_found', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
             if whitelist == None:
@@ -226,8 +227,9 @@ class Whitelist(commands.Cog):
             if whitelist == False:
                 await context.send(i18n.t('messages.whitelist.uuid_not_found', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
             if whitelist == None:
-                amp_server.removeWhitelist(in_gamename=name)
-                await context.send(i18n.t('messages.whitelist.remove.success', server_name=server_name, name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
+                canonical_name = amp_server.resolve_canonical_IGN(name)
+                amp_server.removeWhitelist(in_gamename=canonical_name)
+                await context.send(i18n.t('messages.whitelist.remove.success', server_name=server_name, name=canonical_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     # All DBConfig Whitelist Specific function settings --------------------------------------------------------------
     @commands.hybrid_group(name='whitelist_reply', description=i18n.t('commands.bot.whitelist_reply.description'))

@@ -111,31 +111,70 @@ passes on the same items.
       chain) is the one that actually mattered — it can no longer raise here, so `AMP_setup = True`
       always gets set and `start.py` can't hang on this path anymore.
 
-- [ ] **9. Console sender-filter doesn't actually suppress anything.** `console_chat()` `return`s
+- [x] **9. Console sender-filter doesn't actually suppress anything.** `console_chat()` `return`s
       (falsy `None`) instead of `True` when a sender matches the filter list; the caller's
       `if self.console_chat(entry): continue` never fires, so filtered messages leak through.
       `core/AMP_Console.py:243-247`
       Confidence: Medium
+      **Fixed 2026-08-14**: changed `return` to `return True` in the filtered-sender branch;
+      updated the method's return-type annotation from `-> None | bool` to `-> bool` since every
+      path now returns an actual bool. One-line behavior fix.
 
-- [ ] **10. Unlocked cross-thread mutation of `AMP_Instances`.** The AMP background thread
+- [x] **10. Unlocked cross-thread mutation of `AMP_Instances`.** The AMP background thread
       adds/removes instances every 30s while several asyncio task loops iterate the same dict —
       no lock. Narrow window, but structurally real.
       `core/AMP_Handler.py` (`_instanceValidation`) vs. `cogs/amp_tasks_cog.py`,
       `whitelist_sync_cog.py`
       Confidence: Medium
+      **Fixed 2026-08-14, in two passes.** Pass 1 wrapped every live iteration in the two
+      originally-cited files in `list(...)` — 5 sites in `cogs/amp_tasks_cog.py`, 1 in
+      `cogs/whitelist_sync_cog.py` (a 2nd site there, line 223, was already correctly wrapped and
+      became the precedent this fix followed). No `threading.Lock` introduced — CPython's GIL
+      makes the `list(...)` snapshot itself atomic, sufficient to prevent the `RuntimeError` crash
+      from a concurrent add/remove. While verifying pass 1, a repo-wide grep found the original
+      citation understated the blast radius: 9 more unguarded live-iteration sites of the same
+      dict existed outside the two cited files. Pass 2 fixed all 9, same `list(...)` pattern:
+      `core/utils.py:510` (`serverparse()` — called by `_serverCheck`, hit by nearly every
+      server-related Discord command, the highest-traffic site of all), `cogs/amp_server_cog.py:96`
+      (`amp_server_broadcast`), `cogs/whitelist_cog.py:116` and `modules/Minecraft/cog_minecraft.py:52`
+      (both `on_member_remove` listeners), `core/AMP_Handler.py:70` (shutdown-time console-thread
+      stop) and `:134` (`get_AMP_instance_names`, used by autocomplete), `core/AMP.py:597`
+      (`_updateInstanceAttributes`, reachable from the Discord thread via `__getattribute__`) and
+      `:610` (`_instance_ThreadManager` — same-thread as the mutator so lower risk, fixed anyway
+      for consistency), `core/loader.py:64` (one-time startup-only, same reasoning). Final
+      repo-wide grep (run independently, not just taking the implementing subagent's word)
+      confirms zero remaining unwrapped iterations of `AMP_Instances`/`AMPInstances` anywhere in
+      the codebase — all 16 total sites now snapshot before iterating.
 
-- [ ] **11. `banner_cog.py`'s two reconciliation state machines have already diverged.**
+- [x] **11. `banner_cog.py`'s two reconciliation state machines have already diverged.**
       `_embed_generator`/`_banner_generator` duplicate the same ~80-line delete/edit/resend logic,
       and only one wraps `message.delete()` in try/except — evidence a bug fix in one path was
       missed in the other.
       `cogs/banner_cog.py:158` (both methods)
       Confidence: Medium-High
+      **Fixed 2026-08-14**: found 4 total `await message.delete()` call sites across both methods
+      (2 per method), not just the 1 divergent pair — the "remove extra messages" branch was
+      unguarded in *both* methods (not a divergence, but the same risk twice), and only
+      `_banner_generator`'s "remove all + resend" branch had the try/except. Brought all 3
+      unguarded sites to parity with the one that was already correct: wrap `await message.delete()`
+      in `try: ... except: self.logger.error(...)`, keeping the DB-side `Remove_Message_from_BannerGroup`
+      call unconditional either way. Pure parity fix, no extraction/refactor of the duplicated logic
+      (that remains a separate Structural Concern, not attempted here).
 
-- [ ] **12. Whitelist add/remove uses the raw input name, not the Mojang-verified canonical
+- [x] **12. Whitelist add/remove uses the raw input name, not the Mojang-verified canonical
       name**, after verification already resolved it. Same unescaped-interpolation pattern as #1,
       lower exposure (staff-gated).
       `cogs/whitelist_cog.py:207/229` → `modules/Minecraft/amp_minecraft.py:70-78`
       Confidence: Low-Medium
+      **Fixed 2026-08-14**: added `resolve_canonical_IGN(name)` — a base no-op-passthrough stub on
+      `AMPInstance` (`core/AMP.py`, matching the existing `name_History` base-stub precedent) plus
+      a Minecraft override (`modules/Minecraft/amp_minecraft.py`) that mirrors `name_Conversion`'s
+      exact Mojang API call but returns the canonical `name` field instead of `id` (which
+      `name_Conversion` already receives but discards). `name_Conversion` itself and its 3 existing
+      call sites were left untouched to avoid destabilizing `check_Whitelist`'s branching — this
+      was an additive, isolated fix. Both `whitelist_cog.py` call sites now resolve the canonical
+      name once and use it for both the AMP console command and the confirmation message shown to
+      staff.
 
 - [x] **13. (Found during #5 verification, fixed 2026-08-14) `server_settings_whitelist_set`
       crashes on a not-found/offline server.** `amp_server = await self.uBot._serverCheck(context,

@@ -93,7 +93,7 @@ class AMP_Server(commands.Cog):
     async def amp_server_broadcast(self, context: commands.Context, prefix: Choice[str], message: str):
         self.logger.command(f'{context.author.name} used AMP Server Broadcast')
         discord_message = await context.send(i18n.t('messages.amp_server.broadcast.sending'), ephemeral=True)
-        for amp_server in self.AMPInstances:
+        for amp_server in list(self.AMPInstances):
             if self.AMPInstances[amp_server].Running:
                 if self.AMPInstances[amp_server]._ADScheck():
                     self.AMPInstances[amp_server].Broadcast_Message(message, prefix=prefix.value)

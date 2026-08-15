@@ -507,7 +507,7 @@ class botUtils():
         Returns `AMPInstance[server] <object>`"""
         self.logger.dev('Bot Utility Server Parse')
         cur_server = None
-        for key, value in self.AMPHandler.AMP_Instances.items():
+        for key, value in list(self.AMPHandler.AMP_Instances.items()):
             if key == instanceID:
                 cur_server = value
                 self.logger.dev(f'Selected Server is {value} - InstanceID: {key}')

@@ -61,7 +61,7 @@ class Handler():
         loaded.append('Generic')
 
         #This loads the Cog Module if it finds a Instance that requires said Module.
-        for instance in self.AMPInstances:
+        for instance in list(self.AMPInstances):
             DisplayImageSource = self.AMPInstances[instance].DisplayImageSource
             if DisplayImageSource in self.Cog_Modules:
                 path = self.Cog_Modules[DisplayImageSource]

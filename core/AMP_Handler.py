@@ -67,7 +67,7 @@ def request_shutdown():
     except Exception:
         pass
 
-    for server in handler.AMP_Instances.values():
+    for server in list(handler.AMP_Instances.values()):
         if hasattr(server, "Console") and server.Console is not None:
             server.Console.console_thread_running = False
 
@@ -131,7 +131,7 @@ class AMPHandler():
     def get_AMP_instance_names(self, public: bool = False) -> dict[str, str]:
         """Creates a list of Instance Names/DisplayName or Friendly Name."""
         AMP_Instances_Names = {}
-        for instanceID, server in self.AMP_Instances.items():
+        for instanceID, server in list(self.AMP_Instances.items()):
             # If this is a "Public" Server Autocomplete or List/etc lets not SHOW our Hidden servers.
             if public and server.Hidden:
                 continue

@@ -67,6 +67,20 @@ class AMPMinecraft(AMP.AMPInstance):
         post_req = requests.get(url)
         return post_req.json()[-1]
 
+    def resolve_canonical_IGN(self, name: str) -> str:
+        """Resolves a Minecraft IGN to Mojang's canonical-cased name. Falls back to the raw name if it doesn't resolve or is ambiguous."""
+        self.logger.dev(f'Resolving canonical IGN for: {name}')
+        url = 'https://api.mojang.com/profiles/minecraft'
+        header = {'Content-Type': 'application/json'}
+        jsonhandler = json.dumps(name)
+        post_req = requests.post(url, headers=header, data=jsonhandler)
+        minecraft_user = post_req.json()
+
+        if len(minecraft_user) != 1:
+            return name
+
+        return minecraft_user[0]['name']
+
     def addWhitelist(self, db_user: DBUser = None, in_gamename: str = None):
         """Adds a User to the Whitelist File *Supports IGN*"""
         self.Login()

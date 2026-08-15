@@ -62,7 +62,7 @@ class WhitelistSync(commands.Cog):
 
     def _get_amp_instance_by_server_id(self, ServerID: int) -> Optional[AMP_Handler.AMP.AMPInstance]:
         """Finds the live AMPInstance tied to a Servers table row ID."""
-        for amp_instance in self.AMPHandler.AMP_Instances.values():
+        for amp_instance in list(self.AMPHandler.AMP_Instances.values()):
             if amp_instance.DB_Server.ID == ServerID:
                 return amp_instance
         return None

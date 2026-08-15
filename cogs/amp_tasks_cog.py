@@ -59,7 +59,7 @@ class AMP_Tasks(commands.Cog):
         if message.author == self._client.user:
             return
 
-        for amp_server in self.AMPInstances:
+        for amp_server in list(self.AMPInstances):
             self.AMPServer = self.AMPInstances[amp_server]
             if not self.AMPServer.Running:
                 continue
@@ -105,7 +105,7 @@ class AMP_Tasks(commands.Cog):
             Sent_Data = True
             while (Sent_Data):
                 Sent_Data = False
-                for amp_server in self.AMPInstances:
+                for amp_server in list(self.AMPInstances):
                     AMPServer = self.AMPInstances[amp_server]
                     AMP_Server_Console = AMPServer.Console
 
@@ -157,7 +157,7 @@ class AMP_Tasks(commands.Cog):
             Sent_Data = True
             while (Sent_Data):
                 Sent_Data = False
-                for amp_server in self.AMPInstances:
+                for amp_server in list(self.AMPInstances):
                     AMPServer_Event = self.AMPInstances[amp_server]
                     AMP_Server_Console_Event = AMPServer_Event.Console
 
@@ -207,7 +207,7 @@ class AMP_Tasks(commands.Cog):
         """This handles IN game chat messages and sends them to discord."""
         if self._client.is_ready():
             AMPChatChannels: dict[str | int, list[AMPInstance | AMPMinecraft]] = {}
-            for amp_server in self.AMPInstances:
+            for amp_server in list(self.AMPInstances):
                 AMPServer = self.AMPInstances[amp_server]
 
                 if AMPServer.Discord_Chat_Channel == None:
@@ -220,7 +220,7 @@ class AMP_Tasks(commands.Cog):
             Sent_Data = True
             while (Sent_Data):
                 Sent_Data = False
-                for amp_server in self.AMPInstances:
+                for amp_server in list(self.AMPInstances):
                     AMPServer_Chat: AMPMinecraft | AMPInstance = self.AMPInstances[amp_server]
                     AMP_Server_Console_Chat = AMPServer_Chat.Console
 

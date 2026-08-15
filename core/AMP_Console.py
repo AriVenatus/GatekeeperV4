@@ -232,7 +232,7 @@ class AMPConsole:
                 return return_bool
         return False
 
-    def console_chat(self, message: ConsoleEntry) -> None | bool:
+    def console_chat(self, message: ConsoleEntry) -> bool:
         """This will handle all player chat messages from AMP to Discord.
         Format's Server Chat Messages for better readability to the Console"""
         # {'Timestamp': '/Date(1657587898574)/', 'Source': 'IceOfWraith', 'Type': 'Chat', 'Contents': 'This is a local message','Prefix': 'Discord_Chat_Prefix}
@@ -244,7 +244,7 @@ class AMPConsole:
             for sender in self.AMPInstance.SenderFilterList:
                 if message["Source"].lower() == sender.lower():
                     self.logger.dev(f"Filtered Message: {message}")
-                    return
+                    return True
 
             # Removed the odd character for color indicators on text
             message["Contents"] = message["Contents"].replace("�", "")

@@ -166,7 +166,10 @@ class Banner(commands.Cog):
         if len(message_list) > ratio:
             for message in message_list[ratio:]:
                 self.DB.Remove_Message_from_BannerGroup(messageid=message.id)
-                await message.delete()
+                try:
+                    await message.delete()
+                except:
+                    self.logger.error('Failed to find discord.Message object; removing Message from bannergroup.')
 
         # We have no Message IDs in the Database; so lets send new messages and store the IDs.
         # We have too many Embeds for the amount of Messages; we need to create some new ones.
@@ -175,7 +178,10 @@ class Banner(commands.Cog):
             if len(message_list):
                 for message in message_list:
                     self.DB.Remove_Message_from_BannerGroup(messageid=message.id)
-                    await message.delete()
+                    try:
+                        await message.delete()
+                    except:
+                        self.logger.error('Failed to find discord.Message object; removing Message from bannergroup.')
 
             for curpos in range(0, len(embed_list), 10):
                 cur_message = await discord_channel.send(embeds=embed_list[curpos:(curpos + 9)])
@@ -239,7 +245,10 @@ class Banner(commands.Cog):
             old_messages = message_list[len(banner_image_list):]
             for message in old_messages:
                 self.DB.Remove_Message_from_BannerGroup(messageid=message.id)
-                await message.delete()
+                try:
+                    await message.delete()
+                except:
+                    self.logger.error('Failed to find discord.Message object; removing Message from bannergroup.')
                 message_list.remove(message)
 
         # If our message_list is empty, we assume we haven't sent messages yet.
