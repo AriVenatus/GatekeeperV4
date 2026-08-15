@@ -386,7 +386,7 @@ class AMPInstance:
                 "***ATTENTION*** The Bot is missing permissions, some or all functionality may not work properly!"
             )
             # Please see this image for the required bot user Permissions **(Github link to AMP Basic Perms image here)**
-            return check
+            return False
 
         return True
 
@@ -424,8 +424,9 @@ class AMPInstance:
     def Login(self) -> bool:
         if self.SessionID == 0:
             if self.InstanceID in self.AMPHandler.SessionIDlist:
-                self.AMPHandler.SessionIDlist[self.InstanceID] = self.SessionID
-                return
+                self.SessionID = self.AMPHandler.SessionIDlist[self.InstanceID]
+                self.Running = True
+                return True
 
             self.logger.dev(f"AMPInstance Logging in {self.InstanceID}")
 

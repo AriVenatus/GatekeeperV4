@@ -253,6 +253,11 @@ class AMPHandler():
     def _instanceValidation(self, AMP: AMP.AMPInstance, startup: bool = False):
         """This checks if any new instances have been created since last check. If so, updates AMP_Instances and creates the object."""
         result = AMP.getInstances()
+        if not result or not isinstance(result, list):
+            self.logger.critical(f'***ATTENTION*** Unable to retrieve AMP Instances (API call failed or returned unexpected data): {result}')
+            time.sleep(30)
+            return
+
         amp_instance_keys = list(self.AMP_Instances.keys())  # This could be empty on startup;
         available_instances = []
         # if len(result["result"][0]['AvailableInstances']) == 0:
@@ -305,6 +310,7 @@ class AMPHandler():
                 self.logger.warning(f'Found the AMP Instance {amp_server.InstanceName} that no longer exists.')
                 self.logger.warning(f'Removing {amp_server.InstanceName} from `Gatekeepers` available Instance list.')
                 self.AMP_Instances.pop(instanceID)
+                self.SessionIDlist.pop(instanceID, None)
 
 
 def getAMPHandler(args: Namespace = False) -> AMPHandler:

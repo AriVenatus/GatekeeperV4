@@ -25,6 +25,17 @@ class AMPSevendays(AMP.AMPInstance):
 
     def Chat_Message(self, message: str, author: str = None, author_prefix: str = None, server_prefix: str = None):
         """Sends a customized message via say through the console."""
+        # Replace double quotes with single quotes so untrusted text can't break out of the
+        # double-quote-delimited console command and inject new console input.
+        if message != None:
+            message = message.replace('"', "'")
+        if author != None:
+            author = author.replace('"', "'")
+        if author_prefix != None:
+            author_prefix = author_prefix.replace('"', "'")
+        if server_prefix != None:
+            server_prefix = server_prefix.replace('"', "'")
+
         self.Login()
         content = 'say "[Discord] '
         if server_prefix != None:

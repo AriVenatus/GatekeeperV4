@@ -156,12 +156,12 @@ class AMPMinecraft(AMP.AMPInstance):
         # To use both font and color, write a comma between the variables. Ex: /tellraw {"color":"green","bold":"true"}
         content = 'tellraw @a [{"text":"[Discord]","color":"blue"},'
         if server_prefix != None:
-            content += f'{{"text":"({server_prefix})","color":"gold"}},'
+            content += f'{{"text":{json.dumps(f"({server_prefix})")},"color":"gold"}},'
 
         if author_prefix != None:
-            content += f'{{"text":"({author_prefix})","color":"yellow"}},'
+            content += f'{{"text":{json.dumps(f"({author_prefix})")},"color":"yellow"}},'
 
-        content += f'{{"text":"<{author}>: {message}","color":"white"}}]'
+        content += f'{{"text":{json.dumps(f"<{author}>: {message}")},"color":"white"}}]'
         self.ConsoleMessage(content)
 
     def Chat_Message_Formatter(self, message: str):

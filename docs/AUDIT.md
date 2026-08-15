@@ -7,7 +7,7 @@ passes on the same items.
 
 ## Critical Issues (ranked by severity)
 
-- [ ] **1. Console command injection via game-chat relay.** Discord chat messages are forwarded
+- [x] **1. Console command injection via game-chat relay.** Discord chat messages are forwarded
       verbatim into AMP console commands (`Chat_Message()`) across every game module, with no
       escaping — unlike the AMP→Discord direction, which does strip newlines. The bot's AMP role
       has broad `Core.*`/game permissions, so an embedded newline/quote in a chat message is a
@@ -18,6 +18,26 @@ passes on the same items.
       `modules/SevenDaystoDie/amp_sevendays.py:26-37`, `modules/Terraria/amp_terraria.py:25-39`,
       `modules/Factorio/amp_factorio.py:38-40`
       Confidence: Med-High
+      **Fixed 2026-08-14**: newline-stripped `message.content` once at the cog call site
+      (`cogs/amp_tasks_cog.py:94`, matching the existing AMP→Discord precedent) so an embedded
+      `\n` can no longer smuggle a second console command. Per-game escaping added at the point
+      each `Chat_Message()` builds its console command: Minecraft now uses `json.dumps()` for its
+      `tellraw` JSON text fields instead of hand-rolled string interpolation; ProjectZomboid and
+      SevenDaysToDie replace `"`→`'` (both build double-quote-delimited commands); Terraria and
+      Factorio replace `[`→`(` and `]`→`)` (both use bracket-delimited rich-text tags). Verified
+      independently (not just the implementing subagent's word): all 6 files parse, and a
+      simulated `tellraw` payload with hostile quotes/backslashes in every field (author,
+      author_prefix, server_prefix, message) round-trips through `json.loads()` to the exact
+      original text with no JSON-structure break. `modules/CounterStrikeGo`, `StarBound`,
+      `Valheim`, `Generic` don't override `Chat_Message` (inherit the harmless no-op base) so
+      needed no change.
+      **Bonus fix found while in this code, unrelated to the injection issue**: Factorio's
+      `Chat_Message` took a `prefix` param instead of `author_prefix` like every sibling module
+      and the base class — the cog always calls it with `author_prefix=`, so every Discord→
+      Factorio chat message was raising `TypeError` and silently failing before this fix. Renamed
+      the param and wired `author_prefix`/`server_prefix` into the output the same way the other
+      3 modules do. Confirmed both real call sites (`cogs/amp_tasks_cog.py:97` and `:309`) use
+      keyword args only, so the signature change is safe.
 
 - [x] **2. Dict-mutation-during-iteration kills the whitelist wait-list feature.**
       `whitelist_waitlist_handler` iterates `self._client.Whitelist_wait_list` directly (not a
@@ -46,28 +66,50 @@ passes on the same items.
       `core/utils.py:550-561`
       Confidence: High
 
-- [ ] **6. `check_SessionPermissions()` can report success despite a missing permission.** Returns
+- [x] **6. `check_SessionPermissions()` can report success despite a missing permission.** Returns
       the *last*-checked node's result on failure instead of `False`, so a mix of granted/missing
       nodes where the last one happens to be granted returns `True`. Gates the untested
       `-whitelist-only` startup path flagged in CLAUDE.md.
       `core/AMP.py:358-391`
       Confidence: Medium
+      **Fixed 2026-08-14**: changed `return check` to `return False` in the `if failed:` branch —
+      one-line fix, loop/logging untouched. Only caller is `AMPInstance.__init__` (`core/AMP.py:175`),
+      which gates the role/permission-repair branch on this return value; no caller changes needed.
 
-- [ ] **7. AMP session-cache logic looks inverted, with no cleanup on instance removal.**
+- [x] **7. AMP session-cache logic looks inverted, with no cleanup on instance removal.**
       `Login()`'s early-return branch overwrites the cached session with `0` instead of reusing
       it; `_instanceValidation` never purges `SessionIDlist` when an instance disappears, so a
       reappearing instance (restart/hiccup) can get stuck unable to authenticate until the bot
       restarts.
       `core/AMP.py:424-428`, `core/AMP_Handler.py:302-307`
       Confidence: Medium
+      **Fixed 2026-08-14**: `Login()`'s cache-hit branch now reads the cached session ID *into*
+      `self.SessionID` (was backwards — it overwrote the cache with `self.SessionID`, which is `0`
+      at that point), sets `self.Running = True` to match the fresh-login-success branch, and
+      returns `True` instead of bare `return` (the method is typed `-> bool`). Verified this is
+      safe by reading `CallAPI`'s existing `"Unauthorized Access"` handling (`core/AMP.py:~550`),
+      which already pops the stale entry from `SessionIDlist` and resets `SessionID = 0` on a bad
+      session — so a reused-but-actually-stale session self-heals on the next API call via the
+      existing mechanism; this fix only had to correct the backwards read/write direction, not add
+      new invalidation logic. Also added `self.SessionIDlist.pop(instanceID, None)` to
+      `_instanceValidation`'s instance-removal loop (`core/AMP_Handler.py:313`) as defense in
+      depth for the instance-disappears-and-reappears case specifically.
 
-- [ ] **8. Unguarded `getInstances()` failure can hang startup.** `_instanceValidation` subscripts
+- [x] **8. Unguarded `getInstances()` failure can hang startup.** `_instanceValidation` subscripts
       the API result with no null-check; on a transient/permission failure at startup this throws
       inside the un-caught AMP init thread, and `start.py` blocks forever waiting for
       `AMP_setup == True` with no diagnostic. Directly relevant to the still-unverified
       `-whitelist-only` mode.
       `core/AMP_Handler.py:259`
       Confidence: Medium-High
+      **Fixed 2026-08-14**: added a guard right after `result = AMP.getInstances()` —
+      `if not result or not isinstance(result, list):` logs critical, sleeps 30s, and returns,
+      mirroring the exact style of the pre-existing sibling "zero instances found" branch one line
+      below it. Traced both callers: the 30s poller (`amp_server_instance_check`) already had a
+      surrounding `try/except` so this just avoids an ugly traceback there; the startup path
+      (`AMP_init` → `setup_AMPInstances` → `_instanceValidation`, no try/except anywhere in that
+      chain) is the one that actually mattered — it can no longer raise here, so `AMP_setup = True`
+      always gets set and `start.py` can't hang on this path anymore.
 
 - [ ] **9. Console sender-filter doesn't actually suppress anything.** `console_chat()` `return`s
       (falsy `None`) instead of `True` when a sender matches the filter list; the caller's

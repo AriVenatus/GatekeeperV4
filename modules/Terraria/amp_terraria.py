@@ -24,6 +24,17 @@ class AMPTerraria(AMP.AMPInstance):
 
     def Chat_Message(self, message: str, author: str = None, author_prefix: str = None, server_prefix: str = None):
         """Sends a customized message via say through the console."""
+        # Replace bracket characters so untrusted text can't close the current [c/...:...] tag
+        # early or inject a new/malformed rich-text tag.
+        if message != None:
+            message = message.replace('[', '(').replace(']', ')')
+        if author != None:
+            author = author.replace('[', '(').replace(']', ')')
+        if author_prefix != None:
+            author_prefix = author_prefix.replace('[', '(').replace(']', ')')
+        if server_prefix != None:
+            server_prefix = server_prefix.replace('[', '(').replace(']', ')')
+
         self.Login()
         # Colors:
         # To write colors, you have to use the "color" variable. To write the command, use 'say [c/(insert color):text]' Ex: /say [c/ff0000:Hi!]

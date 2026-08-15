@@ -35,9 +35,28 @@ class AMPFactorio(AMP.AMPInstance):
             if self.setAMPRolePermissions(self.AMP_BotRoleID, perm, enabled):
                 self.logger.dev(f'Set {perm} for {self.AMP_BotRoleID} to {enabled}')
 
-    def Chat_Message(self, message: str, author: str = None, prefix: str = None):
+    def Chat_Message(self, message: str, author: str = None, author_prefix: str = None, server_prefix: str = None):
         # See https://wiki.factorio.com/Rich_text
-        self.ConsoleMessage(f'[color=blue]"[Discord]"[/color] [color=default]<{author}>: {message}[/color]')
+        # Replace bracket characters so untrusted text can't close the current rich-text tag
+        # early or inject a new/malformed tag (e.g. [gps=...], [item=...]).
+        if message != None:
+            message = message.replace('[', '(').replace(']', ')')
+        if author != None:
+            author = author.replace('[', '(').replace(']', ')')
+        if author_prefix != None:
+            author_prefix = author_prefix.replace('[', '(').replace(']', ')')
+        if server_prefix != None:
+            server_prefix = server_prefix.replace('[', '(').replace(']', ')')
+
+        content = '[color=blue]"[Discord]"[/color] '
+        if server_prefix != None:
+            content += f'[color=gold]({server_prefix})[/color] '
+
+        if author_prefix != None:
+            content += f'[color=yellow]({author_prefix})[/color] '
+
+        content += f'[color=default]<{author}>: {message}[/color]'
+        self.ConsoleMessage(content)
 
 
 class AMPFactorioConsole(AMP_Console.AMPConsole):

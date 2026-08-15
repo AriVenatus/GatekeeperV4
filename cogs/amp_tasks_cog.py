@@ -90,8 +90,11 @@ class AMP_Tasks(commands.Cog):
                     # This fetch's a users prefix from the bot_perms.json file.
                     author_prefix = await self.bPerms.get_role_prefix(str(message.author.id))
 
+                    # Strip newlines so a Discord message can't smuggle a second, separate console command.
+                    chat_message = message.content.replace('\r\n', ' ').replace('\r', ' ').replace('\n', ' ')
+
                     # This calls the generic AMP Function; each server will handle this differently
-                    self.AMPServer.Chat_Message(message.content, author=message.author.name, author_prefix=author_prefix)
+                    self.AMPServer.Chat_Message(chat_message, author=message.author.name, author_prefix=author_prefix)
 
         return message
 
