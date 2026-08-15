@@ -263,6 +263,7 @@ class AMP_Tasks(commands.Cog):
                     server_prefix = AMPServer_Chat.Discord_Chat_Prefix
 
                     db_author: None | DB.DBUser = self.DB.GetUser(author)
+                    name, avatar = author, AMPServer_Chat.Avatar_url
                     if db_author != None:
                         author_prefix = await self.bPerms.get_role_prefix(db_author.DiscordID)
 
@@ -275,13 +276,12 @@ class AMP_Tasks(commands.Cog):
                             if discord_user != None:
                                 self.logger.dev('Using Discord Server Information')
                                 name, avatar = discord_user.name, discord_user.avatar
+                            # else: keep the (author, Avatar_url) fallback set above
 
-                    #!TODO! Test these changes.
-                    if db_author == None and AMPServer_Chat.get_IGN_Avatar(user=author):
+                    elif AMPServer_Chat.get_IGN_Avatar(user=author):
                         self.logger.dev('Using Message Information')
                         name, avatar = AMPServer_Chat.get_IGN_Avatar(user=author)
-                    else:
-                        name, avatar = author, AMPServer_Chat.Avatar_url
+                    # else: keep the (author, Avatar_url) fallback set above
 
                     if author_prefix != None:
                         self.logger.dev('Adding Author Prefix to Name')

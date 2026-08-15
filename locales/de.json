@@ -30,6 +30,7 @@
   "commands.user.role.description": "Legt die Berechtigungsrolle eines Nutzers für Befehle fest.",
   "messages.permissions.user_role.success": "Die Berechtigungsrolle von **{user_name}** wurde auf `{role}` gesetzt.",
   "messages.permissions.user_role.not_found": "Der Nutzer {user_name} wurde nicht gefunden. Bitte stelle sicher, dass er in der Datenbank ist.",
+  "messages.permissions.user_role.invalid_role": "`{role}` ist keine gültige Berechtigungsrolle, bitte wähle für **{user_name}** eine der Rollen aus der Autovervollständigung.",
   "commands.dbserver.description": "Befehle zur Datenbank-Server-Wartung.",
   "commands.dbserver.cleanup.description": "Entfernt nicht mehr verwendete DB-Server-Einträge.",
   "commands.dbserver.change_instance_id.description": "Ersetzt eine DB-Instanz-ID durch eine vorhandene AMP-Instanz.",

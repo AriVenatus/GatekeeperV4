@@ -48,6 +48,10 @@ class Permissions(commands.Cog):
     async def user_role(self, context: commands.Context, user: Union[discord.User, discord.Member], role: str):
         self.logger.command(f'{context.author.name} used User Role Function')
 
+        if role not in self.bPerms.get_roles():
+            await context.send(i18n.t('messages.permissions.user_role.invalid_role', user_name=user.name, role=role), ephemeral=True, delete_after=self._client.Message_Timeout)
+            return
+
         db_user = self.DB.GetUser(user.id)
         if db_user != None:
             db_user.Role = role

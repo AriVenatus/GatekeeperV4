@@ -106,7 +106,7 @@ class Whitelist(commands.Cog):
         """Called when a member is kicked or leaves the Server/Guild. Returns a <discord.Member> object."""
         self.logger.dev(f'Member Leave Event {self.name}: {member.name} {member}')
 
-        for key, value in self._client.Whitelist_wait_list.items():
+        for key, value in list(self._client.Whitelist_wait_list.items()):
             if member.id == value['context'].message.author.id:
                 self._client.Whitelist_wait_list.pop(key)
                 self.logger.info(f'Removed {member.name} from Whitelist Wait List.')
@@ -145,8 +145,8 @@ class Whitelist(commands.Cog):
                 self.DB.GetServer(InstanceID=amp_server.InstanceID).Whitelist_disabled = True
                 amp_server._setDBattr()  # This will update the AMPInstance Attributes
 
-        server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
-        await context.send(i18n.t('messages.whitelist.server_set.result', server_name=server_name, flag_name=flag.name), ephemeral=True, delete_after=self._client.Message_Timeout)
+            server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
+            await context.send(i18n.t('messages.whitelist.server_set.result', server_name=server_name, flag_name=flag.name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @commands.hybrid_command(name='whitelist_auto', description=i18n.t('commands.server.settings.whitelist_auto.description'))
     @utils.role_check()
@@ -409,7 +409,7 @@ class Whitelist(commands.Cog):
         cur_time = datetime.now(timezone.utc)
 
         temp_Whitelist_wait_list = self._client.Whitelist_wait_list
-        for key, value in temp_Whitelist_wait_list.items():
+        for key, value in list(temp_Whitelist_wait_list.items()):
             cur_message = value['context'].channel.get_partial_message(key)
             cur_amp_server = value['ampserver']  # AMPInstance Object
             cur_message_context = value['context']

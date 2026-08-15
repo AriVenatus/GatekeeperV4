@@ -551,6 +551,13 @@ class botUtils():
         """Verifies if the AMP Server exists and if its Instance is running and its ADS is Running"""
         amp_server = self.serverparse(server, context, context.guild.id)
 
+        if amp_server == None:
+            if online_only == False:
+                return amp_server
+
+            await context.send(f'Well this is awkward, it appears that server could not be found.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            return False
+
         if online_only == False:
             return amp_server
 

@@ -30,6 +30,7 @@
   "commands.user.role.description": "Sets a User's Permission Role for commands.",
   "messages.permissions.user_role.success": "We set the User: **{user_name}** permission's role to `{role}`.",
   "messages.permissions.user_role.not_found": "We failed to find the User: {user_name}, please make sure they are in the DB.",
+  "messages.permissions.user_role.invalid_role": "`{role}` is not a valid permission role, please pick one of the roles listed in the autocomplete for **{user_name}**.",
   "commands.dbserver.description": "Database server maintenance commands.",
   "commands.dbserver.cleanup.description": "This is used to remove unused DBServer entries.",
   "commands.dbserver.change_instance_id.description": "This will be used to replace a DB Instance ID with an existing AMP Instance",
