@@ -580,7 +580,69 @@ passes on the same items.
   fragile area (`core/AMP.py`'s login/session/permission-check cluster) from different angles
   rather than disagreeing.
 
-## Style/Tooling Ground Truth (reference)
+## Style/Tooling — worked 2026-08-15, ruff 1051 → 156
+
+The section below was written as a *measurement*, not a task list. It was worked through with a
+deliberate principle: **the goal is not zero, it's an output small enough that a new warning
+means something.** A linter measures conformance to a config, not correctness — 1051 "errors"
+were never 1051 bugs, and the real cost of the old state was that ~40 findings worth reading were
+buried under 649 that weren't.
+
+**The `ANN` decision (the big one).** `ANN` was dropped from `select` in `pyproject.toml` rather
+than fixed, with the reasoning recorded there so nobody silently re-enables it:
+- 649 of 1051 errors (62%). ~454 are return-type rules (`ANN201`/`ANN202`/`ANN204`) — **pyright
+  already infers return types from the function body**, so annotating them is explicitness with
+  no analytical payoff.
+- The other ~195 are parameter annotations, which *would* add real information — but can't pay
+  off yet. Pyright reports **1420** errors dominated by causes annotations don't touch: 741
+  `reportAttributeAccessIssue` (mostly `AMPInstance`'s dynamic `setattr()` injection of AMP's API
+  response, plus **182** from the `logger.dev`/`logger.command` levels `haggis` adds at runtime
+  and pyright cannot see) and 266 `reportOptionalMemberAccess`.
+- Net: enabling `ANN` silences a ruff category and leaves pyright where it is. Re-evaluate once
+  the pyright count drops. **Cheapest win available there: a typing stub for the two custom log
+  levels removes 182 errors (13%) for ~10 lines.**
+- Also removed `ANN101`, `ANN102`, `UP038` from `ignore` — all three no longer exist in ruff, and
+  it printed a warning on every run.
+
+**Fixed:**
+- `RUF013` implicit-Optional (108, 24 files) — `x: str = None` is a false annotation that hides
+  nullability. Worth it because **both production outages this day were that exact shape**: a
+  value that could be `None`/unbound where nothing said so. Only the annotation changed; no
+  `None`-guards were added, so newly-visible nullability is follow-up work.
+- The real-defect tier (45): `F841` (11), `F541` (13), `RUF036` (11), `G201` (5), `G010` (5).
+  **All 11 `F841` turned out to be genuinely dead `except ... as e:` bindings** where the handler
+  logs `traceback.format_exc()` instead — checked individually for dropped return values rather
+  than blindly deleted, which was the point of looking. The one non-exception case,
+  `SQLArgs = []` in `core/DB.py`, was verified unused (the query passes `(self.ID,)` inline).
+- Inert auto-fixes: `W291`/`W293`/`W292` whitespace, `UP039`, `SIM300` (21), `UP017`.
+- The two named style items in `cogs/db_server_cog.py`: the log line now matches the
+  `"{author} used <Feature Name>"` template, and `db_server_changeinstanceid` →
+  `db_server_change_instance_id` (**Python identifier only — the `name='change_instance_id'`
+  string is untouched, since `qualified_name` drives the `commands.*` locale keys**).
+
+**Deliberately NOT done:**
+- **`I001` unsorted-imports (56)** — the single largest remaining category, and it stays.
+  Reordering imports changes module-initialization order, and this codebase has load-bearing
+  import-time side effects (`core/utils_discord.py` runs `getAMPHandler()` at module level;
+  `core/discordBot.py` has a documented i18n startup-ordering requirement). Not worth the risk
+  for zero functional gain.
+- **Quote-style enforcement** — `core/AMP.py`, `DB.py`, `AMP_Console.py`, `DB_Update.py` skew
+  double-quoted against a single-quote-dominant repo. Adding ruff's `Q` rule would rewrite
+  thousands of lines for no functional gain and bury real changes in review. Accepted as-is.
+
+**Two real defects surfaced as side effects, both fixed:**
+- `resources/templates/amp_template.py` subclassed `AMP.AMPConsole`, which does not exist —
+  `core/AMP.py` imports the *module* `AMP_Console`, and every real game module uses
+  `AMP_Console.AMPConsole`. The scaffold would have failed for anyone generating a new game module.
+- Ruff's `RUF013` has real detection gaps (it misses `Attribute`-based and non-builtin bare-`Name`
+  annotations), leaving `db_user: DBUser = None` and
+  `discord_user: Union[discord.Member, discord.User] = None` implicitly-Optional but unflagged.
+  Fixed manually. **Lesson: "ruff reports zero for this rule" is not "this bug class is gone."**
+
+**Residual 156**, all judgment calls rather than defects: `I001` (56, deliberate), `PTH119` (22),
+`SIM102` (11), `TC002`/`TC001` (14), `PERF401`/`PERF102` (13), `SIM108` (6), and a long tail.
+
+### Original measurement (for reference)
 
 - `ruff check .`: 1076 errors (193 auto-fixable), dominated by missing type annotations
   (`ANN*`, ~57%) and implicit-`Optional` (`RUF013`, 120 — i.e. `x: str = None`).

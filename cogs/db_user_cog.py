@@ -94,7 +94,7 @@ class DB_User(commands.Cog):
         self.logger.command(f'{context.author.name} used User Information (Steam)')
         await self._send_user_info(context, identifier)
 
-    async def _send_user_info(self, context: commands.Context, search_value, discord_user: Union[discord.Member, discord.User] = None):
+    async def _send_user_info(self, context: commands.Context, search_value, discord_user: Union[discord.Member, discord.User, None] = None):
         db_user = self.DB.GetUser(search_value)
         if db_user == None:
             return await context.send(i18n.t('messages.db_user.user_info.not_found', search_value=search_value), ephemeral=True, delete_after=self._client.Message_Timeout)
@@ -111,7 +111,7 @@ class DB_User(commands.Cog):
 
     @user.command(name='add', description=i18n.t('commands.user.add.description'))
     @utils_permissions.role_check()
-    async def user_add(self, context: commands.Context, user: Union[discord.Member, discord.User], mc_ign: str = None, mc_uuid: str = None, steamid: str = None):
+    async def user_add(self, context: commands.Context, user: Union[discord.Member, discord.User], mc_ign: str | None = None, mc_uuid: str | None = None, steamid: str | None = None):
         self.logger.command(f'{context.author.name} used User Add Function')
 
         if mc_ign != None:
@@ -126,7 +126,7 @@ class DB_User(commands.Cog):
 
     @user.command(name='update', description=i18n.t('commands.user.update.description'))
     @utils_permissions.role_check()
-    async def user_update(self, context: commands.Context, user: Union[discord.Member, discord.User], mc_ign: str = None, steamid: str = None):
+    async def user_update(self, context: commands.Context, user: Union[discord.Member, discord.User], mc_ign: str | None = None, steamid: str | None = None):
         self.logger.command(f'{context.author.name} used User Update Function')
 
         db_user = None

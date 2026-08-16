@@ -126,7 +126,7 @@ def banner_field_label(value: str) -> str:
 class Whitelist_view(View):
     """Whitelist Request View"""
 
-    def __init__(self, client: discord.Client, discord_message: discord.Message, whitelist_message: discord.Message, amp_server: AMP_Handler.AMP.AMPInstance, context: commands.Context, timeout: float = None):
+    def __init__(self, client: discord.Client, discord_message: discord.Message, whitelist_message: discord.Message, amp_server: AMP_Handler.AMP.AMPInstance, context: commands.Context, timeout: float | None = None):
         self.logger = logging.getLogger()
         self._client = client
         self._context = context

@@ -44,6 +44,17 @@ line-length    = 125
 
 [tool.ruff.lint]
 exclude = ["docs/resources/*.py"]
+# ANN (flake8-annotations) is deliberately NOT selected. It was 649/1051 (62%) of
+# all lint errors as of 2026-08-15: ~454 are return-type rules (ANN201/ANN202/ANN204),
+# which pyright already infers from the function body, so annotating them is pure
+# explicitness with no analytical payoff. The remaining ~195 are parameter-annotation
+# rules (ANN001/ANN003), which would add real information, but pyright currently has
+# 1420 errors dominated by causes annotations don't touch (741 reportAttributeAccessIssue,
+# mostly AMPInstance's dynamic setattr() injection of AMP's API response plus the
+# haggis-added logger.dev/logger.command levels pyright can't see; 266
+# reportOptionalMemberAccess). Net effect of enabling ANN today: it silences this
+# category in ruff while leaving pyright's real error count roughly unchanged.
+# Re-evaluate once the pyright error count above is meaningfully reduced.
 select = [
     "A",
     "C4",
@@ -57,7 +68,6 @@ select = [
     "UP",
     "W",
     "PERF",
-    "ANN",
 ]
 ignore = [
     "F401",
@@ -69,11 +79,7 @@ ignore = [
     "RUF009",
     "SIM105",
     "UP034",
-    "UP038",
     "UP007",
-    "ANN101",
-    "ANN102",
-    "ANN401",
     "G004",
     "G003",
 ]

@@ -9,7 +9,7 @@ DisplayImageSources = ['steam:251570']
 
 
 class AMPSevendays(AMP.AMPInstance):
-    def __init__(self, instanceID: int = 0, serverdata: dict = {}, default_console: bool = False, Handler=None, TargetName: str = None):
+    def __init__(self, instanceID: int = 0, serverdata: dict = {}, default_console: bool = False, Handler=None, TargetName: str | None = None):
         self.perms = []
         self.APIModule = 'Seven Days To Die'
 
@@ -23,7 +23,7 @@ class AMPSevendays(AMP.AMPInstance):
 
         self.SenderFilterList.append('Server')
 
-    def Chat_Message(self, message: str, author: str = None, author_prefix: str = None, server_prefix: str = None):
+    def Chat_Message(self, message: str, author: str | None = None, author_prefix: str | None = None, server_prefix: str | None = None):
         """Sends a customized message via say through the console."""
         # Replace double quotes with single quotes so untrusted text can't break out of the
         # double-quote-delimited console command and inject new console input.
@@ -47,7 +47,7 @@ class AMPSevendays(AMP.AMPInstance):
         content += f'<{author}> {message}"'
         self.ConsoleMessage(content)
 
-    def Broadcast_Message(self, message, prefix: str = None):
+    def Broadcast_Message(self, message, prefix: str | None = None):
         """Used to Send a Broadcast Message to the Server"""
         self.Login()
         content = 'say "'

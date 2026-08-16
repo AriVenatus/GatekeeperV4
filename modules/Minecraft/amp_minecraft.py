@@ -18,7 +18,7 @@ DisplayImageSources = ["internal:MinecraftJava"]
 class AMPMinecraft(AMP.AMPInstance):
     """This is Minecraft Specific API calls for AMP"""
 
-    def __init__(self, instanceID: int = 0, serverdata: dict = {}, default_console: bool = False, Handler=None, TargetName: str = None):
+    def __init__(self, instanceID: int = 0, serverdata: dict = {}, default_console: bool = False, Handler=None, TargetName: str | None = None):
         self.perms = ['Minecraft.*', 'Minecraft.InGameActions.*', '-Minecraft.PluginManagement.*']
         self.APIModule = 'MinecraftModule'  # This is what AMP API calls the Module in the Web GUI API Documentation Browser
 
@@ -75,12 +75,12 @@ class AMPMinecraft(AMP.AMPInstance):
 
         return minecraft_user[0]['name']
 
-    def addWhitelist(self, db_user: DBUser = None, in_gamename: str = None):
+    def addWhitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None):
         """Adds a User to the Whitelist File *Supports IGN*"""
         self.Login()
         self.ConsoleMessage(f'whitelist add {in_gamename if db_user == None else db_user.MC_IngameName}')
 
-    def removeWhitelist(self, db_user: DBUser = None, in_gamename: str = None):
+    def removeWhitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None):
         """Removes a User from the Whitelist File *Supports IGN*"""
         self.Login()
         self.ConsoleMessage(f'whitelist remove {in_gamename if db_user == None else db_user.MC_IngameName}')
@@ -97,7 +97,7 @@ class AMPMinecraft(AMP.AMPInstance):
                 whitelist_json = json.loads(whitelist_data.decode("utf-8"))
                 return whitelist_json
 
-    def check_Whitelist(self, db_user: DBUser = None, in_gamename: str = None):
+    def check_Whitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None):
         self.logger.dev(f'Checking if {in_gamename if db_user == None else db_user.DiscordName} is whitelisted on {self.FriendlyName}...')
         """Checks if the User is already in the whitelist file. Supports DB User and MC In game Name.\n
         Returns `None` if the UUID is whitelisted \n
@@ -188,7 +188,7 @@ class AMPMinecraft(AMP.AMPInstance):
             self.logger.error('We failed to format the Chat Message.')
             return False
 
-    def Broadcast_Message(self, message, prefix: str = None):
+    def Broadcast_Message(self, message, prefix: str | None = None):
         """Used to Send a Broadcast Message to the Server"""
         self.Login()
         self.ConsoleMessage(f'say <{prefix}> :{message}')

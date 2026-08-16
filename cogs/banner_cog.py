@@ -140,7 +140,7 @@ class Banner(commands.Cog):
             return [app_commands.Choice(name=channel.name, value=str(channel.id)) for channel in discord_channels if current.lower() in channel.name.lower()][:25]
 
         except:
-            self.logger.error(f'We failed a `get_channel` inside of autocomplete_bannergroups_channels and defaulted to displaying the IDs')
+            self.logger.error('We failed a `get_channel` inside of autocomplete_bannergroups_channels and defaulted to displaying the IDs')
             return [app_commands.Choice(name=str(value), value=str(value))for value in bg_channels if current.lower() in str(value).lower()][:25]
 
     async def banner_editor(self, context: commands.Context, amp_server: AMP_Handler.AMP.AMPInstance, db_server_banner=None):
@@ -159,7 +159,7 @@ class Banner(commands.Cog):
     async def _embed_generator(self, banner_name: str, server_list: list[str], message_list: list[discord.Message], discord_guild: discord.Guild, discord_channel: discord.TextChannel):
         embed_list = await self.eBot.server_display_embed(server_list=server_list, guild=discord_guild, banner_name=banner_name)
         if len(embed_list) == 0:
-            self.logger.warn('We failed to find any Banners for your Instances.')
+            self.logger.warning('We failed to find any Banners for your Instances.')
             return
         ratio = math.ceil((len(embed_list) / 10))
         # compare ratio to len(message_list)
@@ -236,7 +236,7 @@ class Banner(commands.Cog):
             banner_image_list.append(banner_file)
 
         if not len(banner_image_list):
-            self.logger.warn('We failed to find any Banners for your Instances.')
+            self.logger.warning('We failed to find any Banners for your Instances.')
             return
 
         # If we have too many messages; well we need to remove the remaining messages.
@@ -413,7 +413,7 @@ class Banner(commands.Cog):
     @banner_group_group.command(name='add', description=i18n.t('commands.bot.bannergroup.add.description'))
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.autocomplete(group_name=autocomplete_bannergroups)
-    async def banner_group_add(self, context: commands.Context, group_name: str, server: None | str = None, channel: None | discord.abc.GuildChannel = None):
+    async def banner_group_add(self, context: commands.Context, group_name: str, server: str | None = None, channel: discord.abc.GuildChannel | None = None):
         c_status = True
         s_status = True
 
@@ -446,7 +446,7 @@ class Banner(commands.Cog):
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.autocomplete(channel=autocomplete_bannergroups_channels)
     @app_commands.autocomplete(group_name=autocomplete_bannergroups)
-    async def banner_group_remove(self, context: commands.Context, group_name, server: str = None, channel: str = None):
+    async def banner_group_remove(self, context: commands.Context, group_name, server: str | None = None, channel: str | None = None):
         if server == None and channel == None:
             return await context.send(content=i18n.t('messages.banner.group.remove.need_selection'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
@@ -468,7 +468,7 @@ class Banner(commands.Cog):
                     try:
                         await cur_channel.get_partial_message(entry).delete()
                         self.logger.dev(f'Found message in channel and deleted message. id: {entry}')
-                    except Exception as e:
+                    except Exception:
                         self.logger.error(f'Was unable to delete a message id: {entry}, removing from DB')
 
             # We still need to `int` the channel object because on the off chance the channel has been deleted and the autocomplete fails to find said channel;
@@ -492,7 +492,7 @@ class Banner(commands.Cog):
                 try:
                     await cur_channel.get_partial_message(entry).delete()
                     self.logger.dev(f'Found message in channel and deleted message. id: {entry}')
-                except Exception as e:
+                except Exception:
                     self.logger.error(f'Was unable to delete a message id: {entry}, removing from DB')
 
         self.DB.Delete_BannerGroup(name=group_name)

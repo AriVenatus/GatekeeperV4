@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class Copy_To_TextInput(TextInput):
     """This is used for Banner Editor View with the Copy To Button."""
 
-    def __init__(self, style: TextStyle = TextStyle.short, required: bool = True, placeholder: str = None) -> None:
+    def __init__(self, style: TextStyle = TextStyle.short, required: bool = True, placeholder: str | None = None) -> None:
         placeholder = placeholder or i18n.t('ui.banner_copy.textinput_placeholder')
         label: str = i18n.t('ui.banner_copy.textinput_label')
         TextInput.__init__(self, label=label, style=style, required=required, placeholder=placeholder)
@@ -23,7 +23,7 @@ class Copy_To_TextInput(TextInput):
 
 class Banner_Color_Input(TextInput):
     # This is the Modal that appears when Inputing a color hexcode.
-    def __init__(self, view: Banner_Editor_View, edited_db_banner: Edited_DB_Banner, select_value: str, label: str = None, style=TextStyle.short, placeholder: str = '#000000', default: str = '#ffffff', required=True, min_length=3, max_length=8):
+    def __init__(self, view: Banner_Editor_View, edited_db_banner: Edited_DB_Banner, select_value: str, label: str | None = None, style=TextStyle.short, placeholder: str = '#000000', default: str = '#ffffff', required=True, min_length=3, max_length=8):
         label = label or i18n.t('ui.banner_color_input.label')
         self._edited_db_banner = edited_db_banner
         self._select_value = select_value
@@ -49,7 +49,7 @@ class Banner_Color_Input(TextInput):
 
 class Banner_Blur_Input(TextInput):
     # This is the Modal that appears when inputing the blur value.
-    def __init__(self, view: Banner_Editor_View, edited_db_banner: Edited_DB_Banner, select_value: str, label: str = None, style=TextStyle.short, placeholder: str = None, default: int = 2, required=True, min_length=1, max_length=2):
+    def __init__(self, view: Banner_Editor_View, edited_db_banner: Edited_DB_Banner, select_value: str, label: str | None = None, style=TextStyle.short, placeholder: str | None = None, default: int = 2, required=True, min_length=1, max_length=2):
         label = label or i18n.t('ui.banner_editor.fields.blur_background')
         placeholder = placeholder or i18n.t('ui.banner_blur_input.placeholder')
         self._edited_db_banner = edited_db_banner

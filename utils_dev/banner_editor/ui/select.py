@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 class Banner_Editor_Select(Select):
-    def __init__(self, edited_db_banner: Edited_DB_Banner, view: Banner_Editor_View, amp_server: AMPInstance, banner_message: Message, custom_id: str = None, min_values: int = 1, max_values: int = 1, row: int = None, disabled: bool = False, placeholder: str = None):
+    def __init__(self, edited_db_banner: Edited_DB_Banner, view: Banner_Editor_View, amp_server: AMPInstance, banner_message: Message, custom_id: str | None = None, min_values: int = 1, max_values: int = 1, row: int | None = None, disabled: bool = False, placeholder: str | None = None):
         self.logger = logging.getLogger()
         options = []
         self._banner_view = view

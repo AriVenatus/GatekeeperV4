@@ -96,13 +96,13 @@ class Regex(commands.Cog):
         Choice(name=i18n.t('commands.bot.regex_pattern.update.params.filter_type.choices.0'), value=0),
         Choice(name=i18n.t('commands.bot.regex_pattern.update.params.filter_type.choices.1'), value=1),
     ])
-    async def regex_pattern_update(self, context: commands.Context, name: str, new_name: str = None, filter_type: Choice[int] = None, pattern: str = None):
+    async def regex_pattern_update(self, context: commands.Context, name: str, new_name: str | None = None, filter_type: Choice[int] = None, pattern: str | None = None):
         self.logger.command(f'{context.author.name} used Regex Pattern Update')
 
         if pattern != None:
             try:
                 re.compile(pattern=pattern)
-            except re.error as e:
+            except re.error:
                 self.logger.error(f'Regex Error: {traceback.format_exc()}')
                 return await context.send(content=i18n.t('messages.regex.invalid_pattern', pattern=pattern), ephemeral=True, delete_after=self._client.Message_Timeout)
 

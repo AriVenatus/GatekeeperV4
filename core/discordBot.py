@@ -81,14 +81,14 @@ class Gatekeeper(commands.Bot):
 
     @tasks.loop(seconds=30)
     async def update_loop(self):
-        self.logger.warn(f'Waiting to Update Bot Version to {Version}...')
+        self.logger.warning(f'Waiting to Update Bot Version to {Version}...')
         await client.wait_until_ready()
-        self.logger.warn(f'Currently Updating Bot Version to {Version}...')
+        self.logger.warning(f'Currently Updating Bot Version to {Version}...')
         self.DBConfig.SetSetting('Bot_Version', Version)
         if self.guild_id != None:
             self.tree.copy_global_to(guild=self.get_guild(self.guild_id))
             await self.tree.sync(guild=self.get_guild(self.guild_id))
-            self.logger.warn(f'Syncing Commands via update_loop to guild: {self.get_guild(self.guild_id).name} {await self.tree.sync(guild=self.get_guild(self.guild_id))}')
+            self.logger.warning(f'Syncing Commands via update_loop to guild: {self.get_guild(self.guild_id).name} {await self.tree.sync(guild=self.get_guild(self.guild_id))}')
         else:
             self.logger.error(f'It appears I cannot Sync your commands for you, please run {self.prefix}bot utils sync or `/bot utils sync` to update your command tree. Please see the readme if you encounter issues.')
         self.update_loop.stop()
@@ -101,7 +101,7 @@ class Gatekeeper(commands.Bot):
         except discord.ext.commands.errors.ExtensionAlreadyLoaded:
             pass
 
-        except Exception as e:
+        except Exception:
             self.logger.error(f'We ran into an Error Loading the Permissions_Cog. Error - {traceback.format_exc()}')
             return False
 

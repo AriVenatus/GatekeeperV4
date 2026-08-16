@@ -24,7 +24,7 @@ def init(args=None):
     #To Enable debug logging level (ewwwwww.....)
     if args.debug:
         logginglevel = logging.DEBUG
- 
+
     dircheck = pathlib.Path.exists(pathlib.Path.cwd().joinpath('logs'))
     if dircheck != True:
         print('Making Log Directory...')
@@ -40,14 +40,13 @@ def init(args=None):
     #This is for displaying slash commands information for tracing info!
     command_level = 19
     command_label = 'COMMAND'
-    
+
     logs.add_logging_level(command_label, command_level)
     if args.command:
         logginglevel = logging.COMMAND
-    
-    logging.basicConfig(level=logginglevel, format='%(asctime)s [%(threadName)s] [%(levelname)s]  %(message)s', 
+
+    logging.basicConfig(level=logginglevel, format='%(asctime)s [%(threadName)s] [%(levelname)s]  %(message)s',
                         datefmt='%m/%d/%Y %I:%M:%S %p',
                         handlers = [logging.StreamHandler(sys.stdout),
                         TimedRotatingFileHandler(pathlib.Path.as_posix(pathlib.Path.cwd().joinpath('logs')) + '/log','midnight',atTime=datetime.datetime.min.time(),backupCount= 4,encoding='utf-8',utc=True)])
-  
-        
+

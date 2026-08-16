@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 class Copy_To_Modal(Modal):
     """Used for Copy To Button within the Banner Settings Editor View."""
 
-    def __init__(self, edited_banner: Edited_DB_Banner, title: str = None, timeout: Optional[float] = None) -> None:
+    def __init__(self, edited_banner: Edited_DB_Banner, title: Optional[str] = None, timeout: Optional[float] = None) -> None:
         super().__init__(title=title or i18n.t('ui.banner_copy.modal_title'), timeout=timeout)
         self._edited_banner: Edited_DB_Banner = edited_banner  # Need to pass this along to our view...
         self._amp_instance_names: dict[str, str] = AMP_Handler.getAMPHandler().get_AMP_instance_names()

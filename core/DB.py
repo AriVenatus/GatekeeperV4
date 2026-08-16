@@ -313,7 +313,7 @@ class Database:
         jdata = dump_to_json({"Type": "UserUpdate", "UserID": dbuser.ID, "Field": entry, "Value": args[entry]})
         self._logdata(jdata)
 
-    def AddServer(self, InstanceID: str, InstanceName: str = None, FriendlyName: str = None):
+    def AddServer(self, InstanceID: str, InstanceName: str | None = None, FriendlyName: str | None = None):
         return DBServer(db=self, InstanceID=InstanceID, InstanceName=InstanceName, FriendlyName=FriendlyName)
 
     def GetServer(self, InstanceID: str | int | None = None, ServerID: str | None = None) -> DBServer | None:
@@ -365,11 +365,11 @@ class Database:
 
     def AddUser(
         self,
-        DiscordID: str = None,
-        DiscordName: str = None,
-        MC_IngameName: str = None,
-        MC_UUID: str = None,
-        SteamID: str = None,
+        DiscordID: str | None = None,
+        DiscordName: str | None = None,
+        MC_IngameName: str | None = None,
+        MC_UUID: str | None = None,
+        SteamID: str | None = None,
     ):
         try:
             return DBUser(
@@ -393,7 +393,7 @@ class Database:
             return False
         return True
 
-    def DelRegexPattern(self, ID: int = None, Name: str = None) -> bool:
+    def DelRegexPattern(self, ID: int | None = None, Name: str | None = None) -> bool:
         """Removes a entry RegexPatterns Table using either its `Name` or `ID`"""
         if ID == None:
             (row, cur) = self._fetchone("SELECT ID FROM RegexPatterns WHERE Name=?", (Name,))
@@ -410,7 +410,7 @@ class Database:
         self._execute("DELETE FROM RegexPatterns WHERE ID=?", (ID,))
         return True
 
-    def GetRegexPattern(self, ID: int = None, Name: str = None):
+    def GetRegexPattern(self, ID: int | None = None, Name: str | None = None):
         """Returns RegexPatterns Table
         Returns `row['ID'] = {'Name': row['Name'], 'Type': row['Type'], 'Pattern': row['Pattern']}`
         """
@@ -424,7 +424,7 @@ class Database:
         return regex
 
     def UpdateRegexPattern(
-        self, Pattern: str = None, Type: int = None, ID: int = None, Pattern_Name: str = None, Name: str = None
+        self, Pattern: str | None = None, Type: int | None = None, ID: int | None = None, Pattern_Name: str | None = None, Name: str | None = None
     ) -> bool:
         """Update a Regex Pattern in the RegexPatterns Table using either its `Name` or `ID`"""
         if ID == None:
@@ -521,12 +521,12 @@ class Database:
         cur.close()
         return whitelist_replies
 
-    def AddWhitelistReply(self, Message: str = None):
+    def AddWhitelistReply(self, Message: str | None = None):
         """Adds a Whitelist Reply to the DB"""
         self._execute("INSERT INTO WhitelistReply(Message) values(?)", (Message,))
         return
 
-    def DeleteWhitelistReply(self, Message: str = None):
+    def DeleteWhitelistReply(self, Message: str | None = None):
         """Deletes a Whitelist Reply from the DB"""
         self._execute("DELETE FROM WhitelistReply WHERE Message=?", (Message,))
         return
@@ -537,7 +537,7 @@ class Database:
         self._execute("INSERT INTO BannerGroup(name) values(?)", (name,))
         return
 
-    def Get_BannerGroup(self, name: str = None, ID: int = None):
+    def Get_BannerGroup(self, name: str | None = None, ID: int | None = None):
         """Selects a Banner Group Table matching the `name` provided."""
         (ret, cur) = self._fetchone(
             "SELECT ID FROM BannerGroup WHERE name=? or ID=?",
@@ -560,7 +560,7 @@ class Database:
         cur.close()
         return
 
-    def Get_one_BannerGroup_info(self, name: str) -> Union[None, dict[str, int]]:
+    def Get_one_BannerGroup_info(self, name: str) -> Union[dict[str, int], None]:
         """Gets a Specific Banner Groups full information
         return `Banner_info[entry['name']] = {'InstanceName': list[entry['InstanceName']], 'Discord_Channel': list[entry['Discord_Channel_ID']]}`"""
         banner_id = self.Get_BannerGroup(name)
@@ -595,7 +595,7 @@ class Database:
         cur.close()
         return Banner_info
 
-    def Get_All_BannerGroups(self) -> Union[None, dict[str, str]]:
+    def Get_All_BannerGroups(self) -> Union[dict[str, str], None]:
         """Gets all BannerGroups Names/IDs
         returns `Banners[entry["ID"]] = entry["name"]`"""
         Banners = {}
@@ -622,7 +622,7 @@ class Database:
             self._execute("DELETE FROM BannerGroup WHERE ID=?", (banner_id,))
             cur.close()
 
-    def Get_All_BannerGroup_Info(self) -> Union[None, dict[str, int]]:
+    def Get_All_BannerGroup_Info(self) -> Union[dict[str, int], None]:
         """Gets all the BannerGroups and sorts them by `Discord_Channel_ID`.
         `example: {916195413839712277: {'name': 'TestBannerGroup', 'guild_id': 602285328320954378, 'servers': [1], 'messages': [1079236992145051668]}}`"""
         Banners = {}
@@ -829,13 +829,13 @@ class DBUser:
     def __init__(
         self,
         db: Database,
-        ID: int = None,
-        DiscordID: str = None,
-        DiscordName: str = None,
-        MC_IngameName: str = None,
-        MC_UUID: str = None,
-        SteamID: str = None,
-        Role: str = None,
+        ID: int | None = None,
+        DiscordID: str | None = None,
+        DiscordName: str | None = None,
+        MC_IngameName: str | None = None,
+        MC_UUID: str | None = None,
+        SteamID: str | None = None,
+        Role: str | None = None,
     ):
         # set defaults
         Params = locals()
@@ -934,7 +934,7 @@ class DBServer:
     Discord_Chat_Prefix: str
 
     def __init__(
-        self, db: Database, ID: int = None, InstanceID: str = None, InstanceName: str = None, FriendlyName: str = None
+        self, db: Database, ID: int | None = None, InstanceID: str | None = None, InstanceName: str | None = None, FriendlyName: str | None = None
     ):
         # set defaults
         Params = locals()
@@ -1068,10 +1068,10 @@ class DBServer:
         jdata = dump_to_json({"Type": "UpdateServerDisplayName", "ServerID": self.ID, "DisplayName": DisplayName})
         self._db._logdata(jdata)
 
-    def getBanner(self, background_path: str = None):
+    def getBanner(self, background_path: str | None = None):
         return DBBanner(self._db, self.ID, background_path)
 
-    def AddServerRegexPattern(self, ID: int = None, Name: str = None):
+    def AddServerRegexPattern(self, ID: int | None = None, Name: str | None = None):
         """Adds the provided RegexPattern ID/Name to the ServerRegexPatterns Table."""
         if ID == None:
             (row, cur) = self._db._fetchone("SELECT ID from RegexPatterns WHERE Name=?", (Name,))
@@ -1088,7 +1088,7 @@ class DBServer:
             return False
         return True
 
-    def DelServerRegexPattern(self, ID: int = None, Name: str = None):
+    def DelServerRegexPattern(self, ID: int | None = None, Name: str | None = None):
         """Removes the provided RegexPattern ID/Name from the ServerRegexPatterns Table."""
         if ID == None:
             (row, cur) = self._db._fetchone("SELECT ID from RegexPatterns WHERE Name=?", (Name,))
@@ -1104,7 +1104,6 @@ class DBServer:
         """Gets all Regex Patterns related to Server
         Returns `dict['ID': {'Name': entry['Name'], 'Type': entry['Type'], 'Pattern': entry['Pattern']}]`"""
         regex_patterns = {}
-        SQLArgs = []
         (rows, cur) = self._db._fetchall(
             "SELECT RP.ID, RP.Name, RP.Type, RP.Pattern FROM ServerRegexPatterns SRP, RegexPatterns RP WHERE SRP.ServerID=? and SRP.RegexPatternID = RP.ID",
             (self.ID,),
@@ -1220,7 +1219,7 @@ class DBConfig:
 
 
 class DBBanner:
-    def __init__(self, DB: Database, ServerID: int = None, background_path: str = None):
+    def __init__(self, DB: Database, ServerID: int | None = None, background_path: str | None = None):
         self._attr_list = {
             "_db": DB,
             "ServerID": int(ServerID),

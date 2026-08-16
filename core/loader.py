@@ -15,7 +15,7 @@ from core import AMP_Handler
 #loop = asyncio.new_event_loop()
 loaded = []
 
-class Handler():
+class Handler:
     """This is the Basic Module Loader for AMP to Discord Integration/Interactions"""
     def __init__(self, client:discord.Client):
         self._client = client
@@ -32,7 +32,7 @@ class Handler():
         self.Cog_Modules = {}
 
         self.logger.info(f'**SUCCESS** Initializing {self.name.capitalize()} ')
-        
+
     async def module_auto_loader(self):
         """This loads all the required Cogs/Scripts for each unique AMPInstance.Module type"""
         try:
@@ -47,12 +47,12 @@ class Handler():
                     class_module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(class_module)
 
-                    for DIS in getattr(class_module,f'DisplayImageSources'):
+                    for DIS in getattr(class_module,'DisplayImageSources'):
                         self.Cog_Modules[DIS] = script
-                    
+
                     self.logger.dev(f'**SUCCESS** {self.name} Found Server Cog Module **{module_name}**')
-                    
-        except Exception as e:
+
+        except Exception:
             self.logger.error(f'**ERROR** {self.name} Finding Server Cog Module ** - File Not Found {traceback.format_exc()}')
 
         #Just to make it easier; always load the Generic Module as a base.
@@ -72,15 +72,15 @@ class Handler():
 
                 except discord.ext.commands.errors.ExtensionAlreadyLoaded:
                     continue
-                
-                except Exception as e:
+
+                except Exception:
                     self.logger.error(f'**ERROR** {self.name} Loading Server Cog Module **{path.stem}** - {traceback.format_exc()}')
-     
-        self.logger.info(f'**All Server Modules Loaded**')
+
+        self.logger.info('**All Server Modules Loaded**')
 
     async def cog_auto_loader(self, reload= False):
         """This will load all Cogs inside of the cogs folder."""
-        path = f'cogs' #This gets us to the folder for the module specific scripts to load via the cog.
+        path = 'cogs' #This gets us to the folder for the module specific scripts to load via the cog.
 
         loaded_cogs = []
         #Grab all the cogs inside my `cogs` folder and duplicate the list.
@@ -103,7 +103,7 @@ class Handler():
                 #on startup (only the `reload=True` pass skips it). A process restart (`/bot utils
                 #restart`) picks up code changes to this one file.
                 if reload and script.name.lower() == 'bot_cog.py':
-                    self.logger.dev(f'Skipped reloading bot_cog.py to avoid disrupting the live /bot command group.')
+                    self.logger.dev('Skipped reloading bot_cog.py to avoid disrupting the live /bot command group.')
                     #Mark it satisfied anyway: it IS still loaded (we skipped reloading it, we didn't
                     #unload it), and the cogs that attach subcommands to `/bot` depend on it. Without
                     #this, their dependency never resolves, the dependency branch below `continue`s
@@ -118,10 +118,10 @@ class Handler():
                 spec.loader.exec_module(class_module)
 
 
-                module_dependencies = getattr(class_module, f'Dependencies')
+                module_dependencies = getattr(class_module, 'Dependencies')
                 self.logger.dev(f"Checking Dependencies on {script.name}")
                 if module_dependencies != None:
-                    
+
                     missing_dependencies = False
                     for dependency in module_dependencies:
                         #If the cog we need isnt loaded; skip. We will come back around to it.
@@ -134,7 +134,7 @@ class Handler():
                         self.logger.dev(f"Missing Dependencies: {dependency.lower()} for {script.name}")
                         continue
 
-                    
+
                 cog = f'{path}.{script.name[:-3]}'
 
                 try:
@@ -151,14 +151,14 @@ class Handler():
                     self.logger.dev(f'**FINISHED LOADING** {self.name} -> **{cog}**')
 
                 except Exception as e:
-                    cur_cog_file_list.remove(script) 
+                    cur_cog_file_list.remove(script)
                     self.logger.dev(f'Removed cog from loader list: {script.name}')
                     self.logger.error(f'**ERROR** Loading Cog {script.name}** - {e} {traceback.format_exc()}')
                     continue
-                
-        self.logger.info(f'**All Cog Modules Loaded**')
 
-                
+        self.logger.info('**All Cog Modules Loaded**')
+
+
 
 
 

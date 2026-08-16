@@ -56,7 +56,7 @@ class DB_Server(commands.Cog):
     @db_server.command(name='cleanup', description=i18n.t('commands.dbserver.cleanup.description'))
     @utils_permissions.role_check()
     async def db_server_cleanup(self, context: commands.Context):
-        self.logger.command(f'{context.author.name} used Database Clean-Up in progress...')
+        self.logger.command(f'{context.author.name} used Database Server Cleanup')
 
         amp_instance_keys = self.AMPInstances.keys()
         db_server_list = self.DB.GetAllServers()
@@ -77,7 +77,7 @@ class DB_Server(commands.Cog):
     @app_commands.autocomplete(to_server=utils_discord.autocomplete_servers)
     @app_commands.describe(from_server=i18n.t('commands.dbserver.change_instance_id.params.from_server.description'))
     @app_commands.describe(to_server=i18n.t('commands.dbserver.change_instance_id.params.to_server.description'))
-    async def db_server_changeinstanceid(self, context: Union[commands.Context, discord.Interaction], from_server: str, to_server: str):
+    async def db_server_change_instance_id(self, context: Union[commands.Context, discord.Interaction], from_server: str, to_server: str):
         self.logger.command(f'{context.author.name} used Database Instance swap...')
 
         from_db_server = self.DB.GetServer(InstanceID=from_server)

@@ -12,7 +12,7 @@ DisplayImageSources = ['steam:427520']
 
 
 class AMPFactorio(AMP.AMPInstance):
-    def __init__(self, instanceID: int = 0, serverdata: dict = {}, default_console: bool = False, Handler=None, TargetName: str = None):
+    def __init__(self, instanceID: int = 0, serverdata: dict = {}, default_console: bool = False, Handler=None, TargetName: str | None = None):
         self.APIModule = 'Factorio'
 
         super().__init__(instanceID, serverdata, Handler=Handler, TargetName=TargetName)
@@ -35,7 +35,7 @@ class AMPFactorio(AMP.AMPInstance):
             if self.setAMPRolePermissions(self.AMP_BotRoleID, perm, enabled):
                 self.logger.dev(f'Set {perm} for {self.AMP_BotRoleID} to {enabled}')
 
-    def Chat_Message(self, message: str, author: str = None, author_prefix: str = None, server_prefix: str = None):
+    def Chat_Message(self, message: str, author: str | None = None, author_prefix: str | None = None, server_prefix: str | None = None):
         # See https://wiki.factorio.com/Rich_text
         # Replace bracket characters so untrusted text can't close the current rich-text tag
         # early or inject a new/malformed tag (e.g. [gps=...], [item=...]).

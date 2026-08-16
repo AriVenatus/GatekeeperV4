@@ -9,7 +9,7 @@ DisplayImageSources = ['steam:105600']
 
 
 class AMPTerraria(AMP.AMPInstance):
-    def __init__(self, instanceID: int = 0, serverdata: dict = {}, default_console: bool = False, Handler=None, TargetName: str = None):
+    def __init__(self, instanceID: int = 0, serverdata: dict = {}, default_console: bool = False, Handler=None, TargetName: str | None = None):
         self.perms = []
         self.APIModule = 'Terraria'
 
@@ -22,7 +22,7 @@ class AMPTerraria(AMP.AMPInstance):
         if self.Avatar_url == None:
             self.DB_Server.Avatar_url = 'https://github.com/AriVenatus/GatekeeperV4/blob/main/resources/avatars/terraria_avatar.jpg?raw=true'
 
-    def Chat_Message(self, message: str, author: str = None, author_prefix: str = None, server_prefix: str = None):
+    def Chat_Message(self, message: str, author: str | None = None, author_prefix: str | None = None, server_prefix: str | None = None):
         """Sends a customized message via say through the console."""
         # Replace bracket characters so untrusted text can't close the current [c/...:...] tag
         # early or inject a new/malformed rich-text tag.
@@ -49,7 +49,7 @@ class AMPTerraria(AMP.AMPInstance):
         content += f'[c/ffffff:<{author}> {message}]'
         self.ConsoleMessage(content)
 
-    def Broadcast_Message(self, message, prefix: str = None):
+    def Broadcast_Message(self, message, prefix: str | None = None):
         """Used to Send a Broadcast Message to the Server"""
         self.Login()
         content = 'say '

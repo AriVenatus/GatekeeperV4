@@ -30,7 +30,7 @@ def _resolve_rolecheck_author(context: Union[commands.Context, discord.Interacti
     raise TypeError(f'async_rolecheck() received an unsupported context type: {type(context)!r}')
 
 
-async def _rolecheck_permission(context: Union[commands.Context, discord.Interaction], author: discord.Member, perm_node: str = None) -> tuple[bool, Union[str, None]]:
+async def _rolecheck_permission(context: Union[commands.Context, discord.Interaction], author: discord.Member, perm_node: str | None = None) -> tuple[bool, Union[str, None]]:
     """Pure permission decision: never touches Discord I/O.
 
     Returns `(allowed, denial_key)` where `denial_key` is the i18n key of the message
@@ -65,7 +65,7 @@ async def _rolecheck_permission(context: Union[commands.Context, discord.Interac
 
     # This is the final check before we attempt to use the "DEFAULT" permissions setup.
     if _mod_role == None:
-        logger.error(f'DBConfig Moderator role has not been set yet!')
+        logger.error('DBConfig Moderator role has not been set yet!')
         return False, 'common.no_moderator_role'
 
     staff_role, author_top_role = 0, 0
@@ -113,7 +113,7 @@ async def _send_rolecheck_denial(context: Union[commands.Context, discord.Intera
         raise TypeError(f'async_rolecheck() received an unsupported context type: {type(context)!r}')
 
 
-async def async_rolecheck(context: Union[commands.Context, discord.Interaction], perm_node: str = None) -> bool:
+async def async_rolecheck(context: Union[commands.Context, discord.Interaction], perm_node: str | None = None) -> bool:
     """Primary authorization gate for the bot - used as a `commands.check` predicate
     (via `role_check()`) and called directly wherever a permission needs checking outside
     of a command invocation (autocomplete, UI components).
@@ -135,7 +135,7 @@ def role_check():
     return commands.check(async_rolecheck)
 
 
-def guild_check(guild_id: int = None):
+def guild_check(guild_id: int | None = None):
     """Use this before any commands to limit it to a certain guild usage."""
     async def predicate(context: commands.Context):
         if context.guild.id == guild_id:
@@ -158,7 +158,7 @@ def get_botPerms():
     return bPerms
 
 
-class botPerms():
+class botPerms:
     def __init__(self):
         self.logger = logging.getLogger()
         self.DBHandler = DB.getDBHandler()
@@ -184,7 +184,7 @@ class botPerms():
                 # Verifies each role has a numeric discord_role_id or is equal to None and the name is not empty.
                 for role in self.permissions['Roles']:
                     if len(role['name']) == 0:
-                        self.logger.critical(f'You are missing a role name, please do not leave role names empty..')
+                        self.logger.critical('You are missing a role name, please do not leave role names empty..')
                         sys.exit(0)
 
                     if role['discord_role_id'] == 'None':
@@ -253,7 +253,7 @@ class botPerms():
             self.permission_roles.append(role['name'])
         return self.permission_roles
 
-    async def get_role_prefix(self, user_id: str = None, context: commands.Context = None) -> Union[str, None]:
+    async def get_role_prefix(self, user_id: str | None = None, context: commands.Context = None) -> Union[str, None]:
         """Use to get a Users Role Prefix for displaying."""
 
         # This grabs all a Users discord roles and makes a list of their ids

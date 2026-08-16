@@ -11,7 +11,7 @@ from core import utils
 from core import i18n
 
 
-class botEmbeds():
+class botEmbeds:
     """Gatekeeper Embeds/Banners"""
 
     def __init__(self, client: commands.Bot = None):

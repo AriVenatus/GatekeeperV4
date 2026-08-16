@@ -30,7 +30,7 @@ async def autocomplete_servers_public(interaction: discord.Interaction, current:
     return [app_commands.Choice(name=f"{value}", value=key)for key, value in choice_list.items() if current.lower().lstrip() in value.lower()][:25]
 
 
-class DiscordPlumbingMixin():
+class DiscordPlumbingMixin:
     """Discord entity-parsing/command-tree helpers, mixed into `botUtils` (see `core/utils.py`).
 
     Relies on `self.logger`, `self._client` and `self.AMPHandler` being set by `botUtils.__init__`.
@@ -73,7 +73,7 @@ class DiscordPlumbingMixin():
             # await context.reply(f'Unable to find the Discord Role: {parameter}')
             return None
 
-    def channel_parse(self, parameter: Union[str, int], context: commands.Context = None, guild_id: int = None) -> Union[discord.TextChannel, None]:
+    def channel_parse(self, parameter: Union[str, int], context: commands.Context = None, guild_id: int | None = None) -> Union[discord.TextChannel, None]:
         """This is the bot utils Channel Parse Function
         It handles finding the specificed Discord `<channel>` in multiple different formats, either numeric or alphanumeric.
         returns `<channel>` object if True, else returns `None`
@@ -105,7 +105,7 @@ class DiscordPlumbingMixin():
                 # await context.reply(f'Unable to find the Discord Channel: {parameter}')
                 return None
 
-    def user_parse(self, parameter: str, context: commands.Context = None, guild_id: int = None) -> Union[discord.Member, None]:
+    def user_parse(self, parameter: str, context: commands.Context = None, guild_id: int | None = None) -> Union[discord.Member, None]:
         """This is the bot utils User Parse Function
         It handles finding the specificed Discord `<user>` in multiple different formats, either numeric or alphanumeric.
         It also supports '@', '#0000' and partial display name searching for user indentification (eg. k8thekat#1357)
@@ -158,7 +158,7 @@ class DiscordPlumbingMixin():
                     cur_member = member
             return cur_member
 
-    def serverparse(self, instanceID=str, context: commands.Context = None, guild_id: int = None) -> Union[AMP_Handler.AMP.AMPInstance, None]:
+    def serverparse(self, instanceID=str, context: commands.Context = None, guild_id: int | None = None) -> Union[AMP_Handler.AMP.AMPInstance, None]:
         """This is the botUtils Server Parse function.
         **Note** Use context.guild.id
         Returns `AMPInstance[server] <object>`"""
@@ -212,7 +212,7 @@ class DiscordPlumbingMixin():
             if online_only == False:
                 return amp_server
 
-            await context.send(f'Well this is awkward, it appears that server could not be found.', ephemeral=True, delete_after=self._client.Message_Timeout)
+            await context.send('Well this is awkward, it appears that server could not be found.', ephemeral=True, delete_after=self._client.Message_Timeout)
             return False
 
         if online_only == False:

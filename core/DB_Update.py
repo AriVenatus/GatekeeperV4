@@ -2,7 +2,7 @@ import logging
 import sys
 
 class DB_Update:
-    def __init__(self, DB, Version:float=None):
+    def __init__(self, DB, Version:float | None=None):
         self.logger = logging.getLogger(__name__)
         self.DB = DB
         self.DBConfig = self.DB.DBConfig
@@ -10,7 +10,7 @@ class DB_Update:
         if Version == None:
             self.DBConfig.AddSetting('DB_Version', 1.0)
 
-        if 1.1 > Version:
+        if Version < 1.1:
             self.logger.info('**ATTENTION** Updating DB to Version 1.1')
             self.DBConfig.AddSetting('Guild_ID', None)
             self.DBConfig.AddSetting('Moderator_role_id', None)
@@ -22,12 +22,12 @@ class DB_Update:
             self.DBConfig.AddSetting('Whitelist_Emoji_Done', None)
             self.DBConfig.SetSetting('DB_Version', '1.1')
 
-        if 1.2 > Version:
+        if Version < 1.2:
             self.logger.info('**ATTENTION** Updating DB to Version 1.2')
             self.user_roles()
             self.DBConfig.SetSetting('DB_Version', '1.2')
 
-        if 1.3 > Version:
+        if Version < 1.3:
             self.logger.info('**ATTENTION** Updating DB to Version 1.3')
             # Intentionally disabled, not dead code: SQLite has no `ALTER TABLE ... ADD CONSTRAINT`,
             # so nicknames_unique() would always raise and sys.exit(-1) mid-migration. Kept for
@@ -35,17 +35,17 @@ class DB_Update:
             #self.nicknames_unique()
             self.DBConfig.SetSetting('DB_Version', '1.3')
 
-        if 1.4 > Version:
+        if Version < 1.4:
             self.logger.info('**ATTENTION** Updating DB to Version 1.4')
             self.user_Donator_removal()
             self.DBConfig.SetSetting('DB_Version', '1.4')
 
-        if 1.5 > Version:
+        if Version < 1.5:
             self.logger.info('**ATTENTION** Updating DB to Version 1.5')
             self.server_Discord_reaction_removal()
             self.DBConfig.SetSetting('DB_Version', '1.5')
 
-        if 1.6 > Version:
+        if Version < 1.6:
             self.logger.info('**ATTENTION** Updating DB to Version 1.6')
             self.server_Discord_Chat_prefix()
             self.server_Discord_event_channel()
@@ -53,8 +53,8 @@ class DB_Update:
             #self.DBConfig.AddSetting('Server_Info_Display', None)
             #self.DBConfig.AddSetting('Auto_Display', True)
             self.DBConfig.SetSetting('DB_Version', '1.6')
-        
-        if 1.7 > Version:
+
+        if Version < 1.7:
             self.logger.info('**ATTENTION** Updating DB to Version 1.7')
             self.DBConfig.AddSetting('Banner_Auto_Update', True)
             self.server_banner_table()
@@ -62,8 +62,8 @@ class DB_Update:
             self.DBConfig.DeleteSetting('Server_Info_Display')
             self.DBConfig.DeleteSetting('Auto_Display')
             self.DBConfig.SetSetting('DB_Version', '1.7')
-        
-        if 1.8 > Version:
+
+        if Version < 1.8:
             self.logger.info('**ATTENTION** Updating DB to Version 1.8')
             self.server_hide_column()
             # Both constraint updates below are intentionally disabled, not dead code — SQLite
@@ -74,23 +74,23 @@ class DB_Update:
             #self.server_display_name_constraint_update()
             self.DBConfig.SetSetting('DB_Version', '1.8')
 
-        if 1.9 > Version:
+        if Version < 1.9:
             self.logger.info('**ATTENTION** Updating DB to Version 1.9')
             self.banner_table_creation()
             self.DBConfig.SetSetting('DB_Version', '1.9')
 
-        if 2.1 > Version:
+        if Version < 2.1:
             self.logger.info('**ATTENTION** Updating DB to Version 2.1')
             self.server_ip_name_change()
             self.DBConfig.SetSetting('DB_Version', '2.1')
 
-        if 2.2 > Version:
+        if Version < 2.2:
             self.logger.info('**ATTENTION** Updating DB to Version 2.2')
             self.DBConfig.DeleteSetting('Embed_Auto_Update')
             self.banner_name_conversion()
             self.DBConfig.SetSetting('DB_Version', '2.2')
 
-        if 2.4 > Version:
+        if Version < 2.4:
             self.logger.info('**ATTENTION** Updating DB to Version 2.4')
             self.server_table_whitelist_disabled_column()
             self.regex_pattern_table_creation()
@@ -99,18 +99,18 @@ class DB_Update:
             self.DBConfig.AddSetting('Message_Timeout', 60)
             self.DBConfig.SetSetting('DB_Version', '2.4')
 
-        if 2.5 > Version:
+        if Version < 2.5:
             self.logger.info('**ATTENTION** Updating DB to Version 2.5')
             self.DBConfig.AddSetting('Banner_Type', 0)
             self.DBConfig.SetSetting('DB_Version', '2.5')
 
-        if 2.6 > Version:
+        if Version < 2.6:
             self.logger.info('**ATTENTION** Updating DB to Version 2.6')
             self.DBConfig.DeleteSetting('Whitelist_Emoji_Pending')
             self.DBConfig.DeleteSetting('Whitelist_Emoji_Done')
             self.DBConfig.SetSetting('DB_Version', '2.6')
-        
-        if 2.7 > Version:
+
+        if Version < 2.7:
             """Hotfix for Failed Table creation in version 2.4"""
             self.logger.info('**ATTENTION** Updating DB to Version 2.7')
             self.server_add_FriendlyName_column()
@@ -120,14 +120,14 @@ class DB_Update:
             except:
                 self.server_regex_pattern_table_creation()
             self.DBConfig.SetSetting('DB_Version', '2.7')
-        
-        if 2.8 > Version:
+
+        if Version < 2.8:
             """Adds Donator Bypass and Donator Role ID"""
             self.logger.info('**ATTENTION** Updating DB to Version 2.8')
             self.db_config_add_donator_setting()
             self.DBConfig.SetSetting('DB_Version', '2.8')
 
-        if 2.9 > Version:
+        if Version < 2.9:
             """Updated the Banner Display System to use the new Group System."""
             self.logger.info('**ATTENTION** Updating DB to Version 2.9')
             self.add_bannergroup_table()
@@ -136,7 +136,7 @@ class DB_Update:
             self.add_bannergroupmessages_table()
             self.DBConfig.SetSetting('DB_Version', '2.9')
 
-        if 3.0 > Version:
+        if Version < 3.0:
             """Updated the Banner Display System to use the new Group System."""
             self.logger.info('**ATTENTION** Updating DB to Version 3.0')
             self.add_bannergroup_table()
@@ -145,7 +145,7 @@ class DB_Update:
             self.add_bannergroupmessages_table()
             self.DBConfig.SetSetting('DB_Version', '3.0')
 
-        if 3.1 > Version:
+        if Version < 3.1:
             """Adds support for Discord Role Synced Whitelisting."""
             self.logger.info('**ATTENTION** Updating DB to Version 3.1')
             self.server_whitelist_roles_table_creation()
@@ -153,7 +153,7 @@ class DB_Update:
             self.DBConfig.AddSetting('Whitelist_Role_Sync_Interval', 15)
             self.DBConfig.SetSetting('DB_Version', '3.1')
 
-        if 3.2 > Version:
+        if Version < 3.2:
             """Replaces the single global Donator Role/Bypass with per-Server Donator Roles
             (ServerDonatorRoles, mirroring ServerWhitelistRoles), and moves Auto_Whitelist/
             Whitelist_Wait_Time from bot-wide Config to per-Server columns."""
@@ -232,7 +232,7 @@ class DB_Update:
         except Exception as e:
             self.logger.critical(f'server_banner_table {e}')
             sys.exit(-1)
-    
+
     def whitelist_reply_table(self):
         try:
             SQL = 'create table WhitelistReply (ID integer primary key, Message text)'
@@ -240,7 +240,7 @@ class DB_Update:
         except Exception as e:
             self.logger.critical(f'whitelist_reply_table {e}')
             sys.exit(-1)
-    
+
     def server_hide_column(self):
         """1.8 Update"""
         try:
@@ -283,7 +283,7 @@ class DB_Update:
         except Exception as e:
             self.logger.critical(f'banner_table_creation {e}')
             sys.exit(-1)
-    
+
     def server_ip_name_change(self):
         try:
             # SQL = 'select IP from Servers limit 1'
@@ -311,7 +311,7 @@ class DB_Update:
         except Exception as e:
             self.logger.critical(f'server_ip_name_change {e}')
             sys.exit(-1)
-        
+
     def banner_name_conversion(self):
         try:
             SQL = 'select * from ServerEmbed limit 1'
@@ -427,7 +427,7 @@ class DB_Update:
         except Exception as e:
             self.logger.critical(f'server_console_filter_type {e}')
             sys.exit(-1)
-        
+
     def server_add_FriendlyName_column(self):
         try:
             SQL = 'select FriendlyName from Servers'
@@ -442,7 +442,7 @@ class DB_Update:
         except Exception as e:
             self.logger.critical(f'server_add_FriendlyName_column {e}')
             sys.exit(-1)
-    
+
     def db_config_add_donator_setting(self):
         #Adds support for Donator related functionality.
         try:

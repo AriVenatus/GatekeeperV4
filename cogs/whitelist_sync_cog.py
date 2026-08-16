@@ -65,7 +65,7 @@ class WhitelistSync(commands.Cog):
     def _get_amp_instance_by_server_id(self, ServerID: int) -> Optional[AMP_Handler.AMP.AMPInstance]:
         """Finds the live AMPInstance tied to a Servers table row ID."""
         for amp_instance in list(self.AMPHandler.AMP_Instances.values()):
-            if amp_instance.DB_Server.ID == ServerID:
+            if ServerID == amp_instance.DB_Server.ID:
                 return amp_instance
         return None
 
@@ -85,7 +85,7 @@ class WhitelistSync(commands.Cog):
         try:
             whitelisted = amp_server.check_Whitelist(db_user)
         except Exception:
-            self.logger.error(f'Whitelist Role Sync: Failed to check Whitelist status for {member.name} on {amp_server.FriendlyName}', exc_info=True)
+            self.logger.exception(f'Whitelist Role Sync: Failed to check Whitelist status for {member.name} on {amp_server.FriendlyName}')
             return
 
         if whitelisted == False:
@@ -113,7 +113,7 @@ class WhitelistSync(commands.Cog):
         try:
             whitelisted = amp_server.check_Whitelist(db_user)
         except Exception:
-            self.logger.error(f'Whitelist Role Sync: Failed to check Whitelist status for {member.name} on {amp_server.FriendlyName}', exc_info=True)
+            self.logger.exception(f'Whitelist Role Sync: Failed to check Whitelist status for {member.name} on {amp_server.FriendlyName}')
             return
 
         if whitelisted == None:

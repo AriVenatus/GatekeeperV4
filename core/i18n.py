@@ -17,7 +17,7 @@ _SUPPORTED_LANGUAGES = ('en', 'de')
 _LOCALES_DIR = pathlib.Path(__file__).parent.parent / 'locales'
 
 
-class I18nHandler():
+class I18nHandler:
     """Loads locale files and resolves translation keys for the currently active global language."""
 
     def __init__(self):

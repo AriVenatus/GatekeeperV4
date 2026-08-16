@@ -6,10 +6,10 @@ import random
 from core import DB
 from core import AMP_Handler
 import logging
-        
-class Banner_Generator():
+
+class Banner_Generator:
     """Custom Banner Generator for Gatekeeper. """
-    def __init__(self, AMPServer:AMP_Handler.AMP.AMPInstance, DBBanner:DB.DBBanner, Banner_path:str=None, blur_background:bool=None):
+    def __init__(self, AMPServer:AMP_Handler.AMP.AMPInstance, DBBanner:DB.DBBanner, Banner_path:str | None=None, blur_background:bool | None=None):
         #Turn that str into a Purepath for cross OS support
         self._font = pathlib.Path("resources/fonts/ReemKufiFun-Regular.ttf").as_posix()
         self._logger = logging.getLogger()
@@ -29,7 +29,7 @@ class Banner_Generator():
         self._banner_limit_size_y = 270
         self.banner_image = self._validate_image(pathlib.Path(Banner_path).as_posix())
 
-    
+
         if DBBanner.blur_background_amount != 0:
             self._blur_background(blur_power= DBBanner.blur_background_amount)
 
@@ -71,7 +71,7 @@ class Banner_Generator():
         self._font_Donator = ImageFont.truetype(self._font, self._font_Donator_size)
         self._font_Donator_text_height = self._font_Donator.getbbox('W')[-1]
 
-        
+
         self._font_Status_size = int(self._font_default_size * 3)
         self._font_Status = ImageFont.truetype(self._font, self._font_Status_size)
         self._font_Status_text_height = self._font_Status.getbbox('W')[-1]
@@ -92,12 +92,12 @@ class Banner_Generator():
         self._font_Player_Limit = ImageFont.truetype(self._font, self._font_Player_Limit_size)
         self._font_Player_Limit_text_height = self._font_Player_Limit.getbbox('W')[-1]
 
-        self._font_Player_Online_size = int(self._font_default_size * 2) 
+        self._font_Player_Online_size = int(self._font_default_size * 2)
         self._font_Player_Online_color = DBBanner.color_player_online
         # self._font_Player_Online_color = "#f7dc6f" #white
         self._font_Player_Online = ImageFont.truetype(self._font, self._font_Player_Online_size)
         self._font_Player_Online_text_height = self._font_Player_Online.getbbox('W')[-1]
-        
+
         self._shadow_box()
         self._Server_Name()
         self._Server_Status()
@@ -105,7 +105,7 @@ class Banner_Generator():
         #If Whitelisting is NOT Disabled display Whitelist Text.
         if not AMPServer.Whitelist_disabled:
             self._Server_Whitelist()
-        
+
         #If Donator Only; display the Text
         if AMPServer.Donator:
             self._Server_Donator()
@@ -132,13 +132,13 @@ class Banner_Generator():
             #We are reverting all changes to default values due to failure.
             self._logger.error(f'We Failed to find the Existing Image Path, resetting {self._Server.InstanceName} background path to default.')
             self._Server.background_banner_path = self._Server.default_background_banner_path
-            self._DBBanner.background_path = self._Server.default_background_banner_path 
+            self._DBBanner.background_path = self._Server.default_background_banner_path
             return self._validate_image(path= self._Server.default_background_banner_path)
 
     def _blur_background(self, blur_power:int=2):
         """Blurs the Background Image with GaussianBlur"""
         self.banner_image = self.banner_image.filter(ImageFilter.GaussianBlur(blur_power))
-        return 
+        return
 
     def _word_wrap(self, text:str, text_font:ImageFont.ImageFont, text_size:int, limit:int, find_char:str, truncate:bool=True):
         """Custom Word Wrap.
@@ -164,7 +164,7 @@ class Banner_Generator():
             temp_str += split_test_str[i] + find_char
             if ImageFont.truetype(text_font, text_size).getlength(temp_str) < limit:
                 continue
-            
+
             elif truncate == True:
                 #Removes the extra char at the end when we truncate.
                 return cur_str[:(len(cur_str)-1)]
@@ -199,11 +199,11 @@ class Banner_Generator():
         image_draw.rounded_rectangle([(0,0),(self._banner_limit_size_x, self._banner_limit_size_y)], radius=40, fill=(0,0,0))
         image.paste(self.banner_image, (0,0), mask= image)
         self.banner_image = image
- 
+
     def _draw_text(self, xy:tuple, text:str, font:ImageFont.ImageFont, fill=None, drop_shadow_fill=None, drop_shadow_blur=1):
         if type(drop_shadow_fill) == str:
             drop_shadow_fill = ImageColor.getrgb(drop_shadow_fill)
-        
+
         if drop_shadow_fill == None:
             drop_shadow_fill = (0,0,0)
 
@@ -235,17 +235,17 @@ class Banner_Generator():
 
         name = self._Server.FriendlyName
         if self._Server.DisplayName != None:
-            name = self._Server.DisplayName 
+            name = self._Server.DisplayName
 
         #Lets truncate our Display Name since; well it can clip the shadowbox..
         name = self._word_wrap(text= name, text_font= self._font, text_size= self._font_Header_size, limit= (self._banner_shadow_box_x - x), find_char= ' ')
         self._draw_text((x,y), name, self._font_Header, self._font_Header_color)
-    
+
     def _Server_Host(self):
         self._font_Host_y = self._font_Header_text_height + self._font_Body_text_height + 5
         if self._Server.Host not in [None, '', 'None']:
             text = 'Host: ' + self._Server.Host #offset = int(ImageFont.truetype(self._font, self._font_Host_size).getlength(text)/2)
-    
+
             x,y = (25, self._font_Host_y)
             self._draw_text((x,y), text, self._font_Host, self._font_Host_color)
 
@@ -262,7 +262,7 @@ class Banner_Generator():
         offset = ImageFont.truetype(self._font, self._font_Whitelist_size).getlength(text)
         x,y = (int(self._center_align_Body - (offset / 2)), self._font_Whitelist_y)
         self._draw_text((x,y), text= text, font= self._font_Whitelist, fill= color, drop_shadow_fill= shadow_color)
-    
+
     def _Server_Donator(self):
         #Location
         self._font_Donator_y = int(self._font_Header_text_height  + self._font_Host_text_height + self._font_Whitelist_text_height + 5 + self._font_Whitelist_text_height)
@@ -273,7 +273,7 @@ class Banner_Generator():
         offset = ImageFont.truetype(self._font, self._font_Donator_size).getlength(text)
         x,y = (int(self._center_align_Body - (offset / 2)), self._font_Donator_y)
         self._draw_text((x,y), text= text, font= self._font_Donator, fill= color, drop_shadow_fill= shadow_color)
-        
+
     def _Server_Description(self):
         x,y= (100, (self._font_Header_text_height + 10))
 
@@ -287,7 +287,7 @@ class Banner_Generator():
             else:
                 self._draw_text((x,y), text, self._font_Body, self._font_Body_color)
 
-  
+
     def _Server_Status(self):
         text = 'Offline'
         fill = self._font_Status_color_offline
@@ -320,7 +320,7 @@ class Banner_Generator():
                 x = int(self._banner_shadow_box_x + center_align)
                 self._draw_text((x,y), entry, self._font_Player_Online, self._font_Player_Online_color)
                 y += self._font_Player_Online_text_height
-  
+
 # test_path = 'resources/banners/Minecraft_banner2.jpg'
 # server = fake_server()
 # banner = fake_banner()

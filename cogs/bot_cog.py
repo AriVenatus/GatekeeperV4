@@ -215,7 +215,7 @@ class Bot(commands.Cog):
     @utils_group.command(name='message_timeout', description=i18n.t('commands.bot.utils.message_timeout.description'))
     @utils_permissions.role_check()
     @app_commands.describe(time=i18n.t('commands.bot.utils.message_timeout.params.time.description'))
-    async def utils_message_timeout(self, context: commands.Context, time: Union[None, int] = 60):
+    async def utils_message_timeout(self, context: commands.Context, time: Union[int, None] = 60):
         self.logger.command(f'{context.author.name} used Bot Utils Message Timeout Function...')
 
         self.DBConfig.SetSetting('Message_Timeout', f'{time}')
@@ -278,7 +278,7 @@ class Bot(commands.Cog):
 
         try:
             await self._client.load_extension(name=cog)
-        except Exception as e:
+        except Exception:
             await context.send(i18n.t('messages.bot.cog.load.error', cog=cog, traceback=traceback.format_exc()), ephemeral=True, delete_after=self._client.Message_Timeout)
         else:
             await context.send(i18n.t('messages.bot.cog.load.success', cog=cog), ephemeral=True, delete_after=self._client.Message_Timeout)
@@ -300,7 +300,7 @@ class Bot(commands.Cog):
             my_cog = self._client.cogs[cog]
             await my_cog.cog_unload()
             # await client.unload_extension(name=cog)
-        except Exception as e:
+        except Exception:
             await context.send(i18n.t('messages.bot.cog.unload.error', cog=cog, traceback=traceback.format_exc()), ephemeral=True, delete_after=self._client.Message_Timeout)
         else:
             await context.send(i18n.t('messages.bot.cog.unload.success', cog=cog), ephemeral=True, delete_after=self._client.Message_Timeout)

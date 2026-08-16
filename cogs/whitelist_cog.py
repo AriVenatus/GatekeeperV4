@@ -7,7 +7,7 @@ import os
 import random
 import sqlite3
 import traceback
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from typing import TYPE_CHECKING, Optional, Union
 
 import discord
@@ -112,7 +112,7 @@ class Whitelist(commands.Cog):
                 self._client.Whitelist_wait_list.pop(key)
                 self.logger.info(f'Removed {member.name} from Whitelist Wait List.')
 
-        db_user: None | DB.DBUser = self.DB.GetUser(value=str(member.id))
+        db_user: DB.DBUser | None = self.DB.GetUser(value=str(member.id))
         if db_user != None and db_user.MC_IngameName != None:
             for instance_id, amp_instance in list(self.AMPHandler.AMP_Instances.items()):
                 if amp_instance.Module == 'Minecraft':
@@ -289,7 +289,7 @@ class Whitelist(commands.Cog):
 
     @commands.hybrid_command(name='whitelist_request', description=i18n.t('commands.whitelist_request.description'))
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers_public)
-    async def whitelist_request(self, context: commands.Context, server: str, ign: str = None):
+    async def whitelist_request(self, context: commands.Context, server: str, ign: str | None = None):
         self.logger.command(f'{context.author.name} used Bot Whitelist Request...')
         amp_server = await self.uBot._serverCheck(context, server)
 
@@ -304,7 +304,7 @@ class Whitelist(commands.Cog):
 
             await self.whitelist_request_handler(context=context, message=message, discord_user=context.author, server=amp_server, ign=ign)
 
-    async def whitelist_request_handler(self, context: commands.Context, message: discord.Message, discord_user: discord.Member, server: AMP_Handler.AMP.AMPInstance, ign: str = None):
+    async def whitelist_request_handler(self, context: commands.Context, message: discord.Message, discord_user: discord.Member, server: AMP_Handler.AMP.AMPInstance, ign: str | None = None):
         """Whitelist request handler checks for a DB User, checks for their IGN, checks if they are Whitelisted and any other required checks to whitelist a user. """
         self.logger.command(f'Whitelist Request: ign: {ign} servers: {server.FriendlyName} user: {discord_user.name}')
 
@@ -389,7 +389,7 @@ class Whitelist(commands.Cog):
 
             # and the Wait time isnt Instant (!= 0 mins); let them know.. etc etc..
             elif wait_time_value != 0:
-                cur_time = datetime.now(timezone.utc)
+                cur_time = datetime.now(UTC)
                 display_time = discord.utils.format_dt((cur_time + timedelta(minutes=wait_time_value)))
                 await message.edit(content=i18n.t('messages.whitelist_request.awaiting_approval_with_timer', display_time=display_time))
                 # Checks if the Tasks is running, if not starts the task.
@@ -406,10 +406,10 @@ class Whitelist(commands.Cog):
         """This is the Whitelist Wait list handler, every 30 seconds it will check the list and whitelist them after the alotted wait time."""
         self.logger.command('Checking the Whitelist Wait List...')
         if len(self._client.Whitelist_wait_list) == 0:
-            self.logger.dev(f'It Appears the Whitelist Wait List is empty; stopping the Task loop.')
+            self.logger.dev('It Appears the Whitelist Wait List is empty; stopping the Task loop.')
             self.whitelist_waitlist_handler.stop()
 
-        cur_time = datetime.now(timezone.utc)
+        cur_time = datetime.now(UTC)
 
         temp_Whitelist_wait_list = self._client.Whitelist_wait_list
         for key, value in list(temp_Whitelist_wait_list.items()):

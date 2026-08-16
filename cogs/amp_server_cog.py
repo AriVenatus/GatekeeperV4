@@ -3,7 +3,7 @@
 from __future__ import annotations
 import os
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 import asyncio
 
 import discord
@@ -181,9 +181,9 @@ class AMP_Server(commands.Cog):
         amp_server = await self.uBot._serverCheck(context, server)
         if amp_server:
             title = f"Backup by {context.author.display_name}"
-            time = str(datetime.now(tz=timezone.utc))
+            time = str(datetime.now(tz=UTC))
             description = f"Created at {time} by {context.author.display_name}"
-            display_description = i18n.t('messages.amp_server.backup.description', time_str=str(datetime.now(tz=timezone.utc).strftime("%Y-%m-%d %H:%M")), author=context.author.display_name)
+            display_description = i18n.t('messages.amp_server.backup.description', time_str=str(datetime.now(tz=UTC).strftime("%Y-%m-%d %H:%M")), author=context.author.display_name)
             await context.send(i18n.t('messages.amp_server.backup.creating', server_name=server.InstanceName, description=display_description), ephemeral=True, delete_after=self._client.Message_Timeout)
             amp_server.takeBackup(title, description)
 

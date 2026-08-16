@@ -7,13 +7,13 @@ import requests
 from typing import Union
 
 
-class GameAPIMixin():
+class GameAPIMixin:
     """Mojang/Steam profile lookup helpers, mixed into `botUtils` (see `core/utils.py`).
 
     Relies on `self.logger` and `self.AMPHandler` being set by `botUtils.__init__`.
     """
 
-    def name_to_uuid_MC(self, name) -> Union[None, str]:
+    def name_to_uuid_MC(self, name) -> Union[str, None]:
         """Converts an IGN to a UUID/Name Table
         `returns 'uuid'` else returns `None`, multiple results return `None`"""
         url = 'https://api.mojang.com/profiles/minecraft'
@@ -37,7 +37,7 @@ class GameAPIMixin():
         try:
             req = requests.get(f'https://api.mojang.com/users/profiles/minecraft/{username}', timeout=10)
         except Exception:
-            self.logger.error('Mojang Profile Lookup request failed.', exc_info=True)
+            self.logger.exception('Mojang Profile Lookup request failed.')
             return None
 
         if req.status_code != 200:
@@ -51,7 +51,7 @@ class GameAPIMixin():
 
         return {'name': name, 'uuid': uuid, 'avatar': f'https://mc-heads.net/avatar/{uuid}/100'}
 
-    def name_to_steam_id(self, steamname: str) -> Union[None, str]:
+    def name_to_steam_id(self, steamname: str) -> Union[str, None]:
         """Converts a Steam Name to a Steam ID returns `STEAM_0:0:2806383`
         """
         # Really basic HTML text scan to find the Title; which has the steam ID in it. Thank you STEAMIDFINDER! <3
@@ -107,7 +107,7 @@ class GameAPIMixin():
                 resolve_req = requests.get('https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/', params={'key': api_key, 'vanityurl': steamid64}, timeout=10)
                 resolve_data = resolve_req.json().get('response', {})
             except Exception:
-                self.logger.error('Steam ResolveVanityURL request failed.', exc_info=True)
+                self.logger.exception('Steam ResolveVanityURL request failed.')
                 return None
 
             if resolve_data.get('success') != 1:
@@ -119,7 +119,7 @@ class GameAPIMixin():
             summary_req = requests.get('https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/', params={'key': api_key, 'steamids': steamid64}, timeout=10)
             players = summary_req.json().get('response', {}).get('players', [])
         except Exception:
-            self.logger.error('Steam GetPlayerSummaries request failed.', exc_info=True)
+            self.logger.exception('Steam GetPlayerSummaries request failed.')
             return None
 
         if not len(players):

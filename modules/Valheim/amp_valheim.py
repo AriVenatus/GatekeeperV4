@@ -8,7 +8,7 @@ DisplayImageSources = ['steam:892970']
 
 
 class AMPValheim(AMP.AMPInstance):
-    def __init__(self, instanceID: int = 0, serverdata: dict = {}, default_console: bool = False, Handler=None, TargetName: str = None):
+    def __init__(self, instanceID: int = 0, serverdata: dict = {}, default_console: bool = False, Handler=None, TargetName: str | None = None):
         self.perms = []
         self.APIModule = 'Valheim'
 

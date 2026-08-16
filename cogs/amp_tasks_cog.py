@@ -270,7 +270,7 @@ class AMP_Tasks(commands.Cog):
                     message_contents = message['Contents'].replace('\n', ' ')
                     server_prefix = AMPServer_Chat.Discord_Chat_Prefix
 
-                    db_author: None | DB.DBUser = self.DB.GetUser(author)
+                    db_author: DB.DBUser | None = self.DB.GetUser(author)
                     name, avatar = author, AMPServer_Chat.Avatar_url
                     if db_author != None:
                         author_prefix = await self.bPerms.get_role_prefix(db_author.DiscordID)

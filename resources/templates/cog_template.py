@@ -49,7 +49,7 @@ class Cog_Template(commands.Cog):
         if message.author != self._client.user: #This prevents the bot from interacting/replying to itself with on_message events
             print(f'On Message Event for {self.name}')
             return message
-           
+
     @commands.Cog.listener('on_user_update')
     async def on_user_update(self,user_before,user_after) -> discord.User:
         """Called when a User updates any part of their Discord Profile; this provides access to the `user_before` and `user_after` <discord.Member> objects."""
@@ -95,7 +95,7 @@ class Cog_Template(commands.Cog):
     async def cog_temp(self,context:commands.Context):
         """ Cog Template Group Command"""
         print('cog temp test')
-    
+
     #Example sub_command for a cog.
     #@commands.app_commands.describe
     @cog_temp.command(name='init')
@@ -105,15 +105,15 @@ class Cog_Template(commands.Cog):
 
     @commands.hybrid_command()
     #This limits the command to sync to a specific guild.
-    @app_commands.guilds(discord.Object(id=...)) 
+    @app_commands.guilds(discord.Object(id=...))
     #This limits the command to sync to a specific guild (same as above). But shows the command globally.
-    @utils_permissions.guild_check(guild_id=None) 
+    @utils_permissions.guild_check(guild_id=None)
     #This will autocomplete the command with some premade lists inside of utils.py. You can make your own, see utils.py -> Autocomplete template
-    @app_commands.autocomplete() 
+    @app_commands.autocomplete()
     async def cmd(self, ctx, param: int):
         #So if ctx.interaction is None will tell you whether they invoked it via prefix or slash
         #i.e. you can call ctx.defer(), which will defer a slash invocation but do nothing in a prefix invocation
-        ctx.reply("abcd", ephemeral=True) 
+        ctx.reply("abcd", ephemeral=True)
         print('Test Hybrid Command')
 
 async def setup(client):

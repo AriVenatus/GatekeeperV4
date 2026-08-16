@@ -1066,7 +1066,7 @@ class AMPInstance:
 
     # These are GENERIC Methods below this point purely for typehiting and Linter purpose. ---------------------------------------------------------------------------
 
-    def addWhitelist(self, db_user, in_gamename: str = None):
+    def addWhitelist(self, db_user, in_gamename: str | None = None):
         """Base Function for AMP.addWhitelist"""
         # Use the DB_User object and get the required IGN depending on the server type.
         return False
@@ -1075,7 +1075,7 @@ class AMPInstance:
         """Base Function for AMP.getWhitelist"""
         return
 
-    def removeWhitelist(self, db_user: Union[None, DB.DBUser] = None, in_gamename: str = None):
+    def removeWhitelist(self, db_user: Union[DB.DBUser, None] = None, in_gamename: str | None = None):
         """Base Function for AMP.removeWhitelist"""
         return False
 
@@ -1087,7 +1087,7 @@ class AMPInstance:
         """Base Function for AMP.resolve_canonical_IGN"""
         return name
 
-    def check_Whitelist(self, db_user=None, in_gamename: str = None):
+    def check_Whitelist(self, db_user=None, in_gamename: str | None = None):
         self.logger.dev(
             f"Checking if {in_gamename if db_user == None else db_user.DiscordName} is whitelisted on {self.FriendlyName}..."
         )
@@ -1106,6 +1106,6 @@ class AMPInstance:
         """Base Function for customized discord messages (Primarily Minecraft)"""
         return "", ""
 
-    def Broadcast_Message(self, message, prefix: str = None):
+    def Broadcast_Message(self, message, prefix: str | None = None):
         """Base Function for Broadcast Messages to AMP ADS"""
         return

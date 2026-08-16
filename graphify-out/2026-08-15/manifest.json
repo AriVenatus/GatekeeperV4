@@ -10,32 +10,32 @@
     "semantic_hash": ""
   },
   "cogs/banner_cog.py": {
-    "mtime": 1786838146.3643517,
+    "mtime": 1786844830.7341392,
     "ast_hash": "e0f3cd6776fd6958dcd8f3b29f4d8136",
     "semantic_hash": ""
   },
   "cogs/regex_cog.py": {
-    "mtime": 1786838146.3648934,
+    "mtime": 1786844830.7358427,
     "ast_hash": "81264f4d455041c3e57f2f1f087f8f55",
     "semantic_hash": ""
   },
   "cogs/whitelist_cog.py": {
-    "mtime": 1786838146.3646877,
+    "mtime": 1786844830.7361202,
     "ast_hash": "9bbd9b503e1c2d856bd1c6982333fc2a",
     "semantic_hash": ""
   },
   "cogs/whitelist_sync_cog.py": {
-    "mtime": 1786830785.1202939,
+    "mtime": 1786844830.7364507,
     "ast_hash": "ea2faaefe44f1c086b0202040fc9e6b9",
     "semantic_hash": ""
   },
   "locales/de.json": {
-    "mtime": 1786829812.6772478,
+    "mtime": 1786844830.7396822,
     "ast_hash": "de9c6319f4517c712c8dbf8afe138f24",
     "semantic_hash": ""
   },
   "locales/en.json": {
-    "mtime": 1786829806.891712,
+    "mtime": 1786844830.7405365,
     "ast_hash": "0dd2e4708767116452309de7483196a2",
     "semantic_hash": ""
   },
@@ -45,7 +45,7 @@
     "semantic_hash": ""
   },
   "modules/Factorio/cog_factorio.py": {
-    "mtime": 1786826097.2159915,
+    "mtime": 1786844830.3099804,
     "ast_hash": "68c55b9c44cf9cb72a6b25d543d2648d",
     "semantic_hash": ""
   },
@@ -55,17 +55,17 @@
     "semantic_hash": ""
   },
   "modules/Generic/generic.py": {
-    "mtime": 1786826097.215438,
+    "mtime": 1786844830.3101885,
     "ast_hash": "7668db56d11234c1302e13f0409e8aac",
     "semantic_hash": ""
   },
   "modules/Minecraft/amp_minecraft.py": {
-    "mtime": 1786826603.2021666,
+    "mtime": 1786844830.310426,
     "ast_hash": "236835a444400eb3c80c77fe7eec6815",
     "semantic_hash": ""
   },
   "modules/Minecraft/cog_minecraft.py": {
-    "mtime": 1786826097.2155988,
+    "mtime": 1786844830.3106253,
     "ast_hash": "cd6cebe535b0aaca1b0e06291351c294",
     "semantic_hash": ""
   },
@@ -75,7 +75,7 @@
     "semantic_hash": ""
   },
   "modules/ProjectZomboid/cog_projectzomboid.py": {
-    "mtime": 1786826097.2153018,
+    "mtime": 1786844830.3108199,
     "ast_hash": "26473c96c911a0f9fc7e1dff5caaa606",
     "semantic_hash": ""
   },
@@ -85,7 +85,7 @@
     "semantic_hash": ""
   },
   "modules/SevenDaystoDie/cog_sevendays.py": {
-    "mtime": 1786826097.216272,
+    "mtime": 1786844830.3109903,
     "ast_hash": "10a1e379e4346700927738fd3c6b9c2a",
     "semantic_hash": ""
   },
@@ -95,7 +95,7 @@
     "semantic_hash": ""
   },
   "modules/StarBound/cog_starbound.py": {
-    "mtime": 1786826097.218232,
+    "mtime": 1786844830.311179,
     "ast_hash": "17a1f081853deac521e49b4940fd1231",
     "semantic_hash": ""
   },
@@ -105,7 +105,7 @@
     "semantic_hash": ""
   },
   "modules/Terraria/cog_terraria.py": {
-    "mtime": 1786826097.2151525,
+    "mtime": 1786844830.311357,
     "ast_hash": "349f8001f53149cb14c7fdc3bb8a1c4b",
     "semantic_hash": ""
   },
@@ -115,7 +115,7 @@
     "semantic_hash": ""
   },
   "modules/Valheim/cog_valheim.py": {
-    "mtime": 1786826097.2157516,
+    "mtime": 1786844830.3115637,
     "ast_hash": "604c6ee744d9ce45f62f5cd21f68072f",
     "semantic_hash": ""
   },
@@ -125,7 +125,7 @@
     "semantic_hash": ""
   },
   "pyproject.toml": {
-    "mtime": 1786826820.1014924,
+    "mtime": 1786844830.311742,
     "ast_hash": "5ceebfe11a6a4f40924bbb1349be42de",
     "semantic_hash": ""
   },
@@ -135,12 +135,12 @@
     "semantic_hash": ""
   },
   "resources/templates/cog_template.py": {
-    "mtime": 1786830785.1215699,
+    "mtime": 1786844830.740817,
     "ast_hash": "bc8c80befedb03be21f848d8917dcd7d",
     "semantic_hash": ""
   },
   "start.py": {
-    "mtime": 1786826804.7392294,
+    "mtime": 1786844830.3121457,
     "ast_hash": "dd04bbcdf99c64610f7c750e88115a00",
     "semantic_hash": ""
   },
@@ -205,7 +205,7 @@
     "semantic_hash": ""
   },
   "requirements.txt": {
-    "mtime": 1786825369.6512415,
+    "mtime": 1786844830.3119302,
     "ast_hash": "8b8d7476862694215377d243be0a1a79",
     "semantic_hash": ""
   },
@@ -420,33 +420,33 @@
     "semantic_hash": ""
   },
   "cogs/amp_server_cog.py": {
-    "mtime": 1786838128.464127,
+    "mtime": 1786844830.733208,
     "ast_hash": "bad075dcf9069c8ee640c38a04e50bb8",
     "semantic_hash": ""
   },
   "cogs/amp_tasks_cog.py": {
-    "mtime": 1786830785.1079144,
+    "mtime": 1786844830.7335608,
     "ast_hash": "2d1620e59aaac35fb3738b28d5a4863f",
     "semantic_hash": ""
   },
   "cogs/db_server_cog.py": {
-    "mtime": 1786830785.1135416,
+    "mtime": 1786844830.7347097,
     "ast_hash": "6eabca52519e48e34b8f3de60ac09a89",
     "semantic_hash": ""
   },
   "cogs/db_user_cog.py": {
-    "mtime": 1786830785.1142967,
+    "mtime": 1786844830.7351196,
     "ast_hash": "d273cfe6be65ea58f99800fd769f7440",
     "semantic_hash": ""
   },
   "cogs/permissions_cog.py": {
-    "mtime": 1786830785.1148894,
+    "mtime": 1786844830.735422,
     "ast_hash": "126d02def9c43a154f8d2227547a64fb",
     "semantic_hash": ""
   },
   "core/AMP.py": {
-    "mtime": 1786829682.0176163,
-    "ast_hash": "f6b4a4b9726430dc0a70797ee6c5d4e4",
+    "mtime": 1786845528.9025254,
+    "ast_hash": "1df56f0b535f2c04b618d5c893fb8045",
     "semantic_hash": ""
   },
   "core/AMP_Console.py": {
@@ -455,17 +455,17 @@
     "semantic_hash": ""
   },
   "core/AMP_Handler.py": {
-    "mtime": 1786838128.463894,
+    "mtime": 1786844830.7371407,
     "ast_hash": "ef395a6992d5f8b2220ad3db47ecfa93",
     "semantic_hash": ""
   },
   "core/DB.py": {
-    "mtime": 1786825492.3086464,
+    "mtime": 1786844830.3087056,
     "ast_hash": "f0b74fa0734f59b63e5af188998b7051",
     "semantic_hash": ""
   },
   "core/DB_Update.py": {
-    "mtime": 1786825467.363901,
+    "mtime": 1786844830.3090062,
     "ast_hash": "0f2de4fbd8d3c519622a241cb85e4400",
     "semantic_hash": ""
   },
@@ -480,7 +480,7 @@
     "semantic_hash": ""
   },
   "core/discordBot.py": {
-    "mtime": 1786830785.1209106,
+    "mtime": 1786844830.7374742,
     "ast_hash": "7dfa373b386d9649ab096a98c18353ca",
     "semantic_hash": ""
   },
@@ -490,7 +490,7 @@
     "semantic_hash": ""
   },
   "core/loader.py": {
-    "mtime": 1786838136.8627133,
+    "mtime": 1786844830.7377472,
     "ast_hash": "c8e6e97479dc916c295b2a60f3b99987",
     "semantic_hash": ""
   },
@@ -500,7 +500,7 @@
     "semantic_hash": ""
   },
   "core/utils.py": {
-    "mtime": 1786830736.2813067,
+    "mtime": 1786844830.7380843,
     "ast_hash": "6ba59f592d3bd8d1ae3062826a54457f",
     "semantic_hash": ""
   },
@@ -510,7 +510,7 @@
     "semantic_hash": ""
   },
   "core/utils_ui.py": {
-    "mtime": 1786830812.9057205,
+    "mtime": 1786844830.7392855,
     "ast_hash": "d58b72793967933c30a8cffb626e54c0",
     "semantic_hash": ""
   },
@@ -520,12 +520,12 @@
     "semantic_hash": ""
   },
   "modules/CounterStrikeGo/cog_csgo.py": {
-    "mtime": 1786826097.2161322,
+    "mtime": 1786844830.309773,
     "ast_hash": "2415169ddd87ffb068fcc405bff97773",
     "semantic_hash": ""
   },
   "docs/BANNER.md": {
-    "mtime": 1786752028.2496274,
+    "mtime": 1786844830.3092632,
     "ast_hash": "6de6ed8fc5229a8e9ca1f945f7e653ad",
     "semantic_hash": ""
   },
@@ -550,7 +550,7 @@
     "semantic_hash": ""
   },
   "docs/PERMISSIONS.md": {
-    "mtime": 1786825576.4306705,
+    "mtime": 1786844830.309544,
     "ast_hash": "297432f800d000b16e37090060c608c6",
     "semantic_hash": ""
   },
@@ -569,33 +569,28 @@
     "ast_hash": "395986df9833dda7e11bc36d673d6922",
     "semantic_hash": ""
   },
-  ".claude/settings.json": {
-    "mtime": 1786317446.579787,
-    "ast_hash": "291adbce6080033a921f9f283d6a6ea4",
-    "semantic_hash": ""
-  },
   "docs/AUDIT.md": {
-    "mtime": 1786838206.524939,
+    "mtime": 1786844831.2457206,
     "ast_hash": "7cf1c619a5f716c1c29ecab626db90c0",
     "semantic_hash": ""
   },
   "cogs/bot_cog.py": {
-    "mtime": 1786830785.1127996,
-    "ast_hash": "1bb875ddb725ad5cfd98bf948f99789b",
+    "mtime": 1786846397.7326243,
+    "ast_hash": "2fc1c7291f146889cda89424be93907b",
     "semantic_hash": ""
   },
   "core/utils_api.py": {
-    "mtime": 1786830693.5848892,
+    "mtime": 1786844830.7383378,
     "ast_hash": "c6b7504530a861c826ba50b0d4021f40",
     "semantic_hash": ""
   },
   "core/utils_discord.py": {
-    "mtime": 1786830724.3517928,
+    "mtime": 1786844830.7385821,
     "ast_hash": "ab7c4d1fb2179315119fd8db71460478",
     "semantic_hash": ""
   },
   "core/utils_permissions.py": {
-    "mtime": 1786838158.0019488,
+    "mtime": 1786844830.73895,
     "ast_hash": "a7e323525e546fe74ecb6eb6e0095591",
     "semantic_hash": ""
   }

@@ -72,7 +72,7 @@ def request_shutdown():
             server.Console.console_thread_running = False
 
 
-class AMPHandler():
+class AMPHandler:
     def __init__(self, args: Namespace):
         self.args = args
         self.logger = logging.getLogger()
@@ -244,17 +244,17 @@ class AMPHandler():
                         # self.AMP_Modules[module_name] = getattr(class_module,f'AMP{module_name}')
                         # self.AMP_Console_Modules[module_name] = getattr(class_module,f'AMP{module_name}Console')
                         #!ATTENTION! This may change in the future. Depends on the table update.
-                        for DIS in getattr(class_module, f'DisplayImageSources'):
+                        for DIS in getattr(class_module, 'DisplayImageSources'):
                             self.AMP_Modules[DIS] = getattr(class_module, f'AMP{module_name}')
                             self.AMP_Console_Modules[DIS] = getattr(class_module, f'AMP{module_name}Console')
 
                         self.logger.dev(f'**SUCCESS** {self.name} Loading AMP Module **{module_name}**')
 
-                    except Exception as e:
+                    except Exception:
                         self.logger.error(f'**ERROR** {self.name} Loading AMP Module **{module_name}** - {traceback.format_exc()}')
                         continue
 
-        except Exception as e:
+        except Exception:
             self.logger.error(f'**ERROR** {self.name} Loading AMP Module ** - File Not Found {traceback.format_exc()}')
 
     # NOTE: this parameter must NOT be named `AMP` -- that would shadow the module-level
@@ -273,7 +273,7 @@ class AMPHandler():
         available_instances = []
         # if len(result["result"][0]['AvailableInstances']) == 0:
         if len(result[0]['AvailableInstances']) == 0:
-            self.logger.critical(f'***ATTENTION*** Please ensure the permissions are set correctly, the Bot cannot find any AMP Instances at this time...')
+            self.logger.critical('***ATTENTION*** Please ensure the permissions are set correctly, the Bot cannot find any AMP Instances at this time...')
             time.sleep(30)
             return
 
