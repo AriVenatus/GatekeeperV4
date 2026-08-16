@@ -67,6 +67,15 @@ class AMPInstance:
         Handler: AMPHandler | None = None,
         TargetName: str | None = None,
     ) -> None:
+        # These three MUST be assigned before any other attribute access on self, including the
+        # method lookups on the very next lines: __getattribute__ is overridden below and reads
+        # them on every single access. Assignment is safe (there's no __setattr__ override), a
+        # method call is not. _init_handles() assigns them again -- harmless, and it stays
+        # self-contained for anyone reading it on its own.
+        self.Initialized = False
+        self.InstanceID = instanceID
+        self.serverdata = serverdata
+
         # NOTE: subclasses in modules/*/amp_*.py set self.perms and self.APIModule BEFORE
         # calling super().__init__() -- the hasattr() checks in _init_credentials() depend on
         # that ordering, so don't reorder these calls relative to subclass __init__ bodies.
@@ -444,7 +453,17 @@ class AMPInstance:
         if __name in ["Initialized", "InstanceID", "serverdata"]:
             return super().__getattribute__(__name)
 
-        if self.Initialized and (self.InstanceID != 0) and __name in self.serverdata:
+        # EVERY attribute access lands here -- including method lookups, so `self.anything()`
+        # inside __init__ reads `Initialized` before __init__ has necessarily set it. Fall back
+        # to a plain lookup instead of raising `AttributeError: 'AMPInstance' object has no
+        # attribute 'Initialized'`, which is what happens the moment __init__'s first statement
+        # is a method call rather than the `self.Initialized = False` assignment.
+        try:
+            initialized = super().__getattribute__("Initialized")
+        except AttributeError:
+            return super().__getattribute__(__name)
+
+        if initialized and (self.InstanceID != 0) and __name in self.serverdata:
             self.AMPHandler.AMP._updateInstanceAttributes()
 
         return super().__getattribute__(__name)
