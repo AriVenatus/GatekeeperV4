@@ -22,6 +22,14 @@ if TYPE_CHECKING:
     from core.AMP_Handler import AMPHandler
 
 
+class AMPInitError(Exception):
+    """Raised when `AMPInstance.__init__` cannot finish bringing up an instance (bad
+    credentials/2FA secret, or a failed permission bootstrap). Callers (see
+    `AMP_Handler._instanceValidation`/`setup_AMPInstances`) decide what to do with this --
+    process death for the main AMP instance (`InstanceID == 0`), skip-and-continue for a
+    single game instance -- rather than this constructor calling `sys.exit()` itself."""
+
+
 class AMPInstance:
     """AMP Base Class -- one instance per AMP-managed server (or the main install when `InstanceID == 0`).
 
@@ -59,6 +67,17 @@ class AMPInstance:
         Handler: AMPHandler | None = None,
         TargetName: str | None = None,
     ) -> None:
+        # NOTE: subclasses in modules/*/amp_*.py set self.perms and self.APIModule BEFORE
+        # calling super().__init__() -- the hasattr() checks in _init_credentials() depend on
+        # that ordering, so don't reorder these calls relative to subclass __init__ bodies.
+        self._init_handles(instanceID=instanceID, serverdata=serverdata, Handler=Handler, TargetName=TargetName)
+        self._init_credentials()
+        self._init_instance_data(default_console=default_console)
+        self._bootstrap_permissions()
+
+    def _init_handles(self, instanceID: int, serverdata: dict, Handler: AMPHandler | None, TargetName: str | None) -> None:
+        """Wires up the logger/DB/AMPHandler handles and the basic per-instance state that
+        every later init step (and every other method on this class) relies on."""
         self.Initialized = False
         # Do not send messages from people in this list (case insensitive)
         self.SenderFilterList: list[str] = list()
@@ -91,6 +110,16 @@ class AMPInstance:
 
         self.url = self.AMPHandler.tokens.AMPurl + "/API/"  # base url for AMP console /API/
 
+    def _init_credentials(self) -> None:
+        """Applies perms/APIModule defaults (skipped if a subclass already set them before
+        calling super().__init__()) and validates the 2 Factor Auth setup code.
+
+        Raises `AMPInitError` if the 2FA secret is malformed -- this used to be a bare
+        `return` from `__init__`, silently leaving the object half-constructed with
+        `Initialized == False` and no way for the caller to notice. It's a hard credential
+        misconfiguration (the same GATEKEEPER_AMP_AUTH secret is shared by every instance),
+        so it now raises like every other init failure and lets the caller decide what to do.
+        """
         if hasattr(self, "perms") == False:
             from core import amp_permissions as AMPPerms
 
@@ -113,8 +142,14 @@ class AMPInstance:
                     "**ERROR** Please check your 2 Factor Set-up Code (GATEKEEPER_AMP_AUTH), it should not contain spaces or escape characters!"
                 )
                 self.AMP2Factor = None
-                return
+                raise AMPInitError(
+                    f"Invalid 2 Factor Auth setup code (GATEKEEPER_AMP_AUTH) while initializing instance {self.InstanceID}."
+                )
 
+    def _init_instance_data(self, default_console: bool) -> None:
+        """Sets the AMP API request headers, optionally attaches a default `AMPConsole`,
+        and -- for game instances only -- injects the AMP API's `serverdata` response as
+        attributes via `setattr()` and ensures a matching `DB_Server` row exists."""
         self.AMPheader = {
             "Accept": "text/javascript",
             # AMP's own web client sends the JSON body under this (technically mismatched)
@@ -123,15 +158,15 @@ class AMPInstance:
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
             "X-Requested-With": "XMLHttpRequest",
         }  # custom header for AMP API POST requests. AMP is pure POST requests. ***EVERY REQUEST MUST HAVE THIS***
-        if instanceID != 0:
-            self.url += f"ADSModule/Servers/{instanceID}/API/"
+        if self.InstanceID != 0:
+            self.url += f"ADSModule/Servers/{self.InstanceID}/API/"
 
         if default_console:
             self.Console = AMP_Console.AMPConsole(self)
 
-        if instanceID != 0:
-            for entry in serverdata:
-                setattr(self, entry, serverdata[entry])
+        if self.InstanceID != 0:
+            for entry in self.serverdata:
+                setattr(self, entry, self.serverdata[entry])
 
             if not hasattr(self, "Description"):
                 self.Description = ""
@@ -163,8 +198,15 @@ class AMPInstance:
             if self.Running:
                 self._ADScheck()
 
+    def _bootstrap_permissions(self) -> None:
+        """Runs the Gatekeeper role/permission bootstrap state machine -- for the main AMP
+        instance, or for a game instance while it is Running -- and sets `self.Initialized`
+        once done (in exactly the same cases the old inline code did: every early-return
+        below sets it immediately before returning, and the unconditional set at the bottom
+        covers both "the `if` block ran and fell through" and "InstanceID != 0 and not
+        Running, so the whole block was skipped")."""
         # Lets see if we are the main AMP or if the Instance is Running
-        if instanceID == 0 or self.Running:
+        if self.InstanceID == 0 or self.Running:
             self._AMP_botRole_exists = False
             self._have_superAdmin = False
             self._have_AMP_botRole = False
@@ -179,9 +221,13 @@ class AMPInstance:
                 self.logger.critical(
                     f"***ATTENTION*** {e} for {self.APIModule} on {self.FriendlyName}! Please consider giving us `Super Admins` and the bot will set its own permissions and role!"
                 )
-                # If the main AMP is missing permissions; lets quit!
-                if instanceID == 0:
-                    sys.exit(1)
+                # Used to only raise (via sys.exit(1)) for the main instance (InstanceID == 0);
+                # for a game instance the exception fell through with `permission` never bound,
+                # causing an UnboundLocalError at the `if permission:` check below. Now this
+                # always raises, and the caller (AMP_Handler) decides what to do based on
+                # InstanceID -- process death for the main instance, skip-this-instance for a
+                # game instance.
+                raise AMPInitError(f"Session permission check failed for instance {self.InstanceID}: {e}") from e
 
             if permission:
                 # If we have the -super arg no need to check for Gatekeeper Role/etc. Just return.
@@ -191,7 +237,7 @@ class AMPInstance:
 
                 role_perms = self.check_GatekeeperRole_Permissions()  # This will fail if we DO NOT have
                 # Main Instance
-                if instanceID == 0:
+                if self.InstanceID == 0:
                     # Gatekeeper Role doesn't exist we setup our Bot Role Woohoo!
                     if not self._AMP_botRole_exists:
                         self.Initialized = True
@@ -208,7 +254,9 @@ class AMPInstance:
                         self.logger.critical(
                             f"We do not have the Role `Super Admins` and are unable to set our Permissions for {'AMP' if self.InstanceID == 0 else self.FriendlyName}"
                         )
-                        sys.exit(1)
+                        raise AMPInitError(
+                            f"Missing `Super Admins` role, unable to set Gatekeeper permissions for {'AMP' if self.InstanceID == 0 else self.FriendlyName}"
+                        )
 
                     # If for some reason we do have Gatekeeper Role and the permissions are NOT setup.
                     if self._AMP_botRole_exists and self._have_AMP_botRole:
@@ -352,6 +400,8 @@ class AMPInstance:
 
             if not failed:
                 return True
+
+            return False
         else:
             return False
 
@@ -544,7 +594,6 @@ class AMPInstance:
 
             # This should handle the new API by auto defaulting to returning entries without the result key.
             else:
-                # print(f"Found result in post_req, returning keyed ['result'] {APICall}")
                 return res["result"]
 
         elif isinstance(res, dict) and "Title" in res:
@@ -556,7 +605,6 @@ class AMPInstance:
                 return False
 
         else:
-            # print("Trigger Else in API call", res)
             return res
 
     def _ADScheck(self) -> bool:
@@ -569,6 +617,8 @@ class AMPInstance:
             self.logger.debug(f"{self.FriendlyName} ADS Running: {status}")
             self.ADS_Running = status
             return status
+
+        return False
 
     def _updateInstanceAttributes(self):
         """This updates an AMP Server Objects attributes from `getInstances()` API call."""
@@ -587,8 +637,6 @@ class AMPInstance:
             return
 
         if len(result[0]["AvailableInstances"]) != 0:
-            # if len(result["result"][0]['AvailableInstances']) != 0:
-            # for Target in result["result"]:
             for Target in result:
                 for instance in Target[
                     "AvailableInstances"
@@ -782,7 +830,6 @@ class AMPInstance:
         self.Login()
         parameters = {}
         result = self.CallAPI("Core/GetScheduleData", parameters)
-        # return result['result']['PopulatedTriggers']
         return result["PopulatedTriggers"]
 
     def setFriendlyName(self, name: str, description: str) -> str:
@@ -893,7 +940,11 @@ class AMPInstance:
         return
 
     def getAMPUserInfo(self, name: str) -> Union[str, dict]:
-        """Gets AMP user info. if IdOnly is True; returns AMP User ID only!"""
+        """Looks up an AMP user by `name` (an AMP username, via `Core/GetAMPUserInfo`).
+        Returns a `dict` of that user's AMP info on success (includes at least `ID` and
+        `Roles`, used by `getAMPUserID()`/`check_GatekeeperRole_Permissions()`); returns
+        whatever `CallAPI()` yields on failure (typically `False`) -- callers should check
+        `isinstance(result, dict)` before use."""
         self.Login()
         parameters = {"Username": name}
         result = self.CallAPI("Core/GetAMPUserInfo", parameters)
@@ -912,10 +963,6 @@ class AMPInstance:
         self.Login()
         parameters = {"PermissionNode": PermissionNode}
         result = self.CallAPI("Core/CurrentSessionHasPermission", parameters)
-        if result != False:
-            # return result['result']
-            return result
-
         return result
 
     def getAMPRolePermissions(self, RoleID: str) -> dict:
@@ -937,7 +984,6 @@ class AMPInstance:
         self.Login()
         parameters = {}
         result = self.CallAPI("Core/GetRoleIds", parameters)
-        # return result['result']
         return result
 
     def setRoleIDs(self):
@@ -1018,10 +1064,6 @@ class AMPInstance:
         """Base Function for AMP.name_Conversion"""
         return None
 
-    def name_History(self, user):
-        """Base Function for AMP.name_History"""
-        return user
-
     def resolve_canonical_IGN(self, name: str) -> str:
         """Base Function for AMP.resolve_canonical_IGN"""
         return name
@@ -1040,10 +1082,6 @@ class AMPInstance:
     ):
         """Base Function for Discord Chat Messages to AMP ADS"""
         return
-
-    def Chat_Message_Formatter(self, message: str):
-        """Base Function for Server Chat Message Formatter"""
-        return message
 
     def get_IGN_Avatar(self, db_user=None, user: str | None = None) -> tuple[str, str]:
         """Base Function for customized discord messages (Primarily Minecraft)"""

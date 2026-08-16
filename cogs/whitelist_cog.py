@@ -18,6 +18,8 @@ from discord.ext import commands, tasks
 from core import AMP_Handler
 from core import DB
 from core import utils
+from core import utils_permissions
+from core import utils_discord
 from core import utils_embeds
 from core import utils_ui
 from core import i18n
@@ -29,7 +31,7 @@ if TYPE_CHECKING:
 
 # This is used to force cog order to prevent missing methods.
 # MUST USE ENTIRE FILENAME!
-Dependencies = ["amp_server_cog.py"]
+Dependencies = ["amp_server_cog.py", "bot_cog.py"]
 
 Whitelist_settings_choices = [app_commands.Choice(name='True', value=True),
                               app_commands.Choice(name='False', value=False)
@@ -50,7 +52,6 @@ class Whitelist(commands.Cog):
 
         self.uBot = utils.botUtils(client)
         self.uiBot = utils_ui
-        self.dBot = utils.discordBot(client)
         self.eBot = utils_embeds.botEmbeds(client)
 
         self.Whitelist_Request_Channel = None
@@ -121,8 +122,8 @@ class Whitelist(commands.Cog):
     # Server Whitelist Commands ------------------------------------------------------------
 
     @commands.hybrid_command(name='whitelist', description=i18n.t('commands.server.settings.whitelist.description'))
-    @utils.role_check()
-    @app_commands.autocomplete(server=utils.autocomplete_servers)
+    @utils_permissions.role_check()
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.choices(flag=[
         Choice(name=i18n.t('common.bool.false'), value=0),
         Choice(name=i18n.t('common.bool.true'), value=1),
@@ -149,8 +150,8 @@ class Whitelist(commands.Cog):
             await context.send(i18n.t('messages.whitelist.server_set.result', server_name=server_name, flag_name=flag.name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @commands.hybrid_command(name='whitelist_auto', description=i18n.t('commands.server.settings.whitelist_auto.description'))
-    @utils.role_check()
-    @app_commands.autocomplete(server=utils.autocomplete_servers)
+    @utils_permissions.role_check()
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.choices(flag=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
     async def server_settings_whitelist_auto(self, context: commands.Context, server: str, flag: Choice[int]):
         self.logger.command(f'{context.author.name} used Server Whitelist Auto...')
@@ -172,8 +173,8 @@ class Whitelist(commands.Cog):
                 return await context.send(i18n.t('messages.whitelist.auto.disabled', server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @commands.hybrid_command(name='whitelist_wait_time', description=i18n.t('commands.server.settings.whitelist_wait_time.description'))
-    @utils.role_check()
-    @app_commands.autocomplete(server=utils.autocomplete_servers)
+    @utils_permissions.role_check()
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.describe(time=i18n.t('commands.server.settings.whitelist_wait_time.params.time.description'))
     async def server_settings_whitelist_wait_time(self, context: commands.Context, server: str, time: app_commands.Range[int, 0, 60] = 5):
         self.logger.command(f'{context.author.name} used Server Whitelist Wait Time...')
@@ -188,14 +189,14 @@ class Whitelist(commands.Cog):
             await context.send(i18n.t('messages.whitelist.wait_time.success', server_name=server_name, interval=interval_str), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @commands.hybrid_group(name='whitelist', description=i18n.t('commands.server.whitelist.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def server_whitelist(self, context: commands.Context):
         if context.invoked_subcommand is None:
             await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @server_whitelist.command(name='add', description=i18n.t('commands.server.whitelist.add.description'))
-    @utils.role_check()
-    @app_commands.autocomplete(server=utils.autocomplete_servers)
+    @utils_permissions.role_check()
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     async def amp_server_whitelist_add(self, context: commands.Context, server, name):
         self.logger.command(f'{context.author.name} used AMP Server Whitelist Add...')
 
@@ -213,8 +214,8 @@ class Whitelist(commands.Cog):
                 await context.send(i18n.t('messages.whitelist.add.already', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @server_whitelist.command(name='remove', description=i18n.t('commands.server.whitelist.remove.description'))
-    @utils.role_check()
-    @app_commands.autocomplete(server=utils.autocomplete_servers)
+    @utils_permissions.role_check()
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     async def amp_server_whitelist_remove(self, context: commands.Context, server, name):
         self.logger.command(f'{context.author.name} used AMP Server Whitelist Remove...')
 
@@ -233,13 +234,13 @@ class Whitelist(commands.Cog):
 
     # All DBConfig Whitelist Specific function settings --------------------------------------------------------------
     @commands.hybrid_group(name='whitelist_reply', description=i18n.t('commands.bot.whitelist_reply.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def db_bot_whitelist_reply(self, context: commands.Context):
         if context.invoked_subcommand is None:
             await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @db_bot_whitelist_reply.command(name='add', description=i18n.t('commands.bot.whitelist_reply.add.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def db_bot_whitelist_reply_add(self, context: commands.Context, message: str):
         self.logger.command(f'{context.author.name} used Database Bot Whitelist Reply Add...')
 
@@ -249,7 +250,7 @@ class Whitelist(commands.Cog):
         await context.send(f'{message}', ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @db_bot_whitelist_reply.command(name='remove', description=i18n.t('commands.bot.whitelist_reply.remove.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.autocomplete(message=autocomplete_whitelist_replies)
     async def db_bot_whitelist_reply_remove(self, context: commands.Context, message: str):
         self.logger.command(f'{context.author.name} used Database Bot Whitelist Reply Remove...')
@@ -263,7 +264,7 @@ class Whitelist(commands.Cog):
         return await context.send(i18n.t('messages.whitelist_reply.remove.not_found'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @db_bot_whitelist_reply.command(name='list', description=i18n.t('commands.bot.whitelist_reply.list.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def db_bot_whitelist_reply_list(self, context: commands.Context):
         self.logger.command(f'{context.author.name} used Database Bot Whitelist Reply List...')
 
@@ -273,13 +274,13 @@ class Whitelist(commands.Cog):
             await context.send(f'{reply}', ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @commands.hybrid_group(name='whitelist', description=i18n.t('commands.bot.whitelist.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def db_bot_whitelist(self, context: commands.Context):
         if context.invoked_subcommand is None:
             await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @db_bot_whitelist.command(name='request_channel', description=i18n.t('commands.bot.whitelist.request_channel.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def db_bot_whitelist_request_channel_set(self, context: commands.Context, channel: discord.abc.GuildChannel):
         self.logger.command(f'{context.author.name} used Bot Whitelist Channel Set...')
 
@@ -287,7 +288,7 @@ class Whitelist(commands.Cog):
         await context.send(i18n.t('messages.whitelist.request_channel.success', channel_name=channel.name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @commands.hybrid_command(name='whitelist_request', description=i18n.t('commands.whitelist_request.description'))
-    @app_commands.autocomplete(server=utils.autocomplete_servers_public)
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers_public)
     async def whitelist_request(self, context: commands.Context, server: str, ign: str = None):
         self.logger.command(f'{context.author.name} used Bot Whitelist Request...')
         amp_server = await self.uBot._serverCheck(context, server)

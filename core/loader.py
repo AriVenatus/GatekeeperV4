@@ -97,6 +97,21 @@ class Handler():
                     cur_cog_file_list.remove(script)
                     continue
 
+                #bot_cog.py hosts the `/bot` group -- including this very reload command. Reloading
+                #it as part of a bulk `bot cog reload` is skipped so the command tree that triggered
+                #the reload can't disappear out from under itself; it's still auto-loaded normally
+                #on startup (only the `reload=True` pass skips it). A process restart (`/bot utils
+                #restart`) picks up code changes to this one file.
+                if reload and script.name.lower() == 'bot_cog.py':
+                    self.logger.dev(f'Skipped reloading bot_cog.py to avoid disrupting the live /bot command group.')
+                    #Mark it satisfied anyway: it IS still loaded (we skipped reloading it, we didn't
+                    #unload it), and the cogs that attach subcommands to `/bot` depend on it. Without
+                    #this, their dependency never resolves, the dependency branch below `continue`s
+                    #WITHOUT removing them from the list, and the enclosing `while` spins forever.
+                    loaded_cogs.append(script.name.lower())
+                    cur_cog_file_list.remove(script)
+                    continue
+
                 module_name = script.name[:-3].capitalize() #File name ofc.
                 spec = importlib.util.spec_from_file_location(module_name, script)
                 class_module = importlib.util.module_from_spec(spec)

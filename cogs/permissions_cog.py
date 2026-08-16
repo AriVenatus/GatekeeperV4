@@ -10,6 +10,7 @@ import logging
 from typing import Union
 
 from core import utils
+from core import utils_permissions
 from core import AMP_Handler
 from core import DB as DB
 from core import i18n
@@ -30,7 +31,7 @@ class Permissions(commands.Cog):
         self.DBCOnfig = self.DB.DBConfig
 
         self.uBot = utils.botUtils(client)
-        self.bPerms = utils.get_botPerms()
+        self.bPerms = utils_permissions.get_botPerms()
 
         # Leave this commented out unless you need to create a sub-command.
         self.uBot.sub_command_handler('user', self.user_role)  # This is used to add a sub command(self,parent_command,sub_command)
@@ -38,12 +39,12 @@ class Permissions(commands.Cog):
 
     async def autocomplete_permission_roles(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
         """This is for roles inside of the bot_perms file. Returns a list of all the roles.."""
-        bPerms = utils.get_botPerms()
+        bPerms = utils_permissions.get_botPerms()
         choice_list = bPerms.get_roles()
         return [app_commands.Choice(name=choice, value=choice) for choice in choice_list if current.lower() in choice.lower()][:25]
 
     @commands.hybrid_command(name='role', description=i18n.t('commands.user.role.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.autocomplete(role=autocomplete_permission_roles)
     async def user_role(self, context: commands.Context, user: Union[discord.User, discord.Member], role: str):
         self.logger.command(f'{context.author.name} used User Role Function')

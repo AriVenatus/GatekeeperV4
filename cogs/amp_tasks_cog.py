@@ -12,6 +12,7 @@ from discord.ext import commands, tasks
 from core import AMP_Handler
 from core import DB
 from core import utils
+from core import utils_permissions
 from core.AMP import AMPInstance
 
 if TYPE_CHECKING:
@@ -35,7 +36,7 @@ class AMP_Tasks(commands.Cog):
         self.DB = self.DBHandler.DB  # Main Database object
         self.DBConfig = self.DBHandler.DBConfig
 
-        self.bPerms = utils.get_botPerms()
+        self.bPerms = utils_permissions.get_botPerms()
 
         self.uBot = utils.botUtils(client)
         self.logger.info(f'**SUCCESS** Initializing {self.name.title().replace("Amp", "AMP")}')
@@ -48,9 +49,6 @@ class AMP_Tasks(commands.Cog):
 
         self.amp_server_console_event_messages_send.start()
         self.logger.dev('AMP_Cog Console Event Message Handler Running: ' + str(self.amp_server_console_event_messages_send.is_running()))
-
-        # self.amp_server_instance_check.start()
-        # self.logger.dev('AMP_Cog Instance Check Event Loop: ' + str(self.amp_server_instance_check.is_running()))
 
     @commands.Cog.listener('on_message')
     async def on_message(self, message: discord.Message):
@@ -71,7 +69,7 @@ class AMP_Tasks(commands.Cog):
                 # Makes sure we are not responding to a webhook message (ourselves/bots/etc)
                 if message.webhook_id == None:
                     # This checks user permissions. Just in case.
-                    if await utils.async_rolecheck(context=context, perm_node='server.console.interact'):
+                    if await utils_permissions.async_rolecheck(context=context, perm_node='server.console.interact'):
                         # Since Integrations hijacks any commands with a `/` in front of it. We are now going to be using a `.` in front of any command to bypass.
                         if message.content.startswith('.'):
                             # Remove the prefix char.
@@ -97,6 +95,43 @@ class AMP_Tasks(commands.Cog):
                     self.AMPServer.Chat_Message(chat_message, author=message.author.name, author_prefix=author_prefix)
 
         return message
+
+    async def _get_or_create_webhook(
+        self,
+        channel: discord.TextChannel,
+        friendly_name: str,
+        webhook_name: str,
+        expected_channel_id: int,
+        log_prefix: str,
+    ) -> discord.Webhook:
+        """Find an existing webhook named `webhook_name` on `channel`, move it to
+        `channel` if it's currently attached to a different channel, or create a
+        new one if none exists.
+
+        `webhook_name` is a stored identity key matched by exact string equality
+        across restarts (see CLAUDE.md's i18n section) - callers must pass the
+        exact literal name, never an i18n-translated one, or restarts will
+        orphan/duplicate webhooks.
+        """
+        webhook_list = await channel.webhooks()
+        self.logger.debug(f'{log_prefix} webhooks {webhook_list}')
+        found_webhook = None
+        for webhook in webhook_list:
+            if webhook.name == webhook_name:
+                self.logger.debug(f'{log_prefix} found an old webhook, reusing it {friendly_name}')
+                if webhook.channel_id == expected_channel_id:
+                    found_webhook = webhook
+                else:
+                    await webhook.edit(channel=channel)
+                    self.logger.dev(f'{log_prefix} **Editing Webhook for {friendly_name} // ID: {webhook.id} // Channel: {webhook.channel_id}')
+                    found_webhook = webhook
+                break
+
+        if found_webhook is None:
+            self.logger.dev(f'{log_prefix} creating a new webhook for {friendly_name}')
+            found_webhook = await channel.create_webhook(name=webhook_name)
+
+        return found_webhook
 
     @tasks.loop(seconds=1)
     async def amp_server_console_messages_send(self):
@@ -125,23 +160,13 @@ class AMP_Tasks(commands.Cog):
                     AMP_Server_Console.console_message_lock.release()
 
                     # This setup is for getting/used old webhooks and allowing custom avatar names per message.
-                    webhook_list = await channel.webhooks()
-                    self.logger.debug(f'*AMP Console Message* webhooks {webhook_list}')
-                    console_webhook = None
-                    for webhook in webhook_list:
-                        if webhook.name == f"{AMPServer.FriendlyName} Console":
-                            self.logger.debug(f'*AMP Console Message* found an old webhook, validating {AMPServer.FriendlyName} webhook')
-                            if webhook.channel_id == AMPServer.Discord_Console_Channel:
-                                console_webhook = webhook
-                            else:
-                                await webhook.edit(channel=channel)
-                                self.logger.dev(f'**Editing Console Webhook for {AMPServer.FriendlyName} // ID: {webhook.id} // Channel: {webhook.channel_id}')
-                                console_webhook = webhook
-                            break
-
-                    if console_webhook == None:
-                        self.logger.dev(f'*AMP Console Message* creating a new webhook for {AMPServer.FriendlyName}')
-                        console_webhook = await channel.create_webhook(name=f'{AMPServer.FriendlyName} Console')
+                    console_webhook = await self._get_or_create_webhook(
+                        channel,
+                        AMPServer.FriendlyName,
+                        f'{AMPServer.FriendlyName} Console',
+                        AMPServer.Discord_Console_Channel,
+                        '*AMP Console Message*',
+                    )
 
                     if AMPServer.DisplayName is not None:  # Lets check for a Display name and use that instead.
                         self.logger.dev('*AMP Console Message* sending a message with displayname')
@@ -177,25 +202,15 @@ class AMP_Tasks(commands.Cog):
                     AMP_Server_Console_Event.console_event_message_lock.release()
 
                     # This setup is for getting/used old webhooks and allowing custom avatar names per message.
-                    webhook_list = await channel.webhooks()
-                    self.logger.debug(f'*AMP Event Message* webhooks {webhook_list}')
-                    console_webhook = None
-                    for webhook in webhook_list:
-                        if webhook.name == f"{AMPServer_Event.FriendlyName} Events":
-                            self.logger.debug(f'*AMP Event Message* found an old webhook, reusing it {AMPServer_Event.FriendlyName}')
-                            if webhook.channel_id == AMPServer_Event.Discord_Event_Channel:
-                                console_webhook = webhook
-                            else:
-                                await webhook.edit(channel=channel)
-                                self.logger.dev(f'**Editing Event Webhook for {AMPServer_Event.FriendlyName} ID: {webhook.id} Channel: {webhook.channel_id}')
-                                console_webhook = webhook
-                            break
+                    console_webhook = await self._get_or_create_webhook(
+                        channel,
+                        AMPServer_Event.FriendlyName,
+                        f'{AMPServer_Event.FriendlyName} Events',
+                        AMPServer_Event.Discord_Event_Channel,
+                        '*AMP Event Message*',
+                    )
 
-                    if console_webhook == None:
-                        self.logger.dev(f'*AMP Event Message* creating a new webhook for {AMPServer_Event.FriendlyName}')
-                        console_webhook = await channel.create_webhook(name=f'{AMPServer_Event.FriendlyName} Events')
-
-                    if AMPServer_Event .DisplayName is not None:  # Lets check for a Display name and use that instead.
+                    if AMPServer_Event.DisplayName is not None:  # Lets check for a Display name and use that instead.
                         self.logger.dev('*AMP Event Message* sending a message with displayname')
                         await console_webhook.send(message, username=AMPServer_Event.DisplayName, avatar_url=AMPServer_Event.Avatar_url)
                     else:
@@ -240,23 +255,13 @@ class AMP_Tasks(commands.Cog):
                     AMP_Server_Console_Chat.console_chat_message_lock.release()
 
                     # This setup is for getting/used old webhooks and allowing custom avatar names per message.
-                    webhook_list = await channel.webhooks()
-                    self.logger.debug(f'*AMP Chat Message* webhooks {webhook_list}')
-                    chat_webhook = None
-                    for webhook in webhook_list:
-                        if webhook.name == f"{AMPServer_Chat.FriendlyName} Chat":
-                            self.logger.debug(f'*AMP Chat Message* found an old webhook, reusing it {AMPServer_Chat.FriendlyName}')
-                            if webhook.channel_id == AMPServer_Chat.Discord_Chat_Channel:
-                                chat_webhook = webhook
-                            else:
-                                await webhook.edit(channel=channel)
-                                self.logger.dev(f'**Editing Chat Webhook for {AMPServer_Chat.FriendlyName} ID: {webhook.id} Channel: {webhook.channel_id}')
-                                chat_webhook = webhook
-                            break
-
-                    if chat_webhook == None:
-                        self.logger.dev(f'*AMP Chat Message* creating a new webhook for {AMPServer_Chat.FriendlyName}')
-                        chat_webhook = await channel.create_webhook(name=f'{AMPServer_Chat.FriendlyName} Chat')
+                    chat_webhook = await self._get_or_create_webhook(
+                        channel,
+                        AMPServer_Chat.FriendlyName,
+                        f'{AMPServer_Chat.FriendlyName} Chat',
+                        AMPServer_Chat.Discord_Chat_Channel,
+                        '*AMP Chat Message*',
+                    )
 
                     # This is the person who wrote the In-Game Message
                     author = message['Source']

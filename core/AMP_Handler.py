@@ -44,7 +44,7 @@ def amp_server_instance_check():
 
         handler.logger.dev('Checking AMP Instance(s) Status...')
         try:
-            handler._instanceValidation(AMP=handler.AMP)
+            handler._instanceValidation(main_amp=handler.AMP)
             handler.AMP._instance_ThreadManager()
         except Exception:
             handler.logger.error(f'AMP instance check loop exception: {traceback.format_exc()}')
@@ -109,8 +109,15 @@ class AMPHandler():
 
     def setup_AMPInstances(self):
         """Intializes the connection to AMP and creates AMP_Instance objects."""
-        self.AMP = AMP.AMPInstance(Handler=self)
-        self._instanceValidation(AMP=self.AMP, startup=True)
+        try:
+            self.AMP = AMP.AMPInstance(Handler=self)
+        except AMP.AMPInitError as e:
+            # The main AMP instance (InstanceID == 0) failing to initialize is fatal -- there's
+            # nothing else for Gatekeeper to do without it. This preserves the previous
+            # effective behavior, where AMPInstance.__init__ called sys.exit(1) itself.
+            self.logger.critical(f'***ATTENTION*** Failed to initialize the main AMP instance: {e}')
+            sys.exit(1)
+        self._instanceValidation(main_amp=self.AMP, startup=True)
 
         # This removes Super Admins from the bot user! Controlled through parser args!
         if not self.args.super and not self.args.dev:
@@ -250,9 +257,13 @@ class AMPHandler():
         except Exception as e:
             self.logger.error(f'**ERROR** {self.name} Loading AMP Module ** - File Not Found {traceback.format_exc()}')
 
-    def _instanceValidation(self, AMP: AMP.AMPInstance, startup: bool = False):
+    # NOTE: this parameter must NOT be named `AMP` -- that would shadow the module-level
+    # `from core import AMP` for the whole function body, so `except AMP.AMPInitError` below
+    # would evaluate an attribute on the AMPInstance object and raise AttributeError instead
+    # of catching. It also can't be `amp_instance`, which is the loop variable further down.
+    def _instanceValidation(self, main_amp: AMP.AMPInstance, startup: bool = False):
         """This checks if any new instances have been created since last check. If so, updates AMP_Instances and creates the object."""
-        result = AMP.getInstances()
+        result = main_amp.getInstances()
         if not result or not isinstance(result, list):
             self.logger.critical(f'***ATTENTION*** Unable to retrieve AMP Instances (API call failed or returned unexpected data): {result}')
             time.sleep(30)
@@ -297,7 +308,20 @@ class AMPHandler():
                     image_source = "Generic"
 
                 self.logger.dev(f'Loaded __{name}__ for {amp_instance["FriendlyName"]}')
-                server = self.AMP_Modules[image_source](instanceID=amp_instance['InstanceID'], serverdata=amp_instance, Handler=self)
+                try:
+                    server = self.AMP_Modules[image_source](instanceID=amp_instance['InstanceID'], serverdata=amp_instance, Handler=self)
+                except AMP.AMPInitError as e:
+                    # A misconfigured/unreachable game instance used to sys.exit(1) the whole
+                    # process from inside AMPInstance.__init__ (or, for a game instance, hit an
+                    # UnboundLocalError first -- see core/AMP.py's _bootstrap_permissions()).
+                    # Neither should take the rest of the bot down over one bad server: log and
+                    # skip it, leaving every other instance (and this same loop, for the rest of
+                    # `result`) unaffected. It'll be retried on the next 30s instance check.
+                    self.logger.error(
+                        f'Failed to initialize AMP instance {amp_instance.get("FriendlyName", amp_instance["InstanceID"])} '
+                        f'(InstanceID {amp_instance["InstanceID"]}): {e} -- skipping this instance.'
+                    )
+                    continue
                 self.AMP_Instances[server.InstanceID] = server
 
         # AMPHandler AMP Instances will be empty on first startup; we need to NOT compare for any missing instances.

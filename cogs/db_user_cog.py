@@ -11,6 +11,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from core import utils
+from core import utils_permissions
 from core import utils_embeds
 from core import AMP_Handler
 from core import DB
@@ -36,7 +37,6 @@ class DB_User(commands.Cog):
         self.DBConfig = self.DBHandler.DBConfig
 
         self.uBot = utils.botUtils(client)
-        self.dBot = utils.discordBot(client)
         self.eBot = utils_embeds.botEmbeds(client)
 
         self.logger.info(f'**SUCCESS** Initializing {self.name.title().replace("Db","DB")}')
@@ -61,34 +61,34 @@ class DB_User(commands.Cog):
         self.logger.dev(f'Member has left the server {member.name}')
         return member
 
-    @utils.role_check()
+    @utils_permissions.role_check()
     @commands.hybrid_group(name='user', description=i18n.t('commands.user.description'))
     async def user(self, context: commands.Context):
         if context.invoked_subcommand is None:
             await context.send(i18n.t('common.try_again'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @user.group(name='info', description=i18n.t('commands.user.info.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def user_info(self, context: commands.Context):
         if context.invoked_subcommand is None:
             await context.send(i18n.t('common.try_again'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @user_info.command(name='discord', description=i18n.t('commands.user.info.discord.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.describe(user=i18n.t('commands.user.info.discord.params.user.description'))
     async def user_info_discord(self, context: commands.Context, user: Union[discord.Member, discord.User]):
         self.logger.command(f'{context.author.name} used User Information (Discord)')
         await self._send_user_info(context, user.id, user)
 
     @user_info.command(name='minecraft', description=i18n.t('commands.user.info.minecraft.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.describe(identifier=i18n.t('commands.user.info.minecraft.params.identifier.description'))
     async def user_info_minecraft(self, context: commands.Context, identifier: str):
         self.logger.command(f'{context.author.name} used User Information (Minecraft)')
         await self._send_user_info(context, identifier)
 
     @user_info.command(name='steam', description=i18n.t('commands.user.info.steam.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.describe(identifier=i18n.t('commands.user.info.steam.params.identifier.description'))
     async def user_info_steam(self, context: commands.Context, identifier: str):
         self.logger.command(f'{context.author.name} used User Information (Steam)')
@@ -110,7 +110,7 @@ class DB_User(commands.Cog):
         await context.send(embed=self.eBot.user_info_embed(db_user, discord_user), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @user.command(name='add', description=i18n.t('commands.user.add.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def user_add(self, context: commands.Context, user: Union[discord.Member, discord.User], mc_ign: str = None, mc_uuid: str = None, steamid: str = None):
         self.logger.command(f'{context.author.name} used User Add Function')
 
@@ -125,7 +125,7 @@ class DB_User(commands.Cog):
             await context.send(i18n.t('messages.db_user.user_add.already_exists', user_name=user.name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @user.command(name='update', description=i18n.t('commands.user.update.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def user_update(self, context: commands.Context, user: Union[discord.Member, discord.User], mc_ign: str = None, steamid: str = None):
         self.logger.command(f'{context.author.name} used User Update Function')
 

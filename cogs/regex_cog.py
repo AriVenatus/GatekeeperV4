@@ -11,12 +11,13 @@ import re
 import traceback
 
 from core import utils
+from core import utils_permissions
 from core import AMP_Handler
 from core import DB as DB
 from core import i18n
 
 # This is used to force cog order to prevent missing methods.
-Dependencies = None
+Dependencies = ["bot_cog.py"]
 
 
 class Regex(commands.Cog):
@@ -35,8 +36,6 @@ class Regex(commands.Cog):
 
         # utils.botUtils provide access to utility functions such as serverparse,role_parse,channel_parse,user_parse.
         self.uBot = utils.botUtils(client)
-        # utils.discordBot provides access to utility functions such as sending/deleting messages, kicking/ban users.
-        self.dBot = utils.discordBot(client)
 
         # Leave this commented out unless you need to create a sub-command.
         self.uBot.sub_command_handler('bot', self.regex_pattern)  # This is used to add a sub command(self,parent_command,sub_command)
@@ -53,13 +52,13 @@ class Regex(commands.Cog):
         return [app_commands.Choice(name=choice, value=choice) for choice in choice_list if current.lower() in choice.lower()][:25]
 
     @commands.hybrid_group(name='regex_pattern', description=i18n.t('commands.bot.regex_pattern.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def regex_pattern(self, context: commands.Context):
         if context.invoked_subcommand is None:
             await context.send(i18n.t('common.try_again'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @regex_pattern.command(name='add', description=i18n.t('commands.bot.regex_pattern.add.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.describe(name=i18n.t('commands.bot.regex_pattern.add.params.name.description'))
     @app_commands.describe(filter_type=i18n.t('commands.bot.regex_pattern.add.params.filter_type.description'))
     @app_commands.describe(pattern=i18n.t('commands.bot.regex_pattern.add.params.pattern.description'))
@@ -81,7 +80,7 @@ class Regex(commands.Cog):
             await context.send(content=i18n.t('messages.regex.add.duplicate_name', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @regex_pattern.command(name='delete', description=i18n.t('commands.bot.regex_pattern.delete.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.autocomplete(name=autocomplete_regex)
     async def regex_pattern_remove(self, context: commands.Context, name: str):
         self.logger.command(f'{context.author.name} used Regex Pattern Delete')
@@ -91,7 +90,7 @@ class Regex(commands.Cog):
             await context.send(content=i18n.t('messages.regex.delete.not_found', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @regex_pattern.command(name='update', description=i18n.t('commands.bot.regex_pattern.update.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.autocomplete(name=autocomplete_regex)
     @app_commands.choices(filter_type=[
         Choice(name=i18n.t('commands.bot.regex_pattern.update.params.filter_type.choices.0'), value=0),
@@ -124,7 +123,7 @@ class Regex(commands.Cog):
             await context.send(content=i18n.t('messages.regex.update.not_found', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @regex_pattern.command(name='list', description=i18n.t('commands.bot.regex_pattern.list.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def regex_pattern_list(self, context: commands.Context):
         self.logger.command(f'{context.author.name} used Regex Pattern List')
         regex_patterns = self.DB.GetAllRegexPatterns()

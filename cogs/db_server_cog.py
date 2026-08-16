@@ -10,6 +10,8 @@ from discord.ext import commands
 from discord import app_commands
 
 from core import utils
+from core import utils_permissions
+from core import utils_discord
 from core import utils_ui
 from core import AMP_Handler
 from core import DB
@@ -35,7 +37,6 @@ class DB_Server(commands.Cog):
 
         self.uBot = utils.botUtils(client)
         self.uiBot = utils_ui
-        self.dBot = utils.discordBot(client)
         self.logger.info(f'**SUCCESS** Initializing {self.name.title().replace("Db","DB")}')
 
     async def autocomplete_db_servers(self, interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
@@ -47,13 +48,13 @@ class DB_Server(commands.Cog):
         return [app_commands.Choice(name=f"{value} | ID: {key}", value=key)for key, value in db_server_list.items()][:25]
 
     @commands.hybrid_group(name='dbserver', description=i18n.t('commands.dbserver.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def db_server(self, context: commands.Context):
         if context.invoked_subcommand is None:
             await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=30)
 
     @db_server.command(name='cleanup', description=i18n.t('commands.dbserver.cleanup.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def db_server_cleanup(self, context: commands.Context):
         self.logger.command(f'{context.author.name} used Database Clean-Up in progress...')
 
@@ -71,9 +72,9 @@ class DB_Server(commands.Cog):
             await context.send(i18n.t('messages.db_server.cleanup.none_found'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @db_server.command(name='change_instance_id', description=i18n.t('commands.dbserver.change_instance_id.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.autocomplete(from_server=autocomplete_db_servers)  # The DB Information we want to copy onto the Destination Server
-    @app_commands.autocomplete(to_server=utils.autocomplete_servers)
+    @app_commands.autocomplete(to_server=utils_discord.autocomplete_servers)
     @app_commands.describe(from_server=i18n.t('commands.dbserver.change_instance_id.params.from_server.description'))
     @app_commands.describe(to_server=i18n.t('commands.dbserver.change_instance_id.params.to_server.description'))
     async def db_server_changeinstanceid(self, context: Union[commands.Context, discord.Interaction], from_server: str, to_server: str):

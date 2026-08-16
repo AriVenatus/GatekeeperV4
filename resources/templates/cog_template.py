@@ -7,6 +7,7 @@ import os
 import logging
 
 from core import utils
+from core import utils_permissions
 from core import AMP as AMP
 from core import DB as DB
 
@@ -31,8 +32,6 @@ class Cog_Template(commands.Cog):
 
         #utils.botUtils provide access to utility functions such as serverparse,role_parse,channel_parse,user_parse.
         self.uBot = utils.botUtils(client)
-        #utils.discordBot provides access to utility functions such as sending/deleting messages, kicking/ban users.
-        self.dBot = utils.discordBot(client)
 
         #Leave this commented out unless you need to create a sub-command.
         #self.uBot.sub_command_handler('user',self.info) #This is used to add a sub command(self,parent_command,sub_command)
@@ -85,14 +84,14 @@ class Cog_Template(commands.Cog):
 
     #Any COMMAND needs a ROLE CHECK prior unless its a sub_command
     @commands.hybrid_command(name='cog_temp')
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def temp(self,context:commands.Context):
         """cog template command'"""
         self.logger.info('test')
 
     #Example group command for a cog.
     @commands.hybrid_group(name='cog')
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def cog_temp(self,context:commands.Context):
         """ Cog Template Group Command"""
         print('cog temp test')
@@ -108,7 +107,7 @@ class Cog_Template(commands.Cog):
     #This limits the command to sync to a specific guild.
     @app_commands.guilds(discord.Object(id=...)) 
     #This limits the command to sync to a specific guild (same as above). But shows the command globally.
-    @utils.guild_check(guild_id=None) 
+    @utils_permissions.guild_check(guild_id=None) 
     #This will autocomplete the command with some premade lists inside of utils.py. You can make your own, see utils.py -> Autocomplete template
     @app_commands.autocomplete() 
     async def cmd(self, ctx, param: int):

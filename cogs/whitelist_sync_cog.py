@@ -14,6 +14,8 @@ from discord.ext import commands, tasks
 from core import AMP_Handler
 from core import DB
 from core import utils
+from core import utils_permissions
+from core import utils_discord
 from core import utils_embeds
 from core import utils_ui
 from core import i18n
@@ -367,8 +369,8 @@ class WhitelistSync(commands.Cog):
     # Whitelist Role Management Commands (attached to `server settings`) ----------------------------------------------------------------------
 
     @commands.hybrid_command(name='whitelist_role_add', description=i18n.t('commands.server.settings.whitelist_role_add.description'))
-    @utils.role_check()
-    @app_commands.autocomplete(server=utils.autocomplete_servers)
+    @utils_permissions.role_check()
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     async def whitelist_role_add(self, context: commands.Context, server: str, role: discord.Role):
         self.logger.command(f'{context.author.name} used Whitelist Role Add')
 
@@ -384,8 +386,8 @@ class WhitelistSync(commands.Cog):
             await context.send(i18n.t('messages.whitelist_role.add.success', role_name=role.name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @commands.hybrid_command(name='whitelist_role_remove', description=i18n.t('commands.server.settings.whitelist_role_remove.description'))
-    @utils.role_check()
-    @app_commands.autocomplete(server=utils.autocomplete_servers, role=autocomplete_whitelist_roles)
+    @utils_permissions.role_check()
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers, role=autocomplete_whitelist_roles)
     async def whitelist_role_remove(self, context: commands.Context, server: str, role: str):
         self.logger.command(f'{context.author.name} used Whitelist Role Remove')
 
@@ -408,8 +410,8 @@ class WhitelistSync(commands.Cog):
             await context.send(i18n.t('messages.whitelist_role.remove.success', role_name=role_name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @commands.hybrid_command(name='whitelist_role_list', description=i18n.t('commands.server.settings.whitelist_role_list.description'))
-    @utils.role_check()
-    @app_commands.autocomplete(server=utils.autocomplete_servers)
+    @utils_permissions.role_check()
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     async def whitelist_role_list(self, context: commands.Context, server: str):
         self.logger.command(f'{context.author.name} used Whitelist Role List')
 
@@ -433,8 +435,8 @@ class WhitelistSync(commands.Cog):
     # grants Whitelist access via the same Whitelist-Sync mechanism as `whitelist_role_add` above -----------------
 
     @commands.hybrid_command(name='donator_role_add', description=i18n.t('commands.server.settings.donator_role_add.description'))
-    @utils.role_check()
-    @app_commands.autocomplete(server=utils.autocomplete_servers)
+    @utils_permissions.role_check()
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     async def donator_role_add(self, context: commands.Context, server: str, role: discord.Role):
         self.logger.command(f'{context.author.name} used Donator Role Add')
 
@@ -450,8 +452,8 @@ class WhitelistSync(commands.Cog):
             await context.send(i18n.t('messages.donator_role.add.success', role_name=role.name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @commands.hybrid_command(name='donator_role_remove', description=i18n.t('commands.server.settings.donator_role_remove.description'))
-    @utils.role_check()
-    @app_commands.autocomplete(server=utils.autocomplete_servers, role=autocomplete_donator_roles)
+    @utils_permissions.role_check()
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers, role=autocomplete_donator_roles)
     async def donator_role_remove(self, context: commands.Context, server: str, role: str):
         self.logger.command(f'{context.author.name} used Donator Role Remove')
 
@@ -474,8 +476,8 @@ class WhitelistSync(commands.Cog):
             await context.send(i18n.t('messages.donator_role.remove.success', role_name=role_name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @commands.hybrid_command(name='donator_role_list', description=i18n.t('commands.server.settings.donator_role_list.description'))
-    @utils.role_check()
-    @app_commands.autocomplete(server=utils.autocomplete_servers)
+    @utils_permissions.role_check()
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     async def donator_role_list(self, context: commands.Context, server: str):
         self.logger.command(f'{context.author.name} used Donator Role List')
 
@@ -498,13 +500,13 @@ class WhitelistSync(commands.Cog):
     # Whitelist Sync Global Settings --------------------------------------------------------------------------------------------------------
 
     @commands.hybrid_group(name='whitelist_sync', description=i18n.t('commands.whitelist_sync.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def whitelist_sync_settings(self, context: commands.Context):
         if context.invoked_subcommand is None:
             await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @whitelist_sync_settings.command(name='enabled', description=i18n.t('commands.whitelist_sync.enabled.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.choices(flag=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
     async def whitelist_sync_enabled(self, context: commands.Context, flag: Choice[int]):
         self.logger.command(f'{context.author.name} used Whitelist Sync Enabled')
@@ -522,7 +524,7 @@ class WhitelistSync(commands.Cog):
             await context.send(i18n.t('messages.whitelist_sync.enabled.off'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @whitelist_sync_settings.command(name='interval', description=i18n.t('commands.whitelist_sync.interval.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.describe(minutes=i18n.t('commands.whitelist_sync.interval.params.minutes.description'))
     async def whitelist_sync_interval(self, context: commands.Context, minutes: app_commands.Range[int, 1, 1440] = 15):
         self.logger.command(f'{context.author.name} used Whitelist Sync Interval')

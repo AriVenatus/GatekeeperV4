@@ -22,13 +22,15 @@ from core import AMP_Handler
 from core import DB as DB
 import modules.banner_creator as BC
 from core import utils
+from core import utils_permissions
+from core import utils_discord
 from core import utils_embeds
 from core import utils_ui
 from utils_dev.banner_editor.ui.view import Banner_Editor_View
 from core import i18n
 
 # This is used to force cog order to prevent missing methods.
-Dependencies = ["amp_server_cog.py"]
+Dependencies = ["amp_server_cog.py", "bot_cog.py"]
 
 
 class Banner(commands.Cog):
@@ -48,7 +50,6 @@ class Banner(commands.Cog):
         self.uBot = utils.botUtils(client)
         self.eBot = utils_embeds.botEmbeds(client)
         self.uiBot = utils_ui
-        self.dBot = utils.discordBot(client)
         self.BC = BC
 
         self.uBot.sub_command_handler('server', self.amp_banner)  # This adds server specific amp_banner commands to the `/server` parent command.
@@ -359,7 +360,7 @@ class Banner(commands.Cog):
             await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=30)
 
     @banner_group_group.command(name='create_group', description=i18n.t('commands.bot.bannergroup.create_group.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def banner_group_create(self, context: commands.Context, group_name: str):
         try:
             self.DB.Add_BannerGroup(name=group_name)
@@ -410,7 +411,7 @@ class Banner(commands.Cog):
                 return await context.send(content=i18n.t('messages.banner.group.rename.duplicate', new_groupname=new_groupname), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @banner_group_group.command(name='add', description=i18n.t('commands.bot.bannergroup.add.description'))
-    @app_commands.autocomplete(server=utils.autocomplete_servers)
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.autocomplete(group_name=autocomplete_bannergroups)
     async def banner_group_add(self, context: commands.Context, group_name: str, server: None | str = None, channel: None | discord.abc.GuildChannel = None):
         c_status = True
@@ -442,7 +443,7 @@ class Banner(commands.Cog):
         return await context.send(content=c_str, ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @banner_group_group.command(name='remove', description=i18n.t('commands.bot.bannergroup.remove.description'))
-    @app_commands.autocomplete(server=utils.autocomplete_servers)
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.autocomplete(channel=autocomplete_bannergroups_channels)
     @app_commands.autocomplete(group_name=autocomplete_bannergroups)
     async def banner_group_remove(self, context: commands.Context, group_name, server: str = None, channel: str = None):
@@ -498,15 +499,15 @@ class Banner(commands.Cog):
         await context.send(content=i18n.t('messages.banner.group.delete.success', group_name=group_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @commands.hybrid_group(name='banner', description=i18n.t('commands.server.banner.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def amp_banner(self, context: commands.Context):
         if context.invoked_subcommand is None:
             await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=30)
 
     @amp_banner.command(name='background', description=i18n.t('commands.server.banner.background.description'))
-    @app_commands.autocomplete(server=utils.autocomplete_servers)
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.autocomplete(image=autocomplete_banners)
-    @utils.role_check()
+    @utils_permissions.role_check()
     async def amp_banner_background(self, context: commands.Context, server, image):
         amp_server = self.uBot.serverparse(server, context, context.guild.id)
         if amp_server == None:
@@ -521,8 +522,8 @@ class Banner(commands.Cog):
         await context.send(content=i18n.t('messages.banner.background.success', server_name=amp_server.FriendlyName), file=self.uiBot.banner_file_handler(my_image), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @amp_banner.command(name='settings', description=i18n.t('commands.server.banner.settings.description'))
-    @utils.role_check()
-    @app_commands.autocomplete(server=utils.autocomplete_servers)
+    @utils_permissions.role_check()
+    @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     async def amp_banner_settings(self, context: commands.Context, server):
         self.logger.command(f'{context.author.name} used Server Banner Settings Editor...')
         amp_server = self.uBot.serverparse(server, context, context.guild.id)
@@ -537,7 +538,7 @@ class Banner(commands.Cog):
             await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @banner_settings.command(name='auto_update', description=i18n.t('commands.bot.banner_settings.auto_update.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.choices(flag=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
     async def banner_autoupdate(self, context: commands.Context, flag: Choice[int] = 1):
         self.logger.command(f'{context.author.name} used Bot Display Banners Auto Update...')
@@ -564,7 +565,7 @@ class Banner(commands.Cog):
             return await context.send(i18n.t('messages.banner.settings.auto_update.invalid_choice'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @banner_settings.command(name='type', description=i18n.t('commands.bot.banner_settings.type.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.choices(type=[Choice(name=i18n.t('embeds.bot_settings.banner_type_images'), value=1), Choice(name=i18n.t('embeds.bot_settings.banner_type_embeds'), value=0)])
     async def banner_type(self, context: commands.Context, type: Choice[int] = 0):
         self.logger.command(f'{context.author.name} used Bot Banners Type...')
@@ -578,7 +579,7 @@ class Banner(commands.Cog):
             return await context.send(i18n.t('messages.banner.settings.type.images'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @banner_settings.command(name='auto_remove', description=i18n.t('commands.bot.banner_settings.auto_remove.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.choices(flag=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
     async def banner_auto_remove(self, context: commands.Context, flag: Choice[int] = 1):
         self.logger.command(f'{context.author.name} used Bot Banners Auto Remove...')
@@ -592,7 +593,7 @@ class Banner(commands.Cog):
             return await context.send(i18n.t('messages.banner.settings.auto_remove.enabled'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @banner_settings.command(name='timeformat', description=i18n.t('commands.bot.banner_settings.timeformat.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.choices(format=[Choice(name=i18n.t('commands.bot.banner_settings.timeformat.params.format.choices.1'), value=1), Choice(name=i18n.t('commands.bot.banner_settings.timeformat.params.format.choices.0'), value=0)])
     async def banner_timeformat(self, context: commands.Context, format: Choice[int]):
         self.logger.command(f'{context.author.name} changed banner time format to {"12h" if format.value == 1 else "24h"}')
@@ -610,7 +611,7 @@ class Banner(commands.Cog):
         )
 
     @banner_settings.command(name='timezone', description=i18n.t('commands.bot.banner_settings.timezone.description'))
-    @utils.role_check()
+    @utils_permissions.role_check()
     @app_commands.autocomplete(timezone=autocomplete_timezones)
     async def banner_timezone(self, context: commands.Context, timezone: str):
         self.logger.command(f'{context.author.name} changed banner timezone to {timezone}')

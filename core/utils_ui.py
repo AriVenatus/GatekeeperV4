@@ -14,6 +14,7 @@ import asyncio
 from core import DB
 from core import AMP_Handler
 from core import utils
+from core import utils_permissions
 from core import i18n
 
 
@@ -41,7 +42,7 @@ class ServerButton(Button):
 
     async def callback(self, interaction):
         """This is called when a button is interacted with."""
-        if not await utils.async_rolecheck(interaction, self.permission_node):
+        if not await utils_permissions.async_rolecheck(interaction, self.permission_node):
             return
         self._interaction = interaction
         self.label = self.callback_label
@@ -127,7 +128,6 @@ class Whitelist_view(View):
 
     def __init__(self, client: discord.Client, discord_message: discord.Message, whitelist_message: discord.Message, amp_server: AMP_Handler.AMP.AMPInstance, context: commands.Context, timeout: float = None):
         self.logger = logging.getLogger()
-        self.DB = DB.getDBHandler().DB
         self._client = client
         self._context = context
         self._whitelist_message = whitelist_message
@@ -142,21 +142,31 @@ class Whitelist_view(View):
         self.add_item(Accept_Whitelist_Button(discord_message=discord_message, view=self, client=client, amp_server=amp_server))
         self.add_item(Deny_Whitelist_Button(discord_message=discord_message, view=self, client=client, amp_server=amp_server))
 
-    async def _whitelist_handler(self):
-        db_server = self.DB.GetServer(self._amp_server.InstanceID)
-        self.logger.dev(f'Whitelist Request; Attempting to Whitelist {self._whitelist_message.author.name} on {db_server.FriendlyName}')
-        # This handles all the Discord Role stuff.
-        if db_server != None and db_server.Discord_Role != None:
-            discord_role = self._client.uBot.role_parse(db_server.Discord_Role, self._context, self._context.guild.id)
-            discord_user = self._client.uBot.user_parse(self._context.author.id, self._context, self._context.guild.id)
-            await discord_user.add_roles(discord_role, reason='Auto Whitelisting')
 
-        # This is for all the Replies
-        if len(self.DB.GetAllWhitelistReplies()) != 0:
-            whitelist_reply = random.choice(self.DB.GetAllWhitelistReplies())
-            await self._context.message.channel.send(content=f'{self._context.author.mention} \n{self._client.uBot.whitelist_reply_handler(message= whitelist_reply, context= self._context, server= self._amp_server)}', delete_after=self._client.Message_Timeout)
-        else:
-            await self._context.message.channel.send(content=i18n.t('ui.whitelist_view.success_no_reply', user_mention=self._context.author.mention, server_name=db_server.FriendlyName), delete_after=self._client.Message_Timeout)
+async def fulfill_whitelist_request(client: discord.Client, context: commands.Context, amp_server: AMP_Handler.AMP.AMPInstance, whitelist_message: discord.Message) -> None:
+    """Domain logic run once a Whitelist request has been Accepted: syncs the server's configured
+    Discord Role (if any) onto the requester, sends the post-Whitelist reply message (a random
+    configured reply, or the generic success message) to the requesting channel, adds the
+    requester to the AMP server's Whitelist, and clears their entry from the wait list."""
+    db = DB.getDBHandler().DB
+    logger = logging.getLogger()
+    db_server = db.GetServer(amp_server.InstanceID)
+    logger.dev(f'Whitelist Request; Attempting to Whitelist {whitelist_message.author.name} on {db_server.FriendlyName}')
+    # This handles all the Discord Role stuff.
+    if db_server != None and db_server.Discord_Role != None:
+        discord_role = client.uBot.role_parse(db_server.Discord_Role, context, context.guild.id)
+        discord_user = client.uBot.user_parse(context.author.id, context, context.guild.id)
+        await discord_user.add_roles(discord_role, reason='Auto Whitelisting')
+
+    # This is for all the Replies
+    if len(db.GetAllWhitelistReplies()) != 0:
+        whitelist_reply = random.choice(db.GetAllWhitelistReplies())
+        await context.message.channel.send(content=f'{context.author.mention} \n{client.uBot.whitelist_reply_handler(message= whitelist_reply, context= context, server= amp_server)}', delete_after=client.Message_Timeout)
+    else:
+        await context.message.channel.send(content=i18n.t('ui.whitelist_view.success_no_reply', user_mention=context.author.mention, server_name=db_server.FriendlyName), delete_after=client.Message_Timeout)
+
+    amp_server.addWhitelist(client.Whitelist_wait_list[whitelist_message.id]['dbuser'])
+    client.Whitelist_wait_list.pop(whitelist_message.id)
 
 
 class Accept_Whitelist_Button(Button):
@@ -170,12 +180,10 @@ class Accept_Whitelist_Button(Button):
         self._client = client
 
     async def callback(self, interaction: discord.Interaction):
-        if await utils.async_rolecheck(context=interaction, perm_node='whitelist_buttons'):
+        if await utils_permissions.async_rolecheck(context=interaction, perm_node='whitelist_buttons'):
             self._view.logger.info(f'We Accepted a Whitelist Request by {self._view._whitelist_message.author.name}')
             await self._discord_message.edit(content=i18n.t('ui.whitelist_buttons.approved', approver=interaction.user.name, requester=self._view._whitelist_message.author.name), view=None)
-            await self._view._whitelist_handler()
-            self._amp_server.addWhitelist(self._client.Whitelist_wait_list[self._view._whitelist_message.id]['dbuser'])
-            self._client.Whitelist_wait_list.pop(self._view._whitelist_message.id)
+            await fulfill_whitelist_request(self._client, self._view._context, self._amp_server, self._view._whitelist_message)
             self.disabled = True
 
 
@@ -190,7 +198,7 @@ class Deny_Whitelist_Button(Button):
         self._client = client
 
     async def callback(self, interaction: discord.Interaction):
-        if await utils.async_rolecheck(context=interaction, perm_node='whitelist_buttons'):
+        if await utils_permissions.async_rolecheck(context=interaction, perm_node='whitelist_buttons'):
             self._view.logger.info(f'We Denied a Whitelist Request by {self._view._whitelist_message.author.name}')
             await self._discord_message.edit(content=i18n.t('ui.whitelist_buttons.denied', approver=interaction.user.name, requester=self._view._whitelist_message.author.name), view=None)
             await self._view._whitelist_message.channel.send(content=i18n.t('ui.whitelist_buttons.denied_notice', approver=interaction.user.name, requester_mention=self._view._whitelist_message.author.mention))
@@ -204,7 +212,6 @@ class LinkConfirmView(View):
 
     def __init__(self, invoker_id: int, apply: Callable[[DB.DBUser], None], confirm_message: str, timeout: float = 60):
         self.logger = logging.getLogger()
-        self.DB = DB.getDBHandler().DB
         self._invoker_id = invoker_id
         self._apply = apply
         self._confirm_message = confirm_message
@@ -230,6 +237,28 @@ class LinkConfirmView(View):
                 pass
 
 
+def resolve_link_db_user(discord_id: int, discord_name: str) -> DB.DBUser:
+    """Gets (or creates) the DBUser row for the Discord account confirming a `/link`."""
+    db = DB.getDBHandler().DB
+    db_user = db.GetUser(discord_id)
+    if db_user == None:
+        db_user = db.AddUser(DiscordID=discord_id, DiscordName=discord_name)
+    return db_user
+
+
+def apply_link(apply: Callable[[DB.DBUser], None], db_user: DB.DBUser) -> bool:
+    """Runs the caller-supplied `apply` callback for a `/link` confirmation. Returns False if the
+    account was already linked (a UNIQUE constraint violation), True on success. Any other
+    exception propagates unchanged."""
+    try:
+        apply(db_user)
+    except sqlite3.IntegrityError as e:
+        if 'UNIQUE constraint failed' in e.args[0]:
+            return False
+        raise
+    return True
+
+
 class Confirm_Link_Button(Button):
     """Confirms an Account Link"""
 
@@ -238,20 +267,14 @@ class Confirm_Link_Button(Button):
         self._view = view
 
     async def callback(self, interaction: discord.Interaction):
-        db_user = self._view.DB.GetUser(interaction.user.id)
-        if db_user == None:
-            db_user = self._view.DB.AddUser(DiscordID=interaction.user.id, DiscordName=interaction.user.name)
+        db_user = resolve_link_db_user(interaction.user.id, interaction.user.name)
 
         for child in self._view.children:
             child.disabled = True
 
-        try:
-            self._view._apply(db_user)
-        except sqlite3.IntegrityError as e:
-            if 'UNIQUE constraint failed' in e.args[0]:
-                await interaction.response.edit_message(content=i18n.t('ui.link_confirm.already_linked'), embed=None, view=self._view)
-                return
-            raise
+        if not apply_link(self._view._apply, db_user):
+            await interaction.response.edit_message(content=i18n.t('ui.link_confirm.already_linked'), embed=None, view=self._view)
+            return
 
         self._view.logger.info(f'Linked {interaction.user.name} via /link confirmation')
         await interaction.response.edit_message(content=self._view._confirm_message, embed=None, view=self._view)
@@ -281,6 +304,18 @@ class DB_Instance_ID_Swap(View):
         self.add_item(Cancel_Button(view=self, discord_message=discord_message))
 
 
+def swap_db_instance_ids(from_db_server: DB.DBServer, to_db_server: DB.DBServer) -> tuple[int, str]:
+    """Deletes `to_db_server`'s DB row and reassigns its InstanceID onto `from_db_server` (used
+    when an AMP Instance gets recreated with a new ID but should keep its existing Gatekeeper
+    server config). Returns the (InstanceID, InstanceName) that `to_db_server` had, for use in
+    the confirmation message."""
+    to_db_server_ID = to_db_server.InstanceID
+    to_db_server_Name = to_db_server.InstanceName
+    to_db_server.delServer()
+    from_db_server.InstanceID = to_db_server_ID
+    return to_db_server_ID, to_db_server_Name
+
+
 class Approve_Button(Button):
     def __init__(self, view: View, discord_message: discord.Message, style=discord.ButtonStyle.green):
         self._view = view
@@ -288,10 +323,7 @@ class Approve_Button(Button):
         super().__init__(label=i18n.t('ui.db_instance_swap.approve'), style=style, custom_id='Approve_Button')
 
     async def callback(self, interaction: discord.Interaction):
-        to_db_server_ID = self._view._to_db_server.InstanceID
-        to_db_server_Name = self._view._to_db_server.InstanceName
-        self._view._to_db_server.delServer()
-        self._view._from_db_server.InstanceID = to_db_server_ID
+        to_db_server_ID, to_db_server_Name = swap_db_instance_ids(self._view._from_db_server, self._view._to_db_server)
         await self.message.edit(content=i18n.t('ui.db_instance_swap.replaced', from_name=self._view._from_db_server.InstanceName, from_id=self._view._from_db_server.InstanceID, to_name=to_db_server_Name, to_id=to_db_server_ID), view=None)
 
 
