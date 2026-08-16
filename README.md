@@ -3,7 +3,7 @@
 
 Gatekeeper is a Discord bot for managing CubeCoders AMP game servers — console/chat bridging, Discord Role \<-> Whitelist syncing, self-service account linking, custom banners, and more, all without leaving Discord.
 
-This fork (GatekeeperV4) actively builds on k8thekat's original GatekeeperV2 and Leon Breidenbach's GatekeeperV3, adding new features, performance work, security hardening, and English/German localization. See [Why use this fork?](#why-use-this-fork) below for the full list.
+This fork (GatekeeperV4) actively builds on [k8thekat's](https://github.com/k8thekat) original GatekeeperV2 and [Leon Breidenbach's](https://github.com/leonbreidenbach-pc) GatekeeperV3, adding new features, performance work, security hardening, and English/German localization. See [Why use this fork?](#why-use-this-fork) below for the full list.
 
 Need Support or have questions about this fork? Join the **[FullSendHub Discord](https://discord.gg/mPJZ4NU44)**.
 
