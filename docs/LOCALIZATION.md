@@ -24,7 +24,7 @@ is mostly translation work, not code work.
    ```python
    _SUPPORTED_LANGUAGES = ('en', 'de', 'fr')
    ```
-4. **Add it to the `/bot language` command** in `core/discordBot.py`, so admins can actually
+4. **Add it to the `/bot language` command** in `cogs/bot_cog.py`, so admins can actually
    pick it:
    ```python
    @app_commands.choices(language=[Choice(name='English', value='en'), Choice(name='Deutsch', value='de'), Choice(name='Français', value='fr')])

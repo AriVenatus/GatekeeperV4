@@ -17,13 +17,14 @@ This is a fork of [Leon Breidenbach's GatekeeperV3](https://github.com/leonbreid
 - A `threading.Event`-based shutdown mechanism for the AMP background thread, with try/except wrapping so one bad polling iteration doesn't kill the thread, and daemon-thread behavior so the process doesn't hang on exit.
 - Per-server/per-group error handling in the banner auto-update loop, so one broken server, guild, or channel no longer takes down the whole banner refresh.
 
-**New in this fork (v3.1):**
+**New in this fork (GatekeeperV4):**
 - Banner timestamps now support a configurable timezone and 12h/24h format (`/bot banner_settings timezone`/`timeformat`), with a consistent, timezone-aware "Edited at ..." shown on both banner types.
 - Added Discord Role \<-> Whitelist syncing (`/whitelist_sync`, `/server settings whitelist_role_add`) and self-service account linking (`/link minecraft`/`/link steam` with a Confirm/Deny preview), so players gain/lose Whitelist access automatically as their Discord Role changes, without Staff needing to run `/user add` for them. See [Whitelist Sync Commands](/docs/COMMANDS.md#whitelist-sync-commands) and [Link Commands](/docs/COMMANDS.md#link-commands).
 - Merged `/user lookup` into `/user info` (now `/user info discord`/`minecraft`/`steam`) for one unified way to look up a Database entry.
 - Added English/German localization with a global, admin-controlled language switch (`/bot language`) — the whole command surface and all bot-authored messages retranslate live, no restart required.
 - **Performance**: AMP API calls reuse a shared `requests.Session()` instead of a fresh connection per call, and `start.py` skips redundant `pip install` runs on startup — cutting typical bot startup time from ~90 seconds down to roughly 5-10 seconds.
 - **Security**: closed a SQL-injection gap in `DB.py`'s dynamic `UPDATE` statements, markdown-escaped external display names before they're shown in embeds, patched `requests`/`urllib3`, added a minimal-permission `-whitelist-only` launch mode, and a loud startup warning whenever `-super`/`-dev` leaves the bot's AMP account as Super Admin.
+- **Reliability**: a game server that fails to initialize (missing AMP permissions, unreachable, misconfigured) is now logged and skipped, then retried on the next poll, instead of taking the whole bot down with it — previously any one bad instance could kill the process at startup. Permission denials raised from Discord buttons and autocomplete now actually tell the user, rather than failing silently.
 
 See [changelog.md](/docs/changelog.md) for the full version history.
 
@@ -36,7 +37,7 @@ ___
 - Full AMP Template support with constant updates — see [AMP Instance Instructions](/docs/INSTALL.md#amp-instance-instructions).
 - Cross-platform: Windows or Linux — see [Running as a Service](/docs/INSTALL.md#using-gatekeeper-as-a-service).
 - Extensible via custom Cogs / your own AMP Dedicated Server module.
-- Autocomplete for Discord Channels, Roles, and AMP Servers.
+- Autocomplete for AMP Servers, Banners and Banner Groups, Regex patterns, timezones, Whitelist replies, and the Discord Roles used for Whitelist/Donator sync.
 - Custom Banner displays (Discord Embeds or Images) with AMP Server info.
 - Regex-based filtering of Console output and Events (Disconnects, Deaths, Kills, ...) to Discord channels.
 - Discord Role \<-> Whitelist syncing plus self-service account linking — see [Whitelist Sync Commands](/docs/COMMANDS.md#whitelist-sync-commands) and [Link Commands](/docs/COMMANDS.md#link-commands).
