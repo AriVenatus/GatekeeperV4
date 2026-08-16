@@ -74,7 +74,7 @@ a record of what previous passes found, not something you need loaded to write o
 
 ## Coverage — what is and isn't translated
 
-`core/discordBot.py`, `core/utils.py`, `core/utils_embeds.py`, `core/utils_ui.py`,
+`core/discordBot.py`, `core/utils_permissions.py`, `core/utils_embeds.py`, `core/utils_ui.py`,
 `utils_dev/banner_editor/*` (the **only** banner editor UI — `Banner_Editor_View` lives in
 `utils_dev/banner_editor/ui/view.py` and is imported live by `cogs/banner_cog.py`. An earlier
 note claimed `core/utils_ui.py` held a parallel dead-code copy; verified 2026-08-15 that it does
