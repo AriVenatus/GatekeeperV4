@@ -663,10 +663,25 @@ than fixed, with the reasoning recorded there so nobody silently re-enables it:
 
 ---
 
-**Status as of 2026-08-15**: **every item in this audit is now closed** — all 13 Critical Issues,
-all Quick Wins (including the two "Flag, don't auto-delete" items: the dead `utils.discordBot`
-class was deleted, the 18 unused `AMPInstance` methods were kept on purpose), and all 6 Structural
-Concerns.
+**Status as of 2026-08-15**: **every section of this audit is now closed** — all 13 Critical
+Issues, all Quick Wins (including the two "Flag, don't auto-delete" items: the dead
+`utils.discordBot` class was deleted, the 18 unused `AMPInstance` methods were kept on purpose),
+all 6 Structural Concerns, and the Style/Tooling section (ruff 1051 → 156, with `ANN` and `I001`
+deliberately not fixed — see that section for the reasoning).
+
+**What "closed" does and does not mean.** Closed means each item was investigated and either fixed
+or deliberately declined with the reason recorded. It does **not** mean verified in production.
+Specifically still unverified at time of writing:
+- The deploy-verification list below (`/bot utils status`, `/bot banner`/`regex`/`whitelist`,
+  `/bot cog reload`, a whitelist button accept, a non-staff permission denial). The bot *starts*
+  cleanly, which is not the same as these working.
+- The entire Style/Tooling commit has not been through a restart yet.
+- Two long-standing items outside this audit remain open: the `-whitelist-only` live verification
+  (see CLAUDE.md) and the whitelist-sync round-trip test (see `docs/DEPLOYMENT_LOG.md`).
+
+**Highest-value follow-up, not an audit item**: a ~10-line typing stub for the custom
+`logger.dev`/`logger.command` levels would remove 182 of pyright's 1420 errors (13%) — the
+cheapest step toward making pyright useful enough to revisit the `ANN` decision.
 
 **None of it has been run against a live bot yet.** Everything is uncommitted working-tree state.
 The Structural Concerns pass in particular is ~1,100 lines of pure refactor across 30+ files with
