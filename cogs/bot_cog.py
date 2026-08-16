@@ -56,7 +56,7 @@ class Bot(commands.Cog):
 
     @main_bot.command(name='moderator', description=i18n.t('commands.bot.moderator.description'))
     @commands.has_guild_permissions(administrator=True)
-    async def bot_moderator(self, context: commands.Context, role: discord.Role):
+    async def moderator(self, context: commands.Context, role: discord.Role):
         self.logger.command(f'{context.author.name} used Bot Moderator...')
 
         self.DBConfig.SetSetting('Moderator_role_id', role.id)
@@ -68,7 +68,7 @@ class Bot(commands.Cog):
         Choice(name=i18n.t('commands.bot.permissions.params.permission.choices.0'), value=0),
         Choice(name=i18n.t('commands.bot.permissions.params.permission.choices.1'), value=1),
     ])
-    async def bot_permissions(self, context: commands.Context, permission: Choice[int]):
+    async def permissions(self, context: commands.Context, permission: Choice[int]):
         self.logger.command(f'{context.author.name} used Bot Permissions...')
 
         # If we set to 0; we are using `Default` Permissions and need to unload the cog and commands related to custom permissions.
@@ -97,10 +97,10 @@ class Bot(commands.Cog):
     @commands.has_guild_permissions(administrator=True)
     @app_commands.describe(language=i18n.t('commands.bot.language.params.language.description'))
     @app_commands.choices(language=[Choice(name='English', value='en'), Choice(name='Deutsch', value='de')])
-    async def bot_language(self, context: commands.Context, language: Choice[str]):
+    async def language(self, context: commands.Context, language: Choice[str]):
         self.logger.command(f'{context.author.name} used Bot Language...')
         # Walking every command in the tree plus a tree.sync() round trip can exceed Discord's 3s
-        # interaction-ack window; mirrors the existing defer() precedent in bot_utils_clear/bot_utils_sync.
+        # interaction-ack window; mirrors the existing defer() precedent in utils_clear/utils_sync.
         await context.defer(ephemeral=True)
 
         i18n.set_language(language.value)
@@ -114,22 +114,22 @@ class Bot(commands.Cog):
 
     @main_bot.command(name='settings', description=i18n.t('commands.bot.settings.description'))
     @utils_permissions.role_check()
-    async def bot_settings(self, context: commands.Context):
+    async def settings(self, context: commands.Context):
         self.logger.command(f'{context.author.name} used Bot Settings...')
         await context.send(embed=self.eBot.bot_settings_embed(context), ephemeral=True, delete_after=(self._client.Message_Timeout * 3))  # Tripled the delay to help sort times.
 
     @main_bot.group(name='utils', description=i18n.t('commands.bot.utils.description'))
     @utils_permissions.role_check()
-    async def bot_utils(self, context: commands.Context):
+    async def utils_group(self, context: commands.Context):
         if context.invoked_subcommand is None:
             await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @bot_utils.command(name='clear', description=i18n.t('commands.bot.utils.clear.description'))
+    @utils_group.command(name='clear', description=i18n.t('commands.bot.utils.clear.description'))
     @app_commands.choices(all=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
     @app_commands.describe(all=i18n.t('commands.bot.utils.clear.params.all.description'))
     @app_commands.describe(channel=i18n.t('commands.bot.utils.clear.params.channel.description'))
     @utils_permissions.role_check()
-    async def bot_utils_clear(self, context: commands.Context, channel: discord.abc.GuildChannel = None, amount: app_commands.Range[int, 0, 100] = 50, all: Choice[int] = 0):
+    async def utils_clear(self, context: commands.Context, channel: discord.abc.GuildChannel = None, amount: app_commands.Range[int, 0, 100] = 50, all: Choice[int] = 0):
         self.logger.info(f'{context.author.name} used {context.command.name}...')
         self._client.context = context
         await context.defer()
@@ -149,52 +149,52 @@ class Bot(commands.Cog):
         word = i18n.t_plural('common.messages_word', count=len(messages))
         return await channel.send(i18n.t('messages.bot.utils.clear.success', count=len(messages), word=word), delete_after=self._client.Message_Timeout)
 
-    @bot_utils.command(name='roleid', description=i18n.t('commands.bot.utils.roleid.description'))
+    @utils_group.command(name='roleid', description=i18n.t('commands.bot.utils.roleid.description'))
     @utils_permissions.role_check()
-    async def bot_utils_roleid(self, context: commands.Context, role: discord.Role):
+    async def utils_roleid(self, context: commands.Context, role: discord.Role):
         self.logger.command(f'{context.author.name} used Bot Utils Role ID...')
 
         await context.send(i18n.t('messages.bot.utils.roleid.result', role_name=role.name, role_id=role.id), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @bot_utils.command(name='channelid', description=i18n.t('commands.bot.utils.channelid.description'))
+    @utils_group.command(name='channelid', description=i18n.t('commands.bot.utils.channelid.description'))
     @utils_permissions.role_check()
-    async def bot_utils_channelid(self, context: commands.Context, channel: discord.abc.GuildChannel):
+    async def utils_channelid(self, context: commands.Context, channel: discord.abc.GuildChannel):
         self.logger.command(f'{context.author.name} used Bot Utils Channel ID...')
 
         await context.send(i18n.t('messages.bot.utils.channelid.result', channel_name=channel.name, channel_id=channel.id), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @bot_utils.command(name='userid', description=i18n.t('commands.bot.utils.userid.description'))
+    @utils_group.command(name='userid', description=i18n.t('commands.bot.utils.userid.description'))
     @utils_permissions.role_check()
-    async def bot_utils_userid(self, context: commands.Context, user: Union[discord.User, discord.Member]):
+    async def utils_userid(self, context: commands.Context, user: Union[discord.User, discord.Member]):
         self.logger.command(f'{context.author.name} used Bot Utils User ID...')
 
         await context.send(i18n.t('messages.bot.utils.userid.result', user_name=user.name, display_name=user.display_name, user_id=user.id), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @bot_utils.command(name='uuid', description=i18n.t('commands.bot.utils.uuid.description'))
+    @utils_group.command(name='uuid', description=i18n.t('commands.bot.utils.uuid.description'))
     @utils_permissions.role_check()
-    async def bot_utils_uuid(self, context: commands.Context, mc_ign: str):
+    async def utils_uuid(self, context: commands.Context, mc_ign: str):
         self.logger.command(f'{context.author.name} used Bot Utils UUID...')
 
         await context.send(i18n.t('messages.bot.utils.uuid.result', mc_ign=mc_ign, uuid=self.uBot.name_to_uuid_MC(mc_ign)), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @bot_utils.command(name='ping', description=i18n.t('commands.bot.utils.ping.description'))
+    @utils_group.command(name='ping', description=i18n.t('commands.bot.utils.ping.description'))
     @utils_permissions.role_check()
-    async def bot_utils_ping(self, context: commands.Context):
+    async def utils_ping(self, context: commands.Context):
         self.logger.command(f'{context.author.name} used Bot Ping...')
 
         await context.send(i18n.t('messages.bot.utils.ping.result', latency=round(self._client.latency * 1000)), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @bot_utils.command(name='disconnect', description=i18n.t('commands.bot.utils.disconnect.description'))
+    @utils_group.command(name='disconnect', description=i18n.t('commands.bot.utils.disconnect.description'))
     @utils_permissions.role_check()
-    async def bot_utils_stop(self, context: commands.Context):
+    async def utils_disconnect(self, context: commands.Context):
         self.logger.command(f'{context.author.name} used Bot Stop Function...')
 
         await context.send(i18n.t('messages.bot.utils.disconnect.message'), ephemeral=True, delete_after=self._client.Message_Timeout)
         return await self._client.close()
 
-    @bot_utils.command(name='restart', description=i18n.t('commands.bot.utils.restart.description'))
+    @utils_group.command(name='restart', description=i18n.t('commands.bot.utils.restart.description'))
     @utils_permissions.role_check()
-    async def bot_utils_restart(self, context: commands.Context):
+    async def utils_restart(self, context: commands.Context):
         self.logger.command(f'{context.author.name} used Bot Restart Function...')
 
         import os
@@ -203,19 +203,19 @@ class Bot(commands.Cog):
         sys.stdout.flush()
         os.execv(sys.executable, ['python3'] + sys.argv)
 
-    @bot_utils.command(name='status', description=i18n.t('commands.bot.utils.status.description'))
+    @utils_group.command(name='status', description=i18n.t('commands.bot.utils.status.description'))
     @utils_permissions.role_check()
-    async def bot_utils_status(self, context: commands.Context):
+    async def utils_status(self, context: commands.Context):
         self.logger.command(f'{context.author.name} used Bot Status Function...')
 
         await context.send(i18n.t('messages.bot.utils.status.versions', discord_version=discord.__version__, python_version=sys.version), ephemeral=True, delete_after=self._client.Message_Timeout)
         await context.send(i18n.t('messages.bot.utils.status.bot_db_version', bot_version=Version, db_version=self.DBHandler.DB_Version), ephemeral=True, delete_after=self._client.Message_Timeout)
         await context.send(i18n.t('messages.bot.utils.status.connections', amp_connected=self.AMPHandler.SuccessfulConnection, db_connected=self.DBHandler.SuccessfulDatabase), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @bot_utils.command(name='message_timeout', description=i18n.t('commands.bot.utils.message_timeout.description'))
+    @utils_group.command(name='message_timeout', description=i18n.t('commands.bot.utils.message_timeout.description'))
     @utils_permissions.role_check()
     @app_commands.describe(time=i18n.t('commands.bot.utils.message_timeout.params.time.description'))
-    async def bot_utils_message_timeout(self, context: commands.Context, time: Union[None, int] = 60):
+    async def utils_message_timeout(self, context: commands.Context, time: Union[None, int] = 60):
         self.logger.command(f'{context.author.name} used Bot Utils Message Timeout Function...')
 
         self.DBConfig.SetSetting('Message_Timeout', f'{time}')
@@ -227,11 +227,11 @@ class Bot(commands.Cog):
 
         await context.send(content=i18n.t('messages.bot.utils.message_timeout.result', content_str=content_str), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @bot_utils.command(name='sync', description=i18n.t('commands.bot.utils.sync.description'))
+    @utils_group.command(name='sync', description=i18n.t('commands.bot.utils.sync.description'))
     @utils_permissions.role_check()
     @app_commands.choices(local=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
     @app_commands.choices(reset=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
-    async def bot_utils_sync(self, context: commands.Context, local: Choice[int] = True, reset: Choice[int] = False):
+    async def utils_sync(self, context: commands.Context, local: Choice[int] = True, reset: Choice[int] = False):
         self.logger.command(f'{context.author.name} used Bot Sync Function...')
         await context.defer()
         # This keeps our DB Guild_ID Current.
@@ -267,13 +267,13 @@ class Bot(commands.Cog):
     # Cog Specific Bot Commands --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     @main_bot.group(name='cog', description=i18n.t('commands.bot.cog.description'))
     @utils_permissions.role_check()
-    async def bot_cog(self, context: commands.Context):
+    async def cogs_group(self, context: commands.Context):
         if context.invoked_subcommand is None:
             await context.send(i18n.t('common.invalid_command'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @bot_cog.command(name='load', description=i18n.t('commands.bot.cog.load.description'))
+    @cogs_group.command(name='load', description=i18n.t('commands.bot.cog.load.description'))
     @utils_permissions.role_check()
-    async def bot_cog_loader(self, context: commands.Context, cog: str):
+    async def cogs_load(self, context: commands.Context, cog: str):
         self.logger.command(f'{context.author.name} used Bot Cog Load Function...')
 
         try:
@@ -283,10 +283,10 @@ class Bot(commands.Cog):
         else:
             await context.send(i18n.t('messages.bot.cog.load.success', cog=cog), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @bot_cog.command(name='unload', description=i18n.t('commands.bot.cog.unload.description'))
+    @cogs_group.command(name='unload', description=i18n.t('commands.bot.cog.unload.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(cog=autocomplete_loadedcogs)
-    async def bot_cog_unloader(self, context: commands.Context, cog: str):
+    async def cogs_unload(self, context: commands.Context, cog: str):
         self.logger.command(f'{context.author.name} used Bot Cog Unload Function...')
 
         # Guard: this cog contains the `/bot` command group itself (incl. `bot cog load`, the only
@@ -305,13 +305,13 @@ class Bot(commands.Cog):
         else:
             await context.send(i18n.t('messages.bot.cog.unload.success', cog=cog), ephemeral=True, delete_after=self._client.Message_Timeout)
 
-    @bot_cog.command(name='reload', description=i18n.t('commands.bot.cog.reload.description'))
+    @cogs_group.command(name='reload', description=i18n.t('commands.bot.cog.reload.description'))
     @utils_permissions.role_check()
-    async def bot_cog_reload(self, context: commands.Context):
+    async def cogs_reload(self, context: commands.Context):
         self.logger.command(f'{context.author.name} used Bot Cog Reload Function...')
 
         # Guard: skip reloading this cog (it contains the live `/bot` group, including this very
-        # command) as part of a bulk reload -- see the matching guard/comment in bot_cog_unloader.
+        # command) as part of a bulk reload -- see the matching guard/comment in cogs_unload.
         # `core/loader.py`'s cog_auto_loader() excludes it the same way it already excludes
         # permissions_cog.py, just conditioned on `reload=True` since it must still be auto-loaded
         # normally at startup.
