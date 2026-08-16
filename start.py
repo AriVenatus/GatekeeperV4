@@ -28,6 +28,11 @@ class Setup:
         parser.add_argument('-debug', help='Enables DEBUGGING level for logging', required=False, action="store_true")
         self.args = parser.parse_args()
 
+        # Fail fast on an unsupported interpreter, before we try to pip-install
+        # anything or touch the DB/AMP/Discord. The logger isn't initialized yet,
+        # so this (like pip_install()'s own version guard below) reports via print().
+        self.python_ver_check()
+
         self.pip_install()
 
         # Custom Logger functionality.
@@ -76,8 +81,8 @@ class Setup:
                     self.logger.warning('AMP handler thread did not stop cleanly before process exit.')
 
     def python_ver_check(self):
-        if not sys.version_info.major >= 3 and not sys.version_info.minor >= 10:
-            self.logger.critical(f'Unable to Start Gatekeeper, Python Version is {sys.version_info.major + "." + sys.version_info.minor} we require Python Version >= 3.10')
+        if sys.version_info < (3, 13):
+            print(f'Unable to Start Gatekeeper, Python Version is {sys.version_info.major}.{sys.version_info.minor}, we require Python Version >= 3.13')
             sys.exit(1)
 
     def pip_install(self):

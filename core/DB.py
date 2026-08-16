@@ -59,16 +59,6 @@ class DBHandler:
 
         self.logger.info(f"DB Handler Initialization...DB Version: {self.DBConfig.GetSetting('DB_Version')}")
 
-    def dbServerConsoleSetup(self, server):
-        """This sets the DB Server Console_Flag, Console_Filtered and Discord_Console_Channel to default values"""
-        self.DB_Server = self.DB.GetServer(server.InstanceID)
-        try:
-            self.DB_Server.Console_Flag = True
-            self.DB_Server.Console_Filtered = True
-            self.DB_Server.Discord_Console_Channel = None  # Should be a str, can be an int. eg 289450670581350401
-        except:
-            self.logger.warning(f"**ATTENTION** DBConfig Default Console Settings have been set for {server.FriendlyName}")
-
 
 def getDBHandler() -> DBHandler:
     global Handler
@@ -393,24 +383,6 @@ class Database:
         except Exception as e:
             print("DBUser error", e)
             return None
-
-    def GetAllUsers(self):
-        # get all servers that we are on
-        SQL = "Select ID from Users"
-        SQLWhere = []
-        SQLArgs = []
-
-        if len(SQLWhere):
-            SQL = SQL + " where " + " and ".join(SQLWhere)
-
-        (rows, cur) = self._fetchall(SQL, tuple(SQLArgs))
-        ret = []
-        for entry in rows:
-            User = DBUser(self, ID=entry["ID"])
-            ret.append(User)
-
-        cur.close()
-        return ret
 
     def AddRegexPattern(self, Name: str, Pattern: str, Type: int) -> bool:
         """Adds a entry to table RegexPatterns, else Updates a matching pattern."""
@@ -843,118 +815,6 @@ class Database:
         self._execute("Update Config set Value=? where ID=?", (Value, ID))
         jdata = dump_to_json({"Type": "UpdateConfig", "Name": Name, "Value": Value})
         self._logdata(jdata)
-
-    def GetLog(
-        self,
-        AfterTime: datetime.datetime = None,
-        BeforeTime: datetime.datetime = None,
-        StartingID: int = None,
-        Limit: int = 100,
-    ):
-        SQL = "Select L.ID, L.Log, L.LogDate from Log L"
-        Params = []
-        if StartingID or AfterTime or BeforeTime:
-            NeedAND = False
-            SQL += " Where "
-            if StartingID:
-                SQL += " L.ID >= ? "
-                Params.append(StartingID)
-                NeedAND = True
-            if AfterTime:
-                if NeedAND:
-                    SQL += " and "
-                SQL += " L.LogDate > "
-                Params.append(AfterTime)
-                NeedAND = True
-            if BeforeTime:
-                if NeedAND:
-                    SQL += " and "
-                SQL += " L.LogDate < "
-                Params.append(BeforeTime)
-                NeedAND = True
-        SQL += " order by L.LogDate "
-        if Limit:
-            SQL += " Limit ?"
-            Params.append(Limit)
-
-        NeededUsers = []
-        NeededServers = []
-        (rows, cur) = self._fetchall(SQL, tuple(Params))
-        ret = []
-        for entry in rows:
-            logentry = {}
-            logentry["ID"] = entry["ID"]
-            logentry["Log"] = json.loads(entry["Log"])
-            logentry["Date"] = entry["LogDate"]
-            ret.append(logentry)
-
-            # if we have a userid, serverid, or modid in the log json then store it as needed
-            if ("UserID" in logentry["Log"]) and (logentry["Log"]["UserID"] not in NeededUsers):
-                NeededUsers.append(logentry["Log"]["UserID"])
-            if ("ModID" in logentry["Log"]) and (logentry["Log"]["ModID"] not in NeededUsers):
-                NeededUsers.append(logentry["Log"]["ModID"])
-            if ("ServerID" in logentry["Log"]) and (logentry["Log"]["ServerID"] not in NeededServers):
-                NeededServers.append(logentry["Log"]["ServerID"])
-
-        cur.close()
-
-        # go get all of the users to fill in
-        Users = {}
-        while len(NeededUsers):
-            Count = len(NeededUsers)
-            if len(NeededUsers) > 50:
-                Count = 50
-            qentries = ("?," * Count)[:-1]
-            Params = tuple(NeededUsers[0:Count])
-            NeededUsers = NeededUsers[Count:]
-            (rows, cur) = self._fetchall(
-                f"Select ID, DiscordID, DiscordName, IngameName, UUID from Users where ID in ({qentries})", tuple(Params)
-            )
-            for entry in rows:
-                Users[int(entry["ID"])] = {
-                    "DiscordID": int(entry["DiscordID"]),
-                    "DiscordName": entry["DiscordName"],
-                    "IngameName": entry["IngameName"],
-                    "UUID": entry["UUID"],
-                }
-            cur.close()
-
-        # get servers
-        Servers = {}
-        while len(NeededServers):
-            Count = len(NeededServers)
-            if len(NeededServers) > 50:
-                Count = 50
-            qentries = ("?," * Count)[:-1]
-            Params = tuple(NeededServers[0:Count])
-            NeededServers = NeededServers[Count:]
-            (rows, cur) = self._fetchall(f"Select ID, InstanceName from Servers where ID in ({qentries})", tuple(Params))
-            for entry in rows:
-                Servers[int(entry["ID"])] = entry["InstanceName"]
-            cur.close()
-
-        # now update all log entries
-        for entry in ret:
-            if "UserID" in entry["Log"]:
-                UID = int(entry["Log"]["UserID"])
-                if UID in Users:
-                    entry["Log"].pop("UserID")
-                    entry["Log"]["User_DiscordID"] = int(Users[UID]["DiscordID"])
-                    entry["Log"]["User_DiscordName"] = Users[UID]["DiscordName"]
-                    entry["Log"]["User_IngameName"] = Users[UID]["IngameName"]
-            if "ModID" in entry["Log"]:
-                MID = int(entry["Log"]["ModID"])
-                if MID in Users:
-                    entry["Log"].pop("ModID")
-                    entry["Log"]["Mod_DiscordID"] = int(Users[MID]["DiscordID"])
-                    entry["Log"]["Mod_DiscordName"] = Users[MID]["DiscordName"]
-                    entry["Log"]["Mod_IngameName"] = Users[MID]["IngameName"]
-            if "ServerID" in entry["Log"]:
-                if entry["Log"]["ServerID"] in Servers:
-                    entry["Log"]["Server"] = Servers[int(entry["Log"]["ServerID"])]
-                    entry["Log"].pop("ServerID")
-
-        return ret
 
 
 class DBUser:

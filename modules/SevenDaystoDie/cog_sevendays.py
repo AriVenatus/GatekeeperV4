@@ -28,7 +28,6 @@ class Sevendays(commands.Cog):
         self.DBCOnfig = self.DB.DBConfig
 
         self.uBot = utils.botUtils(client)
-        self.dBot = utils.discordBot(client)
         # self.uBot.sub_command_handler('user',self.info) #This is used to add a sub command(self,parent_command,sub_command)
         self.logger.info(f'**SUCCESS** Initializing Module **{self.name.capitalize()}**')
 

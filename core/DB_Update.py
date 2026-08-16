@@ -29,6 +29,9 @@ class DB_Update:
 
         if 1.3 > Version:
             self.logger.info('**ATTENTION** Updating DB to Version 1.3')
+            # Intentionally disabled, not dead code: SQLite has no `ALTER TABLE ... ADD CONSTRAINT`,
+            # so nicknames_unique() would always raise and sys.exit(-1) mid-migration. Kept for
+            # migration history; re-enabling needs the create-new-table/copy/drop/rename workaround.
             #self.nicknames_unique()
             self.DBConfig.SetSetting('DB_Version', '1.3')
 
@@ -63,6 +66,9 @@ class DB_Update:
         if 1.8 > Version:
             self.logger.info('**ATTENTION** Updating DB to Version 1.8')
             self.server_hide_column()
+            # Both constraint updates below are intentionally disabled, not dead code — SQLite
+            # cannot drop or add a UNIQUE constraint via ALTER TABLE (see each method's docstring).
+            # Kept for migration history; re-enabling needs the create/copy/drop/rename workaround.
             #self.server_ip_constraint_update()
             self.server_display_name_reset()
             #self.server_display_name_constraint_update()
@@ -100,7 +106,6 @@ class DB_Update:
 
         if 2.6 > Version:
             self.logger.info('**ATTENTION** Updating DB to Version 2.6')
-            #self.user_MC_IngameName_unique_constraint()
             self.DBConfig.DeleteSetting('Whitelist_Emoji_Pending')
             self.DBConfig.DeleteSetting('Whitelist_Emoji_Done')
             self.DBConfig.SetSetting('DB_Version', '2.6')

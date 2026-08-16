@@ -29,7 +29,6 @@ class Minecraft(commands.Cog):
         self.DBConfig = self.DBHandler.DBConfig
 
         self.uBot = utils.botUtils(client)  # Utilities Class for Embed's and other functionality.
-        self.dBot = utils.discordBot(client)  # Common Discord Bot functionality (messages/reactions/users)
 
         # This will be used for Modded Minecraft - Not yet implemented.
         self.DBConfig.AddSetting('Minecraft_Multiverse_Core', False)

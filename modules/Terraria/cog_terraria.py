@@ -27,7 +27,6 @@ class Terraria(commands.Cog):
         self.DBConfig = self.DBHandler.DBConfig
 
         self.uBot = utils.botUtils(client)
-        self.dBot = utils.discordBot(client)
         # self.uBot.sub_command_handler(self,'user',self.info)
         self.logger.info(f'**SUCCESS** Initializing Module **{self.name.capitalize()}**')
 

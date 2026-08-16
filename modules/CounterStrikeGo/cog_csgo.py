@@ -32,8 +32,6 @@ class Csgo(commands.Cog):
 
         # utils.botUtils provide access to utility functions such as serverparse,role_parse,channel_parse,user_parse.
         self.uBot = utils.botUtils(client)
-        # utils.discordBot provides access to utility functions such as sending/deleting messages, kicking/ban users.
-        self.dBot = utils.discordBot(client)
 
         # Leave this commented out unless you need to create a sub-command.
         # self.uBot.sub_command_handler('user',self.info) #This is used to add a sub command(self,parent_command,sub_command)

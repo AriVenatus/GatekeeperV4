@@ -61,12 +61,6 @@ class AMPMinecraft(AMP.AMPInstance):
         else:
             return minecraft_user[0]['id']  # returns [{'id': 'uuid', 'name': 'name'}]
 
-    def name_History(self, mc_user_uuid):
-        """Requires `user_UUID` WTF Does this even return? Possible a Dictionary List?"""
-        url = f'https://api.mojang.com/user/profiles/{mc_user_uuid}/names'
-        post_req = requests.get(url)
-        return post_req.json()[-1]
-
     def resolve_canonical_IGN(self, name: str) -> str:
         """Resolves a Minecraft IGN to Mojang's canonical-cased name. Falls back to the raw name if it doesn't resolve or is ambiguous."""
         self.logger.dev(f'Resolving canonical IGN for: {name}')
@@ -177,10 +171,6 @@ class AMPMinecraft(AMP.AMPInstance):
 
         content += f'{{"text":{json.dumps(f"<{author}>: {message}")},"color":"white"}}]'
         self.ConsoleMessage(content)
-
-    def Chat_Message_Formatter(self, message: str):
-        """Formats the message for Discord \n"""
-        return message
 
     def get_IGN_Avatar(self, db_user: DBUser | None = None, user: str | None = None) -> tuple[str, str] | Literal[False]:
         """Handles returning customized discord message data for Minecraft Servers only."""

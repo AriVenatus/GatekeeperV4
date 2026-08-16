@@ -162,6 +162,7 @@ server.banner.settings
 server.banner.background
 
 server.console.*
+server.console.interact #Not a slash command; sends commands via the Discord Console Channel
 server.console.filter
 server.console.channel
 
