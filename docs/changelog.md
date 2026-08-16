@@ -9,6 +9,15 @@ __**Update 4.11.0**__
 - Rewrote `README.md`: dropped "MAINTENANCE MODE ONLY" (this fork is under active development again), new intro, explicit credits to k8thekat (original author) and Leon Breidenbach, trimmed "Features" to flat one-liners, moved all setup/installation content to `docs/INSTALL.md`.
 - Documented the correct `.env` placement for a systemd deployment (outside the repo checkout, wired via `EnvironmentFile=`, not inside `WorkingDirectory`) and added the missing `EnvironmentFile=` line to the example service unit in `docs/INSTALL.md`.
 - Removed the duplicate `COPYING` (kept `LICENSE`) and the stale `discord-role-synced-whitelist.md` proposal doc; added `.DS_Store` to `.gitignore`.
+- Worked through a full codebase audit (`docs/AUDIT.md`) — all Critical Issues, Quick Wins, Structural Concerns and the Style/Tooling section:
+    - A game server that fails to initialize (missing AMP permissions, unreachable, etc.) is now logged and skipped, then retried on the next 30s poll, instead of killing the whole bot. `AMPInstance.__init__` was split into four steps and raises `AMPInitError` rather than calling `sys.exit()` from inside a constructor.
+    - Permission denials coming from a Discord *interaction* (whitelist buttons, server autocomplete) now actually tell the user they lack permission — they previously failed silently.
+    - A malformed `GATEKEEPER_AMP_AUTH` 2FA code now stops startup with a clear message instead of leaving the bot running half-initialized.
+    - Moved the `/bot` command group into `cogs/bot_cog.py` so it loads through the normal cog loader like every other command surface and is visible to `/bot cog load|unload|reload` (with a guard so it can't unload itself). All command names are unchanged.
+    - Split `core/utils.py` (638 lines) into `core/utils_permissions.py`, `core/utils_discord.py`, `core/utils_api.py` and a slim `core/utils.py`; untangled `async_rolecheck()` (the bot's main permission gate), fixing three latent bugs including two branches that could never run.
+    - Removed dead code and 10 unused dependencies; standardized the Python requirement on 3.13, now actually enforced at startup (the existing check was dead code that could never fire).
+- Added the project's first test, `tests/test_cog_imports.py` — run `python3 tests/test_cog_imports.py` before restarting to catch import-time breakage (invalid cog metadata, reserved method names, over-long command descriptions, stray files in `cogs/`) while the bot is still running.
+- Lint cleanup: ruff findings 1051 -> 156, mostly by correcting 108 `x: str = None` annotations that hid nullability, and by switching off the `ANN` rule family as a deliberate decision (reasoning recorded in `pyproject.toml`).
 
 __**Update 4.10.0**__
 - Added English/German localization: a global (not per-user), admin-controlled language switch via `/bot language`, which retranslates the entire command tree (descriptions, parameters, choices) and every bot-authored message live, no restart required.
