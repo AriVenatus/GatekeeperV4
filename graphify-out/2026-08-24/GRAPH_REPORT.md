@@ -14,14 +14,14 @@
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- amp_server_cog — AMP Server Commands
+- role_check
 - Banner
-- utils_ui — Discord UI Views/Buttons
+- .__init__
 - WhitelistSync
-- AMP_Handler — Startup & Instance Polling
+- DB.py
 - Whitelist
-- AMP.py — Core API Call Methods
-- utils_permissions — guild_check & Cog Scaffolding
+- .Login
+- Cog_Template
 - Handler
 - AMPMinecraft
 - Regex
@@ -29,7 +29,7 @@
 - Banner_Generator
 - AMPInstance
 - Database
-- DB.py — Regex/Banner Row Helpers
+- ._fetchone
 - DB_User
 - botUtils
 - botEmbeds
@@ -37,13 +37,13 @@
 - AMPArk
 - **Interacting with the Bot**
 - AMPTemplate
-- DB.py — Write Operations (Regex/Roles/Replies)
+- ._execute
 - DBServer
 - Codebase Audit — 2026-08-14
 - DB_Server
 - **Regex**
-- AMP_Handler & DBBanner (mixed init/config)
-- AMP Role/Permission Bootstrap
+- Edited_DB_Banner
+- ._bootstrap_permissions
 - Python 3.13 Bootstrap Compatibility Fixes
 - DBConfig
 - AMP.py
@@ -56,7 +56,7 @@
 - AMPConsole
 - DiscordPlumbingMixin
 - GameAPIMixin
-- AMPInstance.__init__ Internals
+- .__init__
 - AMP_Tasks
 - AMPProjectzomboid
 - AMPSevendays
@@ -66,7 +66,7 @@
 - **Adding a Language**
 - Setup
 - .ConsoleMessage_withUpdate
-- permissions_cog — User Role Commands
+- .user_role
 - GatekeeperV4
 - changelog.md
 - .CurrentSessionHasPermission
@@ -77,7 +77,7 @@
 - amp_generic.py
 - amp_starbound.py
 - amp_valheim.py
-- test_cog_imports.py — Stub Helpers
+- _Any
 
 ## God Nodes (most connected - your core abstractions)
 1. `AMPInstance` - 106 edges
@@ -112,7 +112,7 @@
 
 ## Communities (66 total, 13 thin omitted)
 
-### Community 1 - "amp_server_cog — AMP Server Commands"
+### Community 1 - "role_check"
 Cohesion: 0.06
 Nodes (37): AMP_Server, autocomplete, Choice, choices, Client, command, Context, group (+29 more)
 
@@ -120,7 +120,7 @@ Nodes (37): AMP_Server, autocomplete, Choice, choices, Client, command, Context,
 Cohesion: 0.08
 Nodes (24): Banner, autocomplete, Choice, choices, command, Context, Guild, GuildChannel (+16 more)
 
-### Community 3 - "utils_ui — Discord UI Views/Buttons"
+### Community 3 - ".__init__"
 Cohesion: 0.05
 Nodes (41): Accept_Whitelist_Button, apply_link(), Approve_Button, Cancel_Button, Confirm_Link_Button, DB_Instance_ID_Swap, Deny_Link_Button, Deny_Whitelist_Button (+33 more)
 
@@ -128,7 +128,7 @@ Nodes (41): Accept_Whitelist_Button, apply_link(), Approve_Button, Cancel_Button
 Cohesion: 0.07
 Nodes (28): before_loop, autocomplete, Choice, choices, command, Context, DBUser, describe (+20 more)
 
-### Community 5 - "AMP_Handler — Startup & Instance Polling"
+### Community 5 - "DB.py"
 Cohesion: 0.05
 Nodes (38): AMP_init(), amp_server_instance_check(), getAMPHandler(), # NOTE: this parameter must NOT be named `AMP` -- that would shadow the module-…, Checks for new AMP Instances every 30 seconds.., Request the AMP handler background loops to stop., request_shutdown(), get_language() (+30 more)
 
@@ -136,11 +136,11 @@ Nodes (38): AMP_init(), amp_server_instance_check(), getAMPHandler(), # NOTE: th
 Cohesion: 0.06
 Nodes (27): autocomplete, Choice, choices, command, Context, describe, GuildChannel, hybrid_command (+19 more)
 
-### Community 7 - "AMP.py — Core API Call Methods"
+### Community 7 - ".Login"
 Cohesion: 0.07
 Nodes (16): This is the main API Call function, This updates an AMP Server Objects attributes from `getInstances()` API call., This gets all Instances on AMP., Basic Console Message, Restarts AMP Instance, Returns a List of connected users., This is used to change an Instance's Friendly Name and or Description. Retains…, Test AMP API calls with this function (+8 more)
 
-### Community 8 - "utils_permissions — guild_check & Cog Scaffolding"
+### Community 8 - "Cog_Template"
 Cohesion: 0.08
 Nodes (24): guild_check(), Use this before any commands to limit it to a certain guild usage., guilds, Reaction, Cog_Template, autocomplete, Client, command (+16 more)
 
@@ -172,7 +172,7 @@ Nodes (12): AMPInstance, DBUser, Base Function for AMP.addWhitelist, Base Functi
 Cohesion: 0.12
 Nodes (11): Database, Gets all Servers current in the DB, Returns all ServerIDs that the provided Discord Role ID gates Whitelist access…, Returns all ServerIDs that the provided Discord Role ID gates Donator access…, Gets all Regex Patterns from the RegexPatterns Table. Returns…, Gets all Whitelist Replies currently in the DB, Gets a Specific Banner Groups full information return…, Gets all BannerGroups Names/IDs returns `Banners[entry["ID"]] = entry["name"]` (+3 more)
 
-### Community 16 - "DB.py — Regex/Banner Row Helpers"
+### Community 16 - "._fetchone"
 Cohesion: 0.09
 Nodes (13): DBServer, Removes a entry RegexPatterns Table using either its `Name` or `ID`, Returns RegexPatterns Table Returns `row['ID'] = {'Name': row['Name'], 'Type':…, Update a Regex Pattern in the RegexPatterns Table using either its `Name` or…, Selects a Banner Group Table matching the `name` provided., Update a Banner Group, Removes a Banner Group., Add a Server to an existing Banner Group. (+5 more)
 
@@ -204,7 +204,7 @@ Nodes (24): **AMP Instance Instructions**, **Creating a Discord Bot Account**, *
 Cohesion: 0.12
 Nodes (8): AMPTemplate, AMPTemplateConsole, Sets the Permissions for Template Modules, Sends a message in a way to mimic that of in-game Chat Messages., Base Function for Broadcast Messages to AMP ADS, Base Function for AMP.addWhitelist, Base Function for AMP.getWhitelist, Base Function for AMP.removeWhitelist
 
-### Community 24 - "DB.py — Write Operations (Regex/Roles/Replies)"
+### Community 24 - "._execute"
 Cohesion: 0.11
 Nodes (10): dump_to_json(), Adds a entry to table RegexPatterns, else Updates a matching pattern., Adds a Discord Role to a Server's Whitelist Role gate list., Removes a Discord Role from a Server's Whitelist Role gate list., Adds a Discord Role to a Server's Donator Role gate list., Removes a Discord Role from a Server's Donator Role gate list., Adds a Whitelist Reply to the DB, Deletes a Whitelist Reply from the DB (+2 more)
 
@@ -224,11 +224,11 @@ Nodes (11): DB_Server, autocomplete, Choice, Client, command, Context, describe,
 Cohesion: 0.12
 Nodes (16): ADD:, ADD:, DELETE:, DELETE:, Examples, **How Console Filtering can affect your Regex Patterns**, **How to Manage your Bot Regex Patterns**, **How to Manage your Servers Regex Patterns** (+8 more)
 
-### Community 29 - "AMP_Handler & DBBanner (mixed init/config)"
+### Community 29 - "Edited_DB_Banner"
 Cohesion: 0.05
 Nodes (53): AMPHandler, Intializes the connection to AMP and creates AMP_Instance objects., Creates a list of Instance Names/DisplayName or Friendly Name., Builds a tokens-like namespace from environment variables (optionally loaded…, Validates the .env/environment-variable settings and 2FA., AMPs class Loader for specific server types., This checks if any new instances have been created since last check. If so,…, DBBanner (+45 more)
 
-### Community 30 - "AMP Role/Permission Bootstrap"
+### Community 30 - "._bootstrap_permissions"
 Cohesion: 0.20
 Nodes (6): Creates a AMP User role, Sets the AMP Users Role Membership, Sets the AMP Role permission Node eg `Core.RoleManagement.DeleteRoles`, Runs the Gatekeeper role/permission bootstrap state machine -- for the main AMP…, Creates the `Gatekeeper` role, Adds us to the Membership of that Role and sets…, Sets the Permissions Nodes for AMP Gatekeeper Role
 
@@ -276,7 +276,7 @@ Nodes (14): DiscordPlumbingMixin, Context, Member, Role, TextChannel, This is th
 Cohesion: 0.14
 Nodes (8): GameAPIMixin, Mojang/Steam profile lookup helpers, mixed into `botUtils` (see…, Converts an IGN to a UUID/Name Table `returns 'uuid'` else returns `None`,…, Resolves a Minecraft in-game name into profile info via the official Mojang…, Converts a Steam Name to a Steam ID returns `STEAM_0:0:2806383`, Returns `True` if a Steam Web API Key has been set via GATEKEEPER_STEAM_API_KEY, Parses a raw SteamID64, a full profile URL (`/profiles/<id>` or…, Resolves a SteamID64, profile URL, or vanity name into Steam profile info via…
 
-### Community 49 - "AMPInstance.__init__ Internals"
+### Community 49 - ".__init__"
 Cohesion: 0.18
 Nodes (6): AMPInitError, Applies perms/APIModule defaults (skipped if a subclass already set them before…, Sets the AMP API request headers, optionally attaches a default `AMPConsole`,…, Raised when `AMPInstance.__init__` cannot finish bringing up an instance (bad…, This is used to set/update the DB attributes for the AMP server, Wires up the logger/DB/AMPHandler handles and the basic per-instance state that…
 
@@ -308,11 +308,11 @@ Nodes (5): **Banner**, **Editing your Server Banner/Embed**, **How to Display yo
 Cohesion: 0.14
 Nodes (12): Open issues / pick up here next time, Production deployment log (Hetzner, `fullsendhub.de`), **Adding a Language**, Bugs surfaced while translating, Coverage — what is and isn't translated, Full text-quality audit (2026-08-09), German naturalness pass (2026-08-09), How it works (+4 more)
 
-### Community 70 - "permissions_cog — User Role Commands"
+### Community 70 - ".user_role"
 Cohesion: 0.14
 Nodes (11): Permissions, autocomplete, Choice, Client, Context, hybrid_command, Interaction, Member (+3 more)
 
-### Community 108 - "test_cog_imports.py — Stub Helpers"
+### Community 108 - "_Any"
 Cohesion: 0.13
 Nodes (9): _Any, _check_metadata(), main(), Walk the commands the module defined and enforce Discord's limits., Stands in for any object a cog pulls off a stubbed `core.*` module., Use the actual en.json so description-length checks test real strings., Fabricates any first-party module a cog imports, so only the cog itself is real., _real_translate() (+1 more)
 
@@ -324,17 +324,17 @@ Nodes (9): _Any, _check_metadata(), main(), Walk the commands the module defined
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `AMPInstance` connect `AMPInstance` to `Banner`, `utils_ui — Discord UI Views/Buttons`, `WhitelistSync`, `AMP_Handler — Startup & Instance Polling`, `Whitelist`, `AMP.py — Core API Call Methods`, `Banner_Generator`, `botUtils`, `botEmbeds`, `AMP_Handler & DBBanner (mixed init/config)`, `AMP Role/Permission Bootstrap`, `AMP.py`, `.getStatus`, `.check_GatekeeperRole_Permissions`, `AMPConsole`, `DiscordPlumbingMixin`, `AMPInstance.__init__ Internals`, `AMP_Tasks`, `.ConsoleMessage_withUpdate`, `.CurrentSessionHasPermission`?**
-  _High betweenness centrality (0.205) - this node is a cross-community bridge._
-- **Why does `role_check()` connect `amp_server_cog — AMP Server Commands` to `Banner`, `WhitelistSync`, `AMP_Handler — Startup & Instance Polling`, `permissions_cog — User Role Commands`, `Whitelist`, `utils_permissions — guild_check & Cog Scaffolding`, `Regex`, `async_rolecheck`, `DB_User`, `DB_Server`?**
-  _High betweenness centrality (0.138) - this node is a cross-community bridge._
-- **Why does `Database` connect `Database` to `DBConfig`, `AMP_Handler — Startup & Instance Polling`, `DB_Update`, `DB.py — Regex/Banner Row Helpers`, `DB.py — Write Operations (Regex/Roles/Replies)`, `DBServer`?**
-  _High betweenness centrality (0.072) - this node is a cross-community bridge._
+- **Why does `AMPInstance` connect `AMPInstance` to `Banner`, `.__init__`, `WhitelistSync`, `DB.py`, `Whitelist`, `.Login`, `Banner_Generator`, `botUtils`, `botEmbeds`, `Edited_DB_Banner`, `._bootstrap_permissions`, `AMP.py`, `.getStatus`, `.check_GatekeeperRole_Permissions`, `AMPConsole`, `DiscordPlumbingMixin`, `.__init__`, `AMP_Tasks`, `.ConsoleMessage_withUpdate`, `.CurrentSessionHasPermission`?**
+  _High betweenness centrality (0.237) - this node is a cross-community bridge._
+- **Why does `role_check()` connect `role_check` to `Banner`, `WhitelistSync`, `DB.py`, `.user_role`, `Whitelist`, `Cog_Template`, `Regex`, `async_rolecheck`, `DB_User`, `DB_Server`?**
+  _High betweenness centrality (0.150) - this node is a cross-community bridge._
+- **Why does `Database` connect `Database` to `DBConfig`, `DB.py`, `DB_Update`, `._fetchone`, `._execute`, `DBServer`?**
+  _High betweenness centrality (0.071) - this node is a cross-community bridge._
 - **Are the 9 inferred relationships involving `AMPInstance` (e.g. with `AMP_Tasks` and `AMPHandler`) actually correct?**
   _`AMPInstance` has 9 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 11 inferred relationships involving `Edited_DB_Banner` (e.g. with `Copy_To_All_Banner_Button` and `Copy_To_Banner_Button`) actually correct?**
   _`Edited_DB_Banner` has 11 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `**Interacting with your AMP Server via Discord Channels**:`, `<u>AMP Server Banner Commands</u>:`, `<u>AMP Server Chat Commands</u>:` to the rest of the system?**
   _110 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `amp_server_cog — AMP Server Commands` be split into smaller, more focused modules?**
+- **Should `role_check` be split into smaller, more focused modules?**
   _Cohesion score 0.06338185890257558 - nodes in this community are weakly interconnected._

@@ -113,11 +113,14 @@ class Whitelist(commands.Cog):
                 self.logger.info(f'Removed {member.name} from Whitelist Wait List.')
 
         db_user: DB.DBUser | None = self.DB.GetUser(value=str(member.id))
-        if db_user != None and db_user.MC_IngameName != None:
+        if db_user != None:
             for instance_id, amp_instance in list(self.AMPHandler.AMP_Instances.items()):
-                if amp_instance.Module == 'Minecraft':
+                if amp_instance.Module == 'Minecraft' and db_user.MC_IngameName != None:
                     self.logger.info(f"Removing {db_user.MC_IngameName} from {amp_instance.FriendlyName} Whitelist.")
                     amp_instance.removeWhitelist(in_gamename=db_user.MC_IngameName)
+                elif getattr(amp_instance, 'APIModule', None) == 'Ark' and db_user.SteamID != None:
+                    self.logger.info(f"Removing {db_user.SteamID} from {amp_instance.FriendlyName} Whitelist.")
+                    amp_instance.removeWhitelist(in_gamename=db_user.SteamID)
 
     # Server Whitelist Commands ------------------------------------------------------------
 

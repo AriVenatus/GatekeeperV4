@@ -56,7 +56,7 @@ This automates Whitelisting entirely around Discord Role membership - no request
 ### Behavior:
 - Gaining a configured Role Whitelists the player automatically, as long as they have a linked identity.
 - Losing the Role, or leaving the Guild, removes them from that Server's Whitelist, unless another qualifying Role (see above) keeps them eligible.
-- **ATTENTION**: Today this is fully functional for **Minecraft** Servers (the only Module with real Whitelist file support). Other Server types safely no-op until their Modules add real Whitelist support - Sync won't error, it just won't have anything to actually add/remove yet.
+- **ATTENTION**: Today this is fully functional for **Minecraft** (IGN/UUID-based) and **ARK: Survival Evolved** (SteamID64-based, via `/link steam`) Servers - the only Modules with real Whitelist file support. See [ARK](#ark-survival-evolved) below for a caveat specific to that Module. Other Server types safely no-op until their Modules add real Whitelist support - Sync won't error, it just won't have anything to actually add/remove yet.
 
 ## **Donator Roles**
 ___
@@ -72,8 +72,15 @@ Donator Roles are a separate, dedicated Role list per Server that works through 
 ### Behavior:
 Identical to Whitelist Role Sync above - gaining a Donator Role Whitelists the player automatically (once linked); losing it removes them, unless another qualifying Role (Whitelist Sync or Donator) still gates that Server.
 
+## **ARK: Survival Evolved**
+___
+ARK's Whitelist works exactly like Minecraft's everywhere above - `/whitelist_request`, `/server whitelist add/remove`, and Discord Role Whitelist Sync all work the same way. The only difference is player identity: ARK is gated by **SteamID64**, not IGN, so link via `/link steam` (see [Account Linking](#account-linking)) rather than `/link minecraft`.
+
+- **ATTENTION**: The ARK Server itself must be started with the `-exclusivejoin` launch parameter (set once by Staff in the AMP Instance's Application Settings, under Additional command line parameters) for Whitelisting to actually restrict who can join. Without it, Gatekeeper's whitelist add/remove commands still run and update the Server's Whitelist file, they just have **no access-control effect** - anyone can join regardless of Whitelist state. Gatekeeper cannot set this flag for you.
+- **⚠ Needs live verification before relying on it in production** - the underlying file path/command behavior was established from community documentation, not a live-tested AMP+ARK instance. See [CLAUDE.md](/CLAUDE.md)'s "ARK whitelist enforcement needs live verification before production use" section.
+
 ## **Troubleshooting**
 ___
-- **A player isn't getting auto-Whitelisted after gaining their Role**: Confirm `/whitelist_sync enabled` is `true`, that they've run `/link` for the correct game, and that the Server is running the Minecraft Module (see above). This applies equally to Whitelist Sync Roles and Donator Roles.
+- **A player isn't getting auto-Whitelisted after gaining their Role**: Confirm `/whitelist_sync enabled` is `true`, that they've run `/link` for the correct game, and that the Server is running the Minecraft or ARK Module (see above). This applies equally to Whitelist Sync Roles and Donator Roles.
 - **A player lost access unexpectedly**: Check whether they lost their *last* qualifying Role (Whitelist Sync or Donator - losing just one of several is fine), left and rejoined the Guild, or ran `/link remove`.
 - **Custom Permissions**: All of the commands above respect Gatekeeper's permission system - see [Permissions](/docs/PERMISSIONS.md) if you want finer-grained control over who can use them.

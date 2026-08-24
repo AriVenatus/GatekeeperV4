@@ -18,6 +18,7 @@ __**Update 4.11.0**__
     - Removed dead code and 10 unused dependencies; standardized the Python requirement on 3.13, now actually enforced at startup (the existing check was dead code that could never fire).
 - Added the project's first test, `tests/test_cog_imports.py` — run `python3 tests/test_cog_imports.py` before restarting to catch import-time breakage (invalid cog metadata, reserved method names, over-long command descriptions, stray files in `cogs/`) while the bot is still running.
 - Lint cleanup: ruff findings 1051 -> 156, mostly by correcting 108 `x: str = None` annotations that hid nullability, and by switching off the `ANN` rule family as a deliberate decision (reasoning recorded in `pyproject.toml`).
+- Added a `modules/Ark/` game module for ARK: Survival Evolved, with a real SteamID64-based Whitelist (identity via the existing `/link steam`, enforced live over AMP RCON console commands) and Discord\<->in-game chat bridging, alongside the generic Server-Status support every AMP-connected game already gets. Whitelisting only actually restricts access when the Instance is started with the `-exclusivejoin` launch parameter - see `docs/WHITELIST.md` and `CLAUDE.md`.
 
 __**Update 4.10.0**__
 - Added English/German localization: a global (not per-user), admin-controlled language switch via `/bot language`, which retranslates the entire command tree (descriptions, parameters, choices) and every bot-authored message live, no restart required.

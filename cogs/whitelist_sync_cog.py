@@ -158,6 +158,27 @@ class WhitelistSync(commands.Cog):
             if amp_server != None and amp_server.Module == 'Minecraft':
                 await self._sync_remove(context.author, server_id)
 
+    async def _cleanup_steam_whitelist(self, context: commands.Context):
+        """Removes `db_user` from any role-synced SteamID-keyed Whitelist before their linked SteamID is cleared via `/link remove`.
+        Must be called *before* nulling `SteamID`, since removal still needs the old identity to know who to remove."""
+        if not self.DBConfig.GetSetting('Whitelist_Role_Sync'):
+            return
+
+        if not isinstance(context.author, discord.Member):
+            return
+
+        server_ids = set()
+        for role in context.author.roles:
+            server_ids.update(self.DB.GetServersByWhitelistRole(role.id))
+            server_ids.update(self.DB.GetServersByDonatorRole(role.id))
+
+        for server_id in server_ids:
+            amp_server = self._get_amp_instance_by_server_id(server_id)
+            # Only modules that key Whitelist membership off SteamID (currently just ARK) need cleanup here;
+            # every other module's check_Whitelist/removeWhitelist is a no-op regardless of identity.
+            if amp_server != None and getattr(amp_server, 'APIModule', None) == 'Ark':
+                await self._sync_remove(context.author, server_id)
+
     # Discord Listener Events -----------------------------------------------------------------------------------------------------------------
 
     @commands.Cog.listener('on_member_update')
@@ -321,6 +342,8 @@ class WhitelistSync(commands.Cog):
             if db_user.SteamID == None:
                 return await context.send(i18n.t('messages.link.remove.no_steam'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
+            # Must run before nulling the field below; removal still needs the old SteamID to know who to remove.
+            await self._cleanup_steam_whitelist(context)
             db_user.SteamID = None
             await context.send(i18n.t('messages.link.remove.removed_steam'), ephemeral=True, delete_after=self._client.Message_Timeout)
 
