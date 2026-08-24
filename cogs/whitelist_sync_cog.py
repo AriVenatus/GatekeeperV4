@@ -97,8 +97,10 @@ class WhitelistSync(commands.Cog):
             return
 
         if whitelisted == True:
-            amp_server.addWhitelist(db_user=db_user)
-            self.logger.command(f'Whitelist Role Sync: Whitelisted {member.name} on {amp_server.FriendlyName}')
+            if amp_server.addWhitelist(db_user=db_user):
+                self.logger.command(f'Whitelist Role Sync: Whitelisted {member.name} on {amp_server.FriendlyName}')
+            else:
+                self.logger.error(f'Whitelist Role Sync: Failed to Whitelist {member.name} on {amp_server.FriendlyName} -- the AMP Console command did not go through (check the Gatekeeper AMP Role\'s permissions).')
 
     async def _sync_remove(self, member: discord.Member, ServerID: int):
         """Removes `member` from the Whitelist on the AMP Instance tied to `ServerID`, if they are currently on it."""
@@ -117,8 +119,10 @@ class WhitelistSync(commands.Cog):
             return
 
         if whitelisted == None:
-            amp_server.removeWhitelist(db_user=db_user)
-            self.logger.command(f'Whitelist Role Sync: Removed {member.name} from the Whitelist on {amp_server.FriendlyName}')
+            if amp_server.removeWhitelist(db_user=db_user):
+                self.logger.command(f'Whitelist Role Sync: Removed {member.name} from the Whitelist on {amp_server.FriendlyName}')
+            else:
+                self.logger.error(f'Whitelist Role Sync: Failed to remove {member.name} from the Whitelist on {amp_server.FriendlyName} -- the AMP Console command did not go through (check the Gatekeeper AMP Role\'s permissions).')
 
     async def _sync_role_members_now(self, role: discord.Role, ServerID: int):
         """Immediately syncs every current holder of `role` against `ServerID`'s Whitelist.

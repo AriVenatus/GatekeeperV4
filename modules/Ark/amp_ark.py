@@ -35,25 +35,28 @@ class AMPArk(AMP.AMPInstance):
 
         return value.startswith('7656119')
 
-    def addWhitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None):
-        """Adds a User to the Whitelist *Supports SteamID64*"""
+    def addWhitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None) -> bool:
+        """Adds a User to the Whitelist *Supports SteamID64*. Returns `True` only if the
+        Console command actually reached the server (eg. `False` on a missing
+        Core.AppManagement.SendConsoleInput permission)."""
         steamid = in_gamename if db_user is None else db_user.SteamID
         if not self._is_valid_steamid64(steamid):
             return False
 
         self.Login()
-        self.ConsoleMessage(f'AllowPlayerToJoinNoCheck {steamid}')
-        return True
+        result = self.ConsoleMessage(f'AllowPlayerToJoinNoCheck {steamid}')
+        return bool(result)
 
-    def removeWhitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None):
-        """Removes a User from the Whitelist *Supports SteamID64*"""
+    def removeWhitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None) -> bool:
+        """Removes a User from the Whitelist *Supports SteamID64*. Returns `True` only if the
+        Console command actually reached the server."""
         steamid = in_gamename if db_user is None else db_user.SteamID
         if not self._is_valid_steamid64(steamid):
             return False
 
         self.Login()
-        self.ConsoleMessage(f'DisallowPlayerToJoinNoCheck {steamid}')
-        return True
+        result = self.ConsoleMessage(f'DisallowPlayerToJoinNoCheck {steamid}')
+        return bool(result)
 
     def getWhitelist(self) -> list[str]:
         """Checks the Whitelist File for Ark Users (SteamID64 entries)"""

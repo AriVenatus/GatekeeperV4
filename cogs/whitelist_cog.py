@@ -117,10 +117,12 @@ class Whitelist(commands.Cog):
             for instance_id, amp_instance in list(self.AMPHandler.AMP_Instances.items()):
                 if amp_instance.Module == 'Minecraft' and db_user.MC_IngameName != None:
                     self.logger.info(f"Removing {db_user.MC_IngameName} from {amp_instance.FriendlyName} Whitelist.")
-                    amp_instance.removeWhitelist(in_gamename=db_user.MC_IngameName)
+                    if not amp_instance.removeWhitelist(in_gamename=db_user.MC_IngameName):
+                        self.logger.error(f"Failed to remove {db_user.MC_IngameName} from {amp_instance.FriendlyName} Whitelist -- the AMP Console command did not go through.")
                 elif getattr(amp_instance, 'APIModule', None) == 'Ark' and db_user.SteamID != None:
                     self.logger.info(f"Removing {db_user.SteamID} from {amp_instance.FriendlyName} Whitelist.")
-                    amp_instance.removeWhitelist(in_gamename=db_user.SteamID)
+                    if not amp_instance.removeWhitelist(in_gamename=db_user.SteamID):
+                        self.logger.error(f"Failed to remove {db_user.SteamID} from {amp_instance.FriendlyName} Whitelist -- the AMP Console command did not go through.")
 
     # Server Whitelist Commands ------------------------------------------------------------
 
@@ -213,8 +215,10 @@ class Whitelist(commands.Cog):
             server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
             if whitelist:
                 canonical_name = amp_server.resolve_canonical_IGN(name)
-                amp_server.addWhitelist(in_gamename=canonical_name)
-                await context.send(i18n.t('messages.whitelist.add.success', server_name=server_name, name=canonical_name), ephemeral=True, delete_after=self._client.Message_Timeout)
+                if amp_server.addWhitelist(in_gamename=canonical_name):
+                    await context.send(i18n.t('messages.whitelist.add.success', server_name=server_name, name=canonical_name), ephemeral=True, delete_after=self._client.Message_Timeout)
+                else:
+                    await context.send(i18n.t('messages.whitelist.add.console_failed', server_name=server_name, name=canonical_name), ephemeral=True, delete_after=self._client.Message_Timeout)
             if whitelist == False:
                 await context.send(i18n.t('messages.whitelist.uuid_not_found', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
             if whitelist == None:
@@ -239,8 +243,10 @@ class Whitelist(commands.Cog):
                 await context.send(i18n.t('messages.whitelist.uuid_not_found', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
             if whitelist == None:
                 canonical_name = amp_server.resolve_canonical_IGN(name)
-                amp_server.removeWhitelist(in_gamename=canonical_name)
-                await context.send(i18n.t('messages.whitelist.remove.success', server_name=server_name, name=canonical_name), ephemeral=True, delete_after=self._client.Message_Timeout)
+                if amp_server.removeWhitelist(in_gamename=canonical_name):
+                    await context.send(i18n.t('messages.whitelist.remove.success', server_name=server_name, name=canonical_name), ephemeral=True, delete_after=self._client.Message_Timeout)
+                else:
+                    await context.send(i18n.t('messages.whitelist.remove.console_failed', server_name=server_name, name=canonical_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     # All DBConfig Whitelist Specific function settings --------------------------------------------------------------
     @commands.hybrid_group(name='whitelist_reply', description=i18n.t('commands.bot.whitelist_reply.description'))
@@ -381,7 +387,11 @@ class Whitelist(commands.Cog):
             if wait_time_value == 0:
                 # Remove them from the waitlist
                 self._client.Whitelist_wait_list.pop(context.message.id)
-                server.addWhitelist(db_user=db_user)
+
+                if not server.addWhitelist(db_user=db_user):
+                    await message.edit(content=i18n.t('messages.whitelist_request.console_failed', author_name=context.author.name, server_name=db_server.FriendlyName))
+                    self.logger.error(f'Failed to Whitelist {context.author.name} on {server.FriendlyName} -- the AMP Console command did not go through.')
+                    return
 
                 # Lets get all the custom Whitelist Replies in the DB and randomly pick one.
                 if len(self.DB.GetAllWhitelistReplies()) >= 1:
@@ -440,6 +450,12 @@ class Whitelist(commands.Cog):
                 if cur_amp_server.check_Whitelist(cur_db_user):
                     self.logger.dev(f'Whitelist Request time has come up; Attempting to Whitelist {cur_message_context.author.name} on {db_server.FriendlyName}')
 
+                    if not cur_amp_server.addWhitelist(db_user=cur_db_user):
+                        await cur_message_context.channel.send(content=i18n.t('messages.whitelist_request.waitlist_console_failed', mention=cur_message_context.author.mention, server_name=db_server.FriendlyName), reference=cur_message, delete_after=self._client.Message_Timeout)
+                        self.logger.error(f'Failed to Whitelist {cur_message_context.author.name} on {cur_amp_server.FriendlyName} -- the AMP Console command did not go through.')
+                        self._client.Whitelist_wait_list.pop(key)
+                        continue
+
                     # This handles all the Discord Role stuff.
                     if db_server != None and db_server.Discord_Role != None:
                         discord_role = self.uBot.role_parse(db_server.Discord_Role, cur_message_context, cur_message_context.guild.id)
@@ -454,7 +470,6 @@ class Whitelist(commands.Cog):
                     else:
                         await cur_message_context.channel.send(content=i18n.t('messages.whitelist_request.waitlist_success_no_reply', mention=cur_message_context.author.mention, server_name=db_server.FriendlyName), reference=cur_message, delete_after=self._client.Message_Timeout)
 
-                    cur_amp_server.addWhitelist(db_user=cur_db_user)
                     self.logger.command(f'Whitelisting {cur_message_context.author.name} on {cur_amp_server.FriendlyName}')
                     self._client.Whitelist_wait_list.pop(key)
 

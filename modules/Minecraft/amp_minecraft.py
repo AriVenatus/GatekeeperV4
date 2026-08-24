@@ -75,15 +75,20 @@ class AMPMinecraft(AMP.AMPInstance):
 
         return minecraft_user[0]['name']
 
-    def addWhitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None):
-        """Adds a User to the Whitelist File *Supports IGN*"""
+    def addWhitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None) -> bool:
+        """Adds a User to the Whitelist File *Supports IGN*. Returns `True` only if the
+        Console command actually reached the server (eg. `False` on a missing
+        Core.AppManagement.SendConsoleInput permission)."""
         self.Login()
-        self.ConsoleMessage(f'whitelist add {in_gamename if db_user == None else db_user.MC_IngameName}')
+        result = self.ConsoleMessage(f'whitelist add {in_gamename if db_user == None else db_user.MC_IngameName}')
+        return bool(result)
 
-    def removeWhitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None):
-        """Removes a User from the Whitelist File *Supports IGN*"""
+    def removeWhitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None) -> bool:
+        """Removes a User from the Whitelist File *Supports IGN*. Returns `True` only if the
+        Console command actually reached the server."""
         self.Login()
-        self.ConsoleMessage(f'whitelist remove {in_gamename if db_user == None else db_user.MC_IngameName}')
+        result = self.ConsoleMessage(f'whitelist remove {in_gamename if db_user == None else db_user.MC_IngameName}')
+        return bool(result)
 
     def getWhitelist(self) -> dict[str, str]:
         """Checks the Whitelist File for Minecraft Users"""

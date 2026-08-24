@@ -721,11 +721,13 @@ class AMPInstance:
         return update
 
     def ConsoleMessage(self, msg: str):
-        """Basic Console Message"""
+        """Basic Console Message. Returns `CallAPI()`'s result (falsy on failure -- e.g. a
+        missing Core.AppManagement.SendConsoleInput permission) so callers that need to know
+        whether the command actually reached the server can check it, instead of assuming
+        success just because the call was made."""
         self.Login()
         parameters = {"message": msg}
-        self.CallAPI("Core/SendConsoleMessage", parameters)
-        return
+        return self.CallAPI("Core/SendConsoleMessage", parameters)
 
     def StartInstance(self):
         """Starts AMP Instance"""

@@ -433,11 +433,13 @@
   "commands.server.whitelist.description": "Server-Whitelist-Befehle.",
   "commands.server.whitelist.add.description": "Fügt einen Nutzer zur Server-Whitelist hinzu",
   "messages.whitelist.add.success": "**{server_name}**: `{name}` gewhitelistet",
+  "messages.whitelist.add.console_failed": "**{server_name}**: Der Whitelist-Hinzufügen-Konsolenbefehl für `{name}` ist nicht durchgekommen -- prüfe die Berechtigungen der Gatekeeper-AMP-Rolle (Core.AppManagement.SendConsoleInput).",
   "messages.whitelist.uuid_not_found": "Ich konnte die UUID von **{name}** nicht finden",
   "messages.whitelist.add.already": "Hoppla, dieser Nutzer scheint bereits gewhitelistet zu sein! **{name}** ist startklar~",
   "commands.server.whitelist.remove.description": "Entfernt einen Nutzer von der Server-Whitelist",
   "messages.whitelist.remove.not_whitelisted": "Hoppla, dieser Nutzer scheint nicht gewhitelistet zu sein! **{name}** ist hier nicht~",
   "messages.whitelist.remove.success": "**{server_name}**: `{name}` von der Whitelist entfernt",
+  "messages.whitelist.remove.console_failed": "**{server_name}**: Der Whitelist-Entfernen-Konsolenbefehl für `{name}` ist nicht durchgekommen -- prüfe die Berechtigungen der Gatekeeper-AMP-Rolle (Core.AppManagement.SendConsoleInput).",
   "commands.bot.whitelist_reply.description": "Befehle für individuelle Whitelist-Antwortnachrichten.",
   "commands.bot.whitelist_reply.add.description": "Fügt eine Antwort hinzu, die der Bot bei Whitelist-Anfragen verwendet",
   "messages.whitelist_reply.add.success": "Juhu! Ich kann jetzt eine neue Antwort verwenden! Wie sieht sie aus?!",
@@ -469,6 +471,8 @@
   "messages.whitelist_request.awaiting_approval": "Deine Whitelist-Anfrage wurde angenommen und wartet auf __Genehmigung durch das Team__. \n",
   "messages.whitelist_request.awaiting_approval_with_timer": "Deine Whitelist-Anfrage wurde angenommen und wartet auf __Genehmigung durch das Team__. \n> Falls bis {display_time} keine Genehmigung erfolgt, wird deine Anfrage automatisch genehmigt.",
   "messages.whitelist_request.success_no_reply": "Alles bereit! Wir haben `{author_name}` auf **{server_name}** gewhitelistet",
+  "messages.whitelist_request.console_failed": "Wir haben versucht, `{author_name}` auf **{server_name}** zu whitelisten, aber der Konsolenbefehl ist nicht durchgekommen -- bitte wende dich ans Team, oder prüfe die Berechtigungen der Gatekeeper-AMP-Rolle (Core.AppManagement.SendConsoleInput).",
   "messages.whitelist_request.waitlist_success_no_reply": "Alles bereit! Wir haben {mention} auf **{server_name}** gewhitelistet ",
+  "messages.whitelist_request.waitlist_console_failed": "Wir haben versucht, {mention} auf **{server_name}** zu whitelisten, aber der Konsolenbefehl ist nicht durchgekommen -- bitte wende dich ans Team, oder prüfe die Berechtigungen der Gatekeeper-AMP-Rolle (Core.AppManagement.SendConsoleInput).",
   "messages.whitelist_request.staff_channel_notice": "Whitelist-Anfrage von `{author_name}` für Server: **{server_name}**..."
 }
