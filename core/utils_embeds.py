@@ -33,6 +33,16 @@ class botEmbeds:
         copy, so it must stay fixed and not change with the active language."""
         return f'`{bool(value)}`'
 
+    def _yes_no_str(self, value) -> str:
+        """Localized Yes/No rendering for a raw internal boolean. Deliberately scoped to
+        `server_display_embed`'s Info field ONLY -- not shared via `_bool_str()`, and uses
+        dedicated `common.bool.yes`/`common.bool.no` keys, not `common.bool.true`/
+        `common.bool.false` (those stay fixed literals reserved for Choice-dropdown-label
+        reuse elsewhere). See CLAUDE.md's i18n notes for why this is intentionally scoped
+        rather than applied to every `_bool_str()` call site."""
+        key = 'common.bool.yes' if bool(value) else 'common.bool.no'
+        return f'`{i18n.t(key)}`'
+
     def _filter_type_str(self, value) -> str:
         """Console_Filtered_Type: 0 = Blacklist, 1 = Whitelist."""
         key = 'embeds.common.filter_type.whitelist' if bool(value) else 'embeds.common.filter_type.blacklist'
@@ -168,7 +178,7 @@ class botEmbeds:
             status_value = f"{i18n.t('embeds.server_display.instance_status_label')} {instance_status}\n{i18n.t('common.embed.dedicated_server_status')} {dedicated_status}"
             embed.add_field(name=i18n.t('embeds.server_display.status_label'), value=status_value, inline=False)
 
-            info_value = f"{i18n.t('common.embed.host_bold')} `{db_server.Host}`\n{i18n.t('embeds.server_display.donator')} {self._bool_str(db_server.Donator)}\n{i18n.t('embeds.server_display.whitelist_open')} {self._bool_str(db_server.Whitelist)}"
+            info_value = f"{i18n.t('common.embed.host_bold')} `{db_server.Host}`\n{i18n.t('embeds.server_display.donator')} {self._yes_no_str(db_server.Donator)}\n{i18n.t('embeds.server_display.whitelist_open')} {self._yes_no_str(db_server.Whitelist)}"
             embed.add_field(name=i18n.t('embeds.server_display.info_label'), value=info_value, inline=True)
 
             if Users != None:
