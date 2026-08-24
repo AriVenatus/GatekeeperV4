@@ -91,6 +91,7 @@
   "embeds.bot_settings.banner_type_embeds": "Discord Embeds",
   "embeds.bot_settings.banner_type_images": "Eigene Banner-Bilder",
   "embeds.bot_settings.banner_auto_update": "Banner Auto-Update:",
+  "embeds.bot_settings.whitelist_role_sync_interval": "Whitelist-Sync-Intervall:",
   "embeds.bot_settings.db_version": "Datenbank-Version:",
   "embeds.bot_settings.bot_version": "Gatekeeper-Version:",
   "embeds.bot_settings.guild_id": "Server-ID (Guild):",

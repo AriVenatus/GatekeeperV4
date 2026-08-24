@@ -261,7 +261,8 @@ class botEmbeds:
                   "message_timeout",
                   "banner_type",
                   "banner_auto_update",
-                  "whitelist_request_channel"]
+                  "whitelist_request_channel",
+                  "whitelist_role_sync_interval"]
 
         # Take our list and store it in a seperate list and lowercase the strings.
         db_config_settingslist = [x.lower() for x in self.DBConfig.GetSettingList()]
@@ -298,6 +299,11 @@ class botEmbeds:
 
             elif key == 'banner_auto_update':
                 embed.add_field(name=i18n.t('embeds.bot_settings.banner_auto_update'), value=self._bool_str(value == 1), inline=True)
+
+            elif key == 'whitelist_role_sync_interval':
+                # A real minute count, not a boolean -- the generic int-as-bool fallback below
+                # would otherwise render any nonzero value as `True`.
+                embed.add_field(name=i18n.t('embeds.bot_settings.whitelist_role_sync_interval'), value=f'`{i18n.t_plural("common.minutes", count=int(value))}`', inline=True)
 
             elif key == 'db_version':
                 embed.add_field(name=i18n.t('embeds.bot_settings.db_version'), value=f'`{value}`', inline=True)

@@ -120,6 +120,18 @@ class WhitelistSync(commands.Cog):
             amp_server.removeWhitelist(db_user=db_user)
             self.logger.command(f'Whitelist Role Sync: Removed {member.name} from the Whitelist on {amp_server.FriendlyName}')
 
+    async def _sync_role_members_now(self, role: discord.Role, ServerID: int):
+        """Immediately syncs every current holder of `role` against `ServerID`'s Whitelist.
+        Called right after a Role is newly registered as a Whitelist-Sync or Donator gate --
+        without this, someone who already held the Role before it became a gate would only
+        get picked up by the next periodic `whitelist_role_sync_reconciliation` tick (up to
+        `Whitelist_Role_Sync_Interval` minutes later), not immediately."""
+        if not self.DBConfig.GetSetting('Whitelist_Role_Sync'):
+            return
+
+        for member in role.members:
+            await self._sync_add(member, ServerID)
+
     def _member_still_qualifies(self, member: discord.Member, ServerID: int) -> bool:
         """Returns True if `member` currently holds ANY Role -- Whitelist-Sync OR Donator, either
         category counts -- that still gates Whitelist access for `ServerID`. Used to decide whether
@@ -406,6 +418,7 @@ class WhitelistSync(commands.Cog):
                 return await context.send(i18n.t('messages.whitelist_role.add.already_gating', role_name=role.name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
             db_server.AddWhitelistRole(role.id)
+            await self._sync_role_members_now(role, db_server.ID)
             await context.send(i18n.t('messages.whitelist_role.add.success', role_name=role.name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @commands.hybrid_command(name='whitelist_role_remove', description=i18n.t('commands.server.settings.whitelist_role_remove.description'))
@@ -472,6 +485,7 @@ class WhitelistSync(commands.Cog):
                 return await context.send(i18n.t('messages.donator_role.add.already_gating', role_name=role.name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
             db_server.AddDonatorRole(role.id)
+            await self._sync_role_members_now(role, db_server.ID)
             await context.send(i18n.t('messages.donator_role.add.success', role_name=role.name, server_name=server_name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     @commands.hybrid_command(name='donator_role_remove', description=i18n.t('commands.server.settings.donator_role_remove.description'))
