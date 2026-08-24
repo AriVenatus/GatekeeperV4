@@ -241,6 +241,7 @@ class Database:
         self._AddConfig("Whitelist_Request_Channel", None)
         self._AddConfig("Whitelist_Role_Sync", False)
         self._AddConfig("Whitelist_Role_Sync_Interval", 15)
+        self._AddConfig("Whitelist_Sync_Notify_Channel", None)
         self._AddConfig("Banner_Auto_Update", True)
         self._AddConfig("Banner_Type", 0)  # 0 = Discord embeds | 1 = Custom Banner Images
         self._AddConfig("Bot_Version", None)

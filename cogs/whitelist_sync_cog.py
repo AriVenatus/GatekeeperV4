@@ -90,17 +90,34 @@ class WhitelistSync(commands.Cog):
 
         if whitelisted == False:
             server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
-            try:
-                await member.send(i18n.t('messages.whitelist_sync.dm_need_link', server_name=server_name))
-            except discord.Forbidden:
-                pass
+            self.logger.info(f'Whitelist Role Sync: {member.name} qualifies for the Whitelist on {server_name} but has no linked game account -- skipping (no DM sent).')
             return
 
         if whitelisted == True:
             if amp_server.addWhitelist(db_user=db_user):
                 self.logger.command(f'Whitelist Role Sync: Whitelisted {member.name} on {amp_server.FriendlyName}')
+                await self._notify_whitelisted(member, amp_server)
             else:
                 self.logger.error(f'Whitelist Role Sync: Failed to Whitelist {member.name} on {amp_server.FriendlyName} -- the AMP Console command did not go through (check the Gatekeeper AMP Role\'s permissions).')
+
+    async def _notify_whitelisted(self, member: discord.Member, amp_server: AMP_Handler.AMP.AMPInstance):
+        """Pings `member` in the configured Whitelist Sync notify channel once they've actually
+        been Whitelisted. No-op (just a debug log line) if no channel is configured or it can't
+        be found -- this is a nice-to-have ping, not something that should ever raise."""
+        channel_id = self.DBConfig.GetSetting('Whitelist_Sync_Notify_Channel')
+        if not channel_id:
+            return
+
+        channel = self._client.get_channel(channel_id)
+        if channel is None:
+            self.logger.dev(f'Whitelist Role Sync: Configured notify channel {channel_id} could not be found; skipping ping for {member.name}.')
+            return
+
+        server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
+        try:
+            await channel.send(i18n.t('messages.whitelist_sync.notify_whitelisted', mention=member.mention, server_name=server_name))
+        except discord.Forbidden:
+            self.logger.error(f'Whitelist Role Sync: Missing permission to post in the configured notify channel ({channel_id}).')
 
     async def _sync_remove(self, member: discord.Member, ServerID: int):
         """Removes `member` from the Whitelist on the AMP Instance tied to `ServerID`, if they are currently on it."""
@@ -575,6 +592,14 @@ class WhitelistSync(commands.Cog):
             self.whitelist_role_sync_reconciliation.change_interval(minutes=minutes)
         interval_str = i18n.t_plural('common.minutes', count=minutes)
         await context.send(i18n.t('messages.whitelist_sync.interval.result', interval=interval_str), ephemeral=True, delete_after=self._client.Message_Timeout)
+
+    @whitelist_sync_settings.command(name='channel', description=i18n.t('commands.whitelist_sync.channel.description'))
+    @utils_permissions.role_check()
+    async def whitelist_sync_channel(self, context: commands.Context, channel: discord.abc.GuildChannel):
+        self.logger.command(f'{context.author.name} used Whitelist Sync Channel')
+
+        self.DBConfig.SetSetting('Whitelist_Sync_Notify_Channel', channel.id)
+        await context.send(i18n.t('messages.whitelist_sync.channel.success', channel_name=channel.name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
 
 async def setup(client: commands.Bot):

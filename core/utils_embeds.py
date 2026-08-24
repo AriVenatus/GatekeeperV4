@@ -262,7 +262,8 @@ class botEmbeds:
                   "banner_type",
                   "banner_auto_update",
                   "whitelist_request_channel",
-                  "whitelist_role_sync_interval"]
+                  "whitelist_role_sync_interval",
+                  "whitelist_sync_notify_channel"]
 
         # Take our list and store it in a seperate list and lowercase the strings.
         db_config_settingslist = [x.lower() for x in self.DBConfig.GetSettingList()]
@@ -279,6 +280,14 @@ class botEmbeds:
                     value = context.guild.get_channel(value)
 
                 embed.add_field(name=i18n.t('embeds.bot_settings.whitelist_request_channel'), value=f'`{value.name.title() if value != None else i18n.t("common.embed.not_set")}`', inline=False)
+
+            elif key == 'whitelist_sync_notify_channel':
+                # A Channel ID, not a boolean -- same reasoning as whitelist_role_sync_interval
+                # above, needs its own branch instead of falling into the generic int fallback.
+                if value != 'None':
+                    value = context.guild.get_channel(value)
+
+                embed.add_field(name=i18n.t('embeds.bot_settings.whitelist_sync_notify_channel'), value=f'`{value.name.title() if value != None else i18n.t("common.embed.not_set")}`', inline=False)
 
             elif key == 'message_timeout':
                 embed.add_field(name=i18n.t('embeds.bot_settings.message_timeout'), value=f'`{i18n.t("embeds.bot_settings.seconds", value=value)}`', inline=False)

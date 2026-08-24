@@ -46,15 +46,16 @@ ___
 This automates Whitelisting entirely around Discord Role membership - no request needed. A player gains a configured Role, they're Whitelisted; they lose it (or leave the Guild), they're removed - **unless they still hold some other configured Role (Whitelist Sync or Donator, either counts) that also gates that same Server**, in which case they correctly stay Whitelisted.
 
 ### Setup:
-1. Have players link their game account first via `/link minecraft` or `/link steam` (see above) - Sync can't act on a player without a linked identity, it'll just DM them asking to `/link` first.
+1. Have players link their game account first via `/link minecraft` or `/link steam` (see above) - Sync can't act on a player without a linked identity, it silently skips them (logged, no DM sent) until they `/link`.
 2. Use `/server settings whitelist_role_add (server, role)` to pick which Discord Role(s) grant access to a Server.
     - **TIP**: A Server can have multiple gate Roles (any one of them is enough), and the same Role can gate multiple Servers.
     - Manage the list with `/server settings whitelist_role_remove` and `/server settings whitelist_role_list`.
 3. Turn it on with `/whitelist_sync enabled true`.
 4. *(Optional)* Adjust `/whitelist_sync interval (minutes)` - this controls a safety-net reconciliation pass (default `15` minutes) that re-checks every configured Role against the live Whitelist, catching anything missed while the bot was offline.
+5. *(Optional)* Set `/whitelist_sync channel (channel)` - once someone is actually Whitelisted, Gatekeeper pings them in this Channel. If it's not set, no ping happens (this only covers the success case - a player with a qualifying Role but no linked identity is never pinged, see above).
 
 ### Behavior:
-- Gaining a configured Role Whitelists the player automatically, as long as they have a linked identity.
+- Gaining a configured Role Whitelists the player automatically, as long as they have a linked identity, and pings them in the configured notify Channel (see Setup step 5) once it's done.
 - Losing the Role, or leaving the Guild, removes them from that Server's Whitelist, unless another qualifying Role (see above) keeps them eligible.
 - **ATTENTION**: Today this is fully functional for **Minecraft** (IGN/UUID-based) and **ARK: Survival Evolved** (SteamID64-based, via `/link steam`) Servers - the only Modules with real Whitelist file support. See [ARK](#ark-survival-evolved) below for a caveat specific to that Module. Other Server types safely no-op until their Modules add real Whitelist support - Sync won't error, it just won't have anything to actually add/remove yet.
 
