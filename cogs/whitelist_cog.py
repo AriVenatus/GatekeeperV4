@@ -202,6 +202,10 @@ class Whitelist(commands.Cog):
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     async def amp_server_whitelist_add(self, context: commands.Context, server, name):
         self.logger.command(f'{context.author.name} used AMP Server Whitelist Add...')
+        # check_Whitelist()/addWhitelist() make several sequential blocking HTTP calls (Mojang
+        # lookup, AMP login, directory listing, file read) -- easily over Discord's 3s ack
+        # window, which would otherwise expire the interaction before we can reply.
+        await context.defer(ephemeral=True)
 
         amp_server = await self.uBot._serverCheck(context, server)
         if amp_server:
@@ -221,6 +225,9 @@ class Whitelist(commands.Cog):
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     async def amp_server_whitelist_remove(self, context: commands.Context, server, name):
         self.logger.command(f'{context.author.name} used AMP Server Whitelist Remove...')
+        # Same reasoning as amp_server_whitelist_add: check_Whitelist() alone can involve
+        # several sequential blocking HTTP calls, easily past Discord's 3s ack window.
+        await context.defer(ephemeral=True)
 
         amp_server = await self.uBot._serverCheck(context, server)
         if amp_server:
