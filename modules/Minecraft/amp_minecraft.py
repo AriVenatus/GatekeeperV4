@@ -88,11 +88,17 @@ class AMPMinecraft(AMP.AMPInstance):
     def getWhitelist(self) -> dict[str, str]:
         """Checks the Whitelist File for Minecraft Users"""
         file_directory = self.getDirectoryListing('')
-        # for entry in file_directory['result']:
+        # CallAPI() returns False (not a list) on a permission/transport failure -- iterating
+        # it directly used to crash with a confusing "'bool' object is not iterable" instead of
+        # surfacing the actual cause (eg. missing FileManager.FileManager.BrowseFiles).
+        if not isinstance(file_directory, list):
+            raise RuntimeError(f"Failed to list files for {self.FriendlyName} while checking the Whitelist -- Core/GetDirectoryListing did not return a directory listing (likely a missing AMP permission, e.g. FileManager.FileManager.BrowseFiles). Raw result: {file_directory!r}")
+
         for entry in file_directory:
             if entry['Filename'] == 'whitelist.json':
                 whitelist = self.getFileChunk("whitelist.json", 0, 33554432)
-                # whitelist_data = base64.b64decode(whitelist["result"]["Base64Data"])
+                if not isinstance(whitelist, dict) or 'Base64Data' not in whitelist:
+                    raise RuntimeError(f"Failed to read whitelist.json for {self.FriendlyName} -- Core/GetFileChunk did not return file data (likely a missing AMP permission). Raw result: {whitelist!r}")
                 whitelist_data = base64.b64decode(whitelist["Base64Data"])
                 whitelist_json = json.loads(whitelist_data.decode("utf-8"))
                 return whitelist_json
@@ -132,7 +138,9 @@ class AMPMinecraft(AMP.AMPInstance):
                 uuid = db_user.MC_UUID
 
         self.Login()
-        server_whitelist = self.getWhitelist()
+        # getWhitelist() implicitly returns None if whitelist.json doesn't exist yet on the
+        # server (eg. nobody has ever been whitelisted) -- treat that the same as "empty".
+        server_whitelist = self.getWhitelist() or {}
         for entry in server_whitelist:
             if uuid == entry['uuid'].replace('-', ''):
                 return None

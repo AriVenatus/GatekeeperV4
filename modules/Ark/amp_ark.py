@@ -63,9 +63,16 @@ class AMPArk(AMP.AMPInstance):
             except Exception:
                 continue
 
+            # CallAPI() returns False (not a list) on a permission/transport failure -- guard
+            # against that instead of crashing with a confusing "'bool' object is not iterable".
+            if not isinstance(file_directory, list):
+                continue
+
             for entry in file_directory:
                 if entry['Filename'] == 'PlayersJoinNoCheckList.txt':
                     chunk = self.getFileChunk(f'{directory}/PlayersJoinNoCheckList.txt', 0, 33554432)
+                    if not isinstance(chunk, dict) or 'Base64Data' not in chunk:
+                        continue
                     whitelist_data = base64.b64decode(chunk['Base64Data'])
                     lines = (line.strip() for line in whitelist_data.decode('utf-8').splitlines())
                     return [line for line in lines if line]
