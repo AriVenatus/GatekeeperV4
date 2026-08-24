@@ -38,6 +38,22 @@ class botEmbeds:
         key = 'embeds.common.filter_type.whitelist' if bool(value) else 'embeds.common.filter_type.blacklist'
         return f'`{i18n.t(key)}`'
 
+    def _player_load(self, online: str | None, maximum: str | None, length: int = 10) -> tuple[str, float | None]:
+        """Renders `(online, maximum)` (both strings, straight from AMP) as a Unicode block bar
+        plus its ratio in [0, 1]. Returns `('', None)` if either value isn't a usable positive int."""
+        if online is None or maximum is None:
+            return '', None
+        try:
+            online_i = int(online)
+            max_i = int(maximum)
+        except ValueError:
+            return '', None
+        if max_i <= 0:
+            return '', None
+        ratio = max(0.0, min(1.0, online_i / max_i))
+        filled = round(ratio * length)
+        return ('▰' * filled) + ('▱' * (length - filled)), ratio
+
     def default_embedmsg(self, title, context: commands.Context, description=None, field=None, field_value=None) -> discord.Embed:
         """This Embed has only one Field Entry."""
         embed = discord.Embed(title=title, description=description, color=0x808000)  # color is RED
@@ -108,25 +124,36 @@ class botEmbeds:
             if db_server == None or db_server.Hidden == 1:
                 continue
 
-            instance_status = i18n.t('embeds.server_display.instance_status_offline_icon')
-            dedicated_status = i18n.t('common.status.offline')
+            instance_status = i18n.t('embeds.server_display.status_offline_icon')
+            dedicated_status = i18n.t('embeds.server_display.status_offline_icon')
             Users = None
             User_list = None
             # This is for the Instance
             if server.Running:
-                instance_status = i18n.t('common.status.online')
+                instance_status = i18n.t('embeds.server_display.status_online_icon')
                 # ADS AKA Application status
                 if server._ADScheck() and server.ADS_Running:
-                    dedicated_status = i18n.t('common.status.online')
+                    dedicated_status = i18n.t('embeds.server_display.status_online_icon')
                     Users = server.getUsersOnline()
                     if len(server.getUserList()) >= 1:
                         User_list = (', ').join(server.getUserList())
 
-            embed_color = 0x71368a
+            bar, ratio = self._player_load(*Users) if Users != None else ('', None)
+
+            # Discord Role color takes priority; otherwise a green/yellow/red status color.
+            embed_color = None
             if guild != None and db_server.Discord_Role != None:
                 db_server_role = guild.get_role(int(db_server.Discord_Role))
                 if db_server_role != None:
                     embed_color = db_server_role.color
+
+            if embed_color == None:
+                if Users == None:
+                    embed_color = 0xE74C3C  # Offline
+                elif ratio != None and ratio >= 0.9:
+                    embed_color = 0xF1C40F  # Online, nearly full
+                else:
+                    embed_color = 0x2ECC71  # Online, healthy
 
             server_name = server.FriendlyName
             if server.DisplayName != None:
@@ -137,17 +164,23 @@ class botEmbeds:
             avatar = await self.uBot.validate_avatar(db_server)
             if avatar != None:
                 embed.set_thumbnail(url=avatar)
-            embed.add_field(name=i18n.t('embeds.server_display.instance_status_label'), value=f'`{instance_status}`', inline=False)
-            embed.add_field(name=i18n.t('common.embed.dedicated_server_status'), value=f'`{dedicated_status}`', inline=False)
-            embed.add_field(name=i18n.t('common.embed.host_bold'), value=f'`{db_server.Host}`', inline=True)
-            embed.add_field(name=i18n.t('embeds.server_display.donator'), value=self._bool_str(db_server.Donator), inline=True)
-            embed.add_field(name=i18n.t('embeds.server_display.whitelist_open'), value=self._bool_str(db_server.Whitelist), inline=True)
+
+            status_value = f"{i18n.t('embeds.server_display.instance_status_label')} {instance_status}\n{i18n.t('common.embed.dedicated_server_status')} {dedicated_status}"
+            embed.add_field(name=i18n.t('embeds.server_display.status_label'), value=status_value, inline=False)
+
+            info_value = f"{i18n.t('common.embed.host_bold')} `{db_server.Host}`\n{i18n.t('embeds.server_display.donator')} {self._bool_str(db_server.Donator)}\n{i18n.t('embeds.server_display.whitelist_open')} {self._bool_str(db_server.Whitelist)}"
+            embed.add_field(name=i18n.t('embeds.server_display.info_label'), value=info_value, inline=True)
+
             if Users != None:
-                embed.add_field(name=i18n.t('embeds.server_display.players'), value=f'`{Users[0]}/{Users[1]}`', inline=True)
+                embed.add_field(name=i18n.t('embeds.server_display.players'), value=f'{bar} `{Users[0]}/{Users[1]}`', inline=True)
             else:
                 embed.add_field(name=i18n.t('embeds.server_display.player_limit'), value=f'`{Users}`', inline=True)
             embed.add_field(name=i18n.t('embeds.server_display.players_online'), value=f'`{User_list}`', inline=False)
-            embed.set_footer(text=discord.utils.utcnow().strftime('%Y-%m-%d | %H:%M') + " UTC")
+
+            # Discord renders this client-side, live, in each viewer's own timezone -- no
+            # Banner_Timezone/Banner_Use_12Hour dependency and nothing to keep in sync.
+            embed.add_field(name=i18n.t('embeds.server_display.last_updated_label'), value=discord.utils.format_dt(discord.utils.utcnow(), style='R'), inline=False)
+
             embed_list.append(embed)
 
         return embed_list

@@ -192,9 +192,9 @@ class Banner(commands.Cog):
             for curpos in range(0, len(message_list)):
                 try:
                     # 0*10 = 0 : (0+1)*10 = 10 / 1*10 = 10 : (1+1)*10 = 20 / 2 *10 = 20 : (2+1)*10 = 30
-                    now = self._get_current_timezone_time()
-                    time_str = now.strftime(self._get_time_format())
-                    await message_list[curpos].edit(content=i18n.t('messages.banner.display.edited_at', time_str=time_str), embeds=embed_list[curpos * 10:(curpos + 1) * 10], attachments=[])
+                    # content=None explicitly clears any "Edited at ..." text a message already
+                    # had from before this line existed -- omitting the kwarg would leave it in place.
+                    await message_list[curpos].edit(content=None, embeds=embed_list[curpos * 10:(curpos + 1) * 10], attachments=[])
 
                 except discord.errors.Forbidden:
                     self.logger.error(f'{self._client.user.name} lacks permissions to edit messages in {discord_channel.name}, removing the Channel from {banner_name}.')
