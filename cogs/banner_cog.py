@@ -159,7 +159,18 @@ class Banner(commands.Cog):
     async def _embed_generator(self, banner_name: str, server_list: list[str], message_list: list[discord.Message], discord_guild: discord.Guild, discord_channel: discord.TextChannel):
         embed_list = await self.eBot.server_display_embed(server_list=server_list, guild=discord_guild, banner_name=banner_name)
         if len(embed_list) == 0:
-            self.logger.warning('We failed to find any Banners for your Instances.')
+            if not len(server_list):
+                self.logger.dev(f'BannerGroup {banner_name} has no Servers assigned; removing any leftover messages.')
+            else:
+                self.logger.warning('We failed to find any Banners for your Instances.')
+            # Clean up any messages left over from before the last Server was removed from this Group,
+            # otherwise they linger in Discord and keep inflating `banner_loop_time_control`'s interval.
+            for message in message_list:
+                self.DB.Remove_Message_from_BannerGroup(messageid=message.id)
+                try:
+                    await message.delete()
+                except:
+                    self.logger.error('Failed to find discord.Message object; removing Message from bannergroup.')
             return
         ratio = math.ceil((len(embed_list) / 10))
         # compare ratio to len(message_list)
@@ -236,7 +247,18 @@ class Banner(commands.Cog):
             banner_image_list.append(banner_file)
 
         if not len(banner_image_list):
-            self.logger.warning('We failed to find any Banners for your Instances.')
+            if not len(server_list):
+                self.logger.dev(f'BannerGroup {banner_name} has no Servers assigned; removing any leftover messages.')
+            else:
+                self.logger.warning('We failed to find any Banners for your Instances.')
+            # Clean up any messages left over from before the last Server was removed from this Group,
+            # otherwise they linger in Discord and keep inflating `banner_loop_time_control`'s interval.
+            for message in message_list:
+                self.DB.Remove_Message_from_BannerGroup(messageid=message.id)
+                try:
+                    await message.delete()
+                except:
+                    self.logger.error('Failed to find discord.Message object; removing Message from bannergroup.')
             return
 
         # If we have too many messages; well we need to remove the remaining messages.

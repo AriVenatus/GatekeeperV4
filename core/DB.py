@@ -630,13 +630,17 @@ class Database:
         # We need to get each BannerGroupID and then get the corresponding Discord_Message_IDs, ServerIDs and Name from related tables.
         (row, cur) = self._fetchall(
             """SELECT BGC.*, BGS.ServerID, BG.name, BG.ID, BGM.Discord_Message_ID
-                                        FROM BannerGroup as BG, BannerGroupServers as BGS, BannerGroupChannels as BGC 
-                                        LEFT JOIN BannerGroupMessages as BGM                       
-                                        ON BGM.BannerGroupChannelsID=BGC.ID
-                                        WHERE BGS.BannerGroupID=BG.ID and BGC.BannerGroupID=BG.ID
+                                        FROM BannerGroup as BG
+                                        JOIN BannerGroupChannels as BGC ON BGC.BannerGroupID=BG.ID
+                                        LEFT JOIN BannerGroupServers as BGS ON BGS.BannerGroupID=BG.ID
+                                        LEFT JOIN BannerGroupMessages as BGM ON BGM.BannerGroupChannelsID=BGC.ID
                                         ORDER BY BGC.Discord_Channel_ID""",
             (),
         )
+        # BannerGroupServers is a LEFT JOIN so a Banner Group that has had all of its Servers removed
+        # still comes back here (with its Channel/Messages intact) instead of vanishing from this query
+        # entirely -- otherwise `server_display_update` never visits it again to clean up its now-stale
+        # messages, and `get_all_bannergroup_messages()` keeps counting them forever.
 
         for entry in row:
             # if BannerGroupChannels.Discord_Channel_ID not in Banners:
@@ -649,7 +653,7 @@ class Database:
                 }
 
             # if BannerGroupServers.ServerID not in Banners:
-            if entry["ServerID"] not in Banners[entry["Discord_Channel_ID"]]["servers"]:
+            if entry["ServerID"] is not None and entry["ServerID"] not in Banners[entry["Discord_Channel_ID"]]["servers"]:
                 Banners[entry["Discord_Channel_ID"]]["servers"].append(entry["ServerID"])
 
             # if BannerGroupMessages.Discord_Message_ID not in Banners
