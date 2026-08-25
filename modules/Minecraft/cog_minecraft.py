@@ -47,11 +47,10 @@ class Minecraft(commands.Cog):
         self.logger.dev(f'Member Leave {self.name}: {member.name} {member}')
 
         db_user = self.DB.GetUser(str(member.id))
-        if db_user != None and db_user.InGameName != None:
+        if db_user != None and db_user.MC_IngameName != None:
             for server in list(self.AMPInstances):
                 if self.AMPInstances[server].Module == 'Minecraft':
-                    if db_user.MC_IngameName != None:
-                        self.AMPInstances[server].removeWhitelist(db_user.MC_IngameName)
+                    self.AMPInstances[server].removeWhitelist(in_gamename=db_user.MC_IngameName)
 
         return member
 

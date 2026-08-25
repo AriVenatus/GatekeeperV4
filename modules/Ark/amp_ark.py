@@ -82,6 +82,33 @@ class AMPArk(AMP.AMPInstance):
 
         return []
 
+    def getMap(self) -> str | None:
+        """Returns the human-readable Map name currently configured for this Instance (eg. `Crystal Isles`),
+        or `None` if the setting couldn't be found. Sourced from `Core/GetSettingsSpec`, confirmed live against
+        a real ARK Instance -- its `Map` setting lives under a category named `ARK SE:<something>` where the
+        part after the colon is presumably Instance-specific, so this matches on the `ARK SE:` prefix rather
+        than hardcoding the full category name."""
+        self.Login()
+        result = self.CallAPI('Core/GetSettingsSpec', {})
+        if not isinstance(result, dict):
+            self.logger.error(f"Core/GetSettingsSpec returned unexpected payload for {self.FriendlyName} while looking up the Map: {result!r}")
+            return None
+
+        for category, settings in result.items():
+            if not isinstance(category, str) or not category.startswith('ARK SE:'):
+                continue
+            if not isinstance(settings, list):
+                continue
+            for setting in settings:
+                if not isinstance(setting, dict) or setting.get('Name') != 'Map':
+                    continue
+                current_value = setting.get('CurrentValue')
+                enum_values = setting.get('EnumValues') or {}
+                return enum_values.get(current_value, current_value)
+
+        self.logger.error(f"Unable to find the Map setting for {self.FriendlyName} in Core/GetSettingsSpec (no 'ARK SE:*' category with a 'Map' entry).")
+        return None
+
     def check_Whitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None):
         self.logger.dev(f'Checking if {in_gamename if db_user == None else db_user.DiscordName} is whitelisted on {self.FriendlyName}...')
         """Checks if the User is already in the whitelist file. Supports DB User and SteamID64.\n

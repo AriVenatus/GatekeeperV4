@@ -1077,6 +1077,10 @@ class AMPInstance:
         """Base Function for AMP.getWhitelist"""
         return
 
+    def getMap(self) -> str | None:
+        """Base Function for AMP.getMap -- only ARK overrides this today."""
+        return None
+
     def removeWhitelist(self, db_user: Union[DB.DBUser, None] = None, in_gamename: str | None = None):
         """Base Function for AMP.removeWhitelist"""
         return False

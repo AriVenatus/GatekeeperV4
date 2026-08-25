@@ -100,6 +100,14 @@ class Whitelist(commands.Cog):
             return parameter[0:96] + '...'
         return parameter
 
+    def _module_key(self, amp_server, ark_key: str, default_key: str) -> str:
+        """Whitelist identifier terminology differs per module -- ARK is keyed off a SteamID64,
+        every other module (currently just Minecraft) off an IGN/UUID. Picks whichever of the two
+        parallel i18n keys matches `amp_server`'s module. Same `APIModule` check used in
+        whitelist_sync_cog.py's `_cleanup_steam_whitelist`, since AMP's own `Module` field for ARK
+        instances is unverified."""
+        return ark_key if getattr(amp_server, 'APIModule', None) == 'Ark' else default_key
+
     # Discord Listener Events -------------------------------------------------------------------------------------------------------------
 
     @commands.Cog.listener('on_member_remove')
@@ -220,7 +228,8 @@ class Whitelist(commands.Cog):
                 else:
                     await context.send(i18n.t('messages.whitelist.add.console_failed', server_name=server_name, name=canonical_name), ephemeral=True, delete_after=self._client.Message_Timeout)
             if whitelist == False:
-                await context.send(i18n.t('messages.whitelist.uuid_not_found', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
+                not_found_key = self._module_key(amp_server, 'messages.whitelist.steamid_not_found', 'messages.whitelist.uuid_not_found')
+                await context.send(i18n.t(not_found_key, name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
             if whitelist == None:
                 await context.send(i18n.t('messages.whitelist.add.already', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
@@ -240,7 +249,8 @@ class Whitelist(commands.Cog):
             if whitelist:
                 await context.send(i18n.t('messages.whitelist.remove.not_whitelisted', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
             if whitelist == False:
-                await context.send(i18n.t('messages.whitelist.uuid_not_found', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
+                not_found_key = self._module_key(amp_server, 'messages.whitelist.steamid_not_found', 'messages.whitelist.uuid_not_found')
+                await context.send(i18n.t(not_found_key, name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
             if whitelist == None:
                 canonical_name = amp_server.resolve_canonical_IGN(name)
                 if amp_server.removeWhitelist(in_gamename=canonical_name):
@@ -342,12 +352,18 @@ class Whitelist(commands.Cog):
             # We check the first entry of the tuple.
             if "UNIQUE constraint failed" in e.args[0]:
                 duplicate_ign_db_user = self.DB.GetUser(ign)
-                return await message.edit(content=i18n.t('messages.whitelist_request.duplicate_ign', ign=ign, mention=context.guild.get_member(duplicate_ign_db_user.DiscordID).mention))
+                duplicate_key = self._module_key(server, 'messages.whitelist_request.duplicate_steamid', 'messages.whitelist_request.duplicate_ign')
+                return await message.edit(content=i18n.t(duplicate_key, ign=ign, mention=context.guild.get_member(duplicate_ign_db_user.DiscordID).mention))
             else:  # Any other errors need to be presented
                 return await message.edit(content=i18n.t('messages.whitelist_request.sqlite_error', traceback=traceback.format_exc()))
 
         if exists == False:
-            reason = i18n.t('messages.whitelist_request.invalid_ign_reason', ign=ign) if ign != None else i18n.t('messages.whitelist_request.need_ign_reason')
+            if ign != None:
+                invalid_key = self._module_key(server, 'messages.whitelist_request.invalid_steamid_reason', 'messages.whitelist_request.invalid_ign_reason')
+                reason = i18n.t(invalid_key, ign=ign)
+            else:
+                need_key = self._module_key(server, 'messages.whitelist_request.need_steamid_reason', 'messages.whitelist_request.need_ign_reason')
+                reason = i18n.t(need_key)
             return await message.edit(content=i18n.t('messages.whitelist_request.cannot_handle', reason=reason))
 
         elif exists == None:
