@@ -179,6 +179,10 @@ class botEmbeds:
             embed.add_field(name=i18n.t('embeds.server_display.status_label'), value=status_value, inline=False)
 
             info_value = f"{i18n.t('common.embed.host_bold')} `{db_server.Host}`\n{i18n.t('embeds.server_display.donator')} {self._yes_no_str(db_server.Donator)}\n{i18n.t('embeds.server_display.whitelist_open')} {self._yes_no_str(db_server.Whitelist)}"
+            if getattr(server, 'APIModule', None) == 'Ark':
+                ark_map = server.getMap()
+                if ark_map != None:
+                    info_value += f"\n{i18n.t('embeds.server_display.map')} `{ark_map}`"
             embed.add_field(name=i18n.t('embeds.server_display.info_label'), value=info_value, inline=True)
 
             if Users != None:
