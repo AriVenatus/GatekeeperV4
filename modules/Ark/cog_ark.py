@@ -10,7 +10,7 @@ from core import utils
 from core import AMP_Handler
 from core import DB
 
-DisplayImageSources = ['steam:376030']
+DisplayImageSources = ['steam:346110', 'steam:376030']  # see modules/Ark/amp_ark.py for why both are listed
 
 
 class Ark(commands.Cog):

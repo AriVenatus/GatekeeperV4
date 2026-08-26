@@ -18,7 +18,12 @@ This test executes each cog's class body for real, with the heavy `core.*`
 dependencies stubbed, so discord.py's decorators and metaclass run exactly as
 they do at startup. It additionally validates command metadata against Discord's
 hard limits using the REAL `locales/en.json` strings, so an over-long
-description fails here rather than at `tree.sync()`.
+description fails here rather than at `tree.sync()`. It separately checks
+EVERY `locales/*.json` file's `commands.*` strings against the same limit --
+a translation can overrun 100 chars even when the English source doesn't (a
+German `whitelist_sync.channel.description` did exactly this on 2026-08-26,
+only surfacing as a `CommandSyncFailure` in production since only en.json
+was checked at import time).
 
 Run:  python3 tests/test_cog_imports.py     (needs discord.py importable)
 Exit: 0 on success, 1 on any failure.
@@ -115,6 +120,21 @@ class _StubFinder(importlib.abc.MetaPathFinder, importlib.abc.Loader):
             setattr(sys.modules[parent], child, module)
 
 
+def _check_locale_lengths() -> list[str]:
+    """Every `commands.*` key (group/command/param descriptions, choice names) is
+    subject to Discord's 100-char limit in EVERY locale, not just en.json -- a
+    translation can overrun the limit even when the English source doesn't.
+    """
+    problems = []
+    for locale_path in sorted((REPO / 'locales').glob('*.json')):
+        with open(locale_path, encoding='utf-8') as fh:
+            table = json.load(fh)
+        for key, value in table.items():
+            if key.startswith('commands.') and isinstance(value, str) and len(value) > DISCORD_DESC_MAX:
+                problems.append(f'{locale_path.name}: {key!r} is {len(value)} chars (max {DISCORD_DESC_MAX})')
+    return problems
+
+
 def _check_metadata(module, path) -> list[str]:
     """Walk the commands the module defined and enforce Discord's limits."""
     from discord.ext import commands as ext_commands
@@ -165,6 +185,11 @@ def main() -> int:
     for stray in strays:
         failures.append(f'stray file in cogs/: {stray.name!r} -- loader.py imports every .py here')
         print(f'  FAIL  stray file in cogs/: {stray.name!r}')
+
+    locale_problems = _check_locale_lengths()
+    failures.extend(locale_problems)
+    for p in locale_problems:
+        print(f'  FAIL  {p}')
 
     print(f'\n{checked} cog(s) imported, {len(failures)} problem(s)')
     return 1 if failures else 0

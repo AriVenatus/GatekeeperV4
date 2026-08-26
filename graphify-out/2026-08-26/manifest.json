@@ -6,9 +6,9 @@
     "semantic_hash": ""
   },
   "cogs/banner_cog.py": {
-    "mtime": 1787670564.4528666,
-    "seen": 1787752739.0653348,
-    "ast_hash": "414ceb26bc0a95379ebf5ecbcd430839",
+    "mtime": 1787599867.641068,
+    "seen": 1787603627.7006142,
+    "ast_hash": "f31821a1447b301829a6322f485525f4",
     "semantic_hash": ""
   },
   "cogs/regex_cog.py": {
@@ -18,27 +18,27 @@
     "semantic_hash": ""
   },
   "cogs/whitelist_cog.py": {
-    "mtime": 1787672700.4579318,
-    "seen": 1787752739.0653398,
-    "ast_hash": "febd0493dd464db62bba187223b4692f",
+    "mtime": 1787601498.925959,
+    "seen": 1787603627.7006185,
+    "ast_hash": "0077156a2ffc1fe862791032773cacc4",
     "semantic_hash": ""
   },
   "cogs/whitelist_sync_cog.py": {
-    "mtime": 1787612913.1848707,
-    "seen": 1787752739.0653408,
-    "ast_hash": "12bad7273c0c6d95c09c5a29d1452e2a",
+    "mtime": 1787601498.925959,
+    "seen": 1787603627.7006187,
+    "ast_hash": "ca36b7b53100a0631521cab975ca35e1",
     "semantic_hash": ""
   },
   "locales/de.json": {
-    "mtime": 1787752634.9162574,
-    "seen": 1787752739.0653522,
-    "ast_hash": "78f6d652311eeb8c188b6be0c610016d",
+    "mtime": 1787599867.6970687,
+    "seen": 1787603627.700627,
+    "ast_hash": "de9c6319f4517c712c8dbf8afe138f24",
     "semantic_hash": ""
   },
   "locales/en.json": {
-    "mtime": 1787681911.5781012,
-    "seen": 1787752739.0653524,
-    "ast_hash": "5e43a01601c9f1ec325f151448138609",
+    "mtime": 1787599867.6970687,
+    "seen": 1787603627.700628,
+    "ast_hash": "0dd2e4708767116452309de7483196a2",
     "semantic_hash": ""
   },
   "modules/Factorio/amp_factorio.py": {
@@ -66,15 +66,15 @@
     "semantic_hash": ""
   },
   "modules/Minecraft/amp_minecraft.py": {
-    "mtime": 1787612234.3168888,
-    "seen": 1787752739.065358,
-    "ast_hash": "7931bb87152ab9cadd9c1593d7a6208a",
+    "mtime": 1787602858.785191,
+    "seen": 1787603627.7006328,
+    "ast_hash": "fd20ef106a63a78ee829f71f14c89b33",
     "semantic_hash": ""
   },
   "modules/Minecraft/cog_minecraft.py": {
-    "mtime": 1787671586.5588934,
-    "seen": 1787752739.0653584,
-    "ast_hash": "f95b2f48d9ed20337cd376a912ed4ceb",
+    "mtime": 1787599867.6970687,
+    "seen": 1787603627.7006333,
+    "ast_hash": "cd6cebe535b0aaca1b0e06291351c294",
     "semantic_hash": ""
   },
   "modules/ProjectZomboid/amp_projectzomboid.py": {
@@ -228,9 +228,9 @@
     "semantic_hash": "d9624477c368058e64f45f001f8b1e8a"
   },
   "CLAUDE.md": {
-    "mtime": 1787753967.0759835,
-    "seen": 1787753976.7229486,
-    "ast_hash": "3688f4e8ae41a0f5dda08149e4829d3d",
+    "mtime": 1787601498.925959,
+    "seen": 1787603627.7006464,
+    "ast_hash": "ed6dc266abe7a16ee6d31b58f08f55c4",
     "semantic_hash": ""
   },
   "README.md": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "core/AMP.py": {
-    "mtime": 1787681902.2259464,
-    "seen": 1787752739.0653415,
-    "ast_hash": "ed1f69b524227cbd54178c385a517dbd",
+    "mtime": 1787599867.6450682,
+    "seen": 1787603627.7006192,
+    "ast_hash": "f30efcb42347c183d268a04b13d2141f",
     "semantic_hash": ""
   },
   "core/AMP_Console.py": {
@@ -540,9 +540,9 @@
     "semantic_hash": ""
   },
   "core/DB.py": {
-    "mtime": 1787670554.9279478,
-    "seen": 1787752739.0653431,
-    "ast_hash": "2b5f0a5999b4164d20856a0269465576",
+    "mtime": 1787599867.6450682,
+    "seen": 1787603627.7006207,
+    "ast_hash": "482d203747690bb4fa1cba0bb4768dc4",
     "semantic_hash": ""
   },
   "core/DB_Update.py": {
@@ -594,9 +594,9 @@
     "semantic_hash": ""
   },
   "core/utils_embeds.py": {
-    "mtime": 1787681921.0222573,
-    "seen": 1787752739.0653503,
-    "ast_hash": "dc88fccea3d7c875cae46b3f150ad0eb",
+    "mtime": 1787599867.6450682,
+    "seen": 1787603627.7006257,
+    "ast_hash": "a0aaef80f871fb371c718afa5b9f937d",
     "semantic_hash": ""
   },
   "core/utils_ui.py": {
@@ -660,9 +660,9 @@
     "semantic_hash": ""
   },
   "docs/WHITELIST.md": {
-    "mtime": 1787612913.1848707,
-    "seen": 1787752739.0653791,
-    "ast_hash": "13bbc5edc7c0e8abe3f195c9ef8fbd4e",
+    "mtime": 1787601498.925959,
+    "seen": 1787603627.7006514,
+    "ast_hash": "22de4cf937af63329b5512f55784eff1",
     "semantic_hash": ""
   },
   "docs/changelog.md": {
@@ -702,21 +702,21 @@
     "semantic_hash": ""
   },
   "tests/test_cog_imports.py": {
-    "mtime": 1787752701.880872,
-    "seen": 1787752739.0653667,
-    "ast_hash": "22ae0f0c398866a3f3b36f1d014660da",
+    "mtime": 1787599867.7130687,
+    "seen": 1787603627.7006407,
+    "ast_hash": "627d698a6b01dedec3315f5c2d628ac1",
     "semantic_hash": ""
   },
   "modules/Ark/amp_ark.py": {
-    "mtime": 1787753932.9136295,
-    "seen": 1787753976.722929,
-    "ast_hash": "d8eeae1760f744f3bca7e5e54e1d1329",
+    "mtime": 1787601652.6734352,
+    "seen": 1787603627.7006285,
+    "ast_hash": "e39363672460b58a494e68ccbfaa51cb",
     "semantic_hash": ""
   },
   "modules/Ark/cog_ark.py": {
-    "mtime": 1787753935.52981,
-    "seen": 1787753976.72293,
-    "ast_hash": "433c095da0fb064b99e01a96a25ae99d",
+    "mtime": 1787601297.9192555,
+    "seen": 1787603627.7006292,
+    "ast_hash": "c5724250ed15282338a836f523e98aaf",
     "semantic_hash": ""
   },
   "resources/avatars/ark_avatar.png": {
@@ -729,24 +729,6 @@
     "mtime": 1787602684.0740964,
     "seen": 1787603627.7006571,
     "ast_hash": "94eaa8c06e4138820ea48a068f09fa24",
-    "semantic_hash": ""
-  },
-  "skill-observations/cross-cutting-principles.md": {
-    "mtime": 1787752586.08887,
-    "seen": 1787752739.0653808,
-    "ast_hash": "252faca9839c4b7b6db570a5c8d13038",
-    "semantic_hash": ""
-  },
-  "skill-observations/last-review-date.txt": {
-    "mtime": 1787752586.0928702,
-    "seen": 1787752739.065382,
-    "ast_hash": "43d6cb692b03e6291950b931ae114794",
-    "semantic_hash": ""
-  },
-  "skill-observations/log.md": {
-    "mtime": 1787752586.08887,
-    "seen": 1787752739.0653825,
-    "ast_hash": "4c37c69f172b34ecbbc5dd482f37eba2",
     "semantic_hash": ""
   }
 }

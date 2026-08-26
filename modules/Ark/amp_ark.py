@@ -8,7 +8,7 @@ from core import AMP
 from core import AMP_Console
 from core.DB import DBUser
 
-DisplayImageSources = ['steam:376030']  # ARK: Survival Evolved Dedicated Server Steam AppID
+DisplayImageSources = ['steam:346110', 'steam:376030']  # 346110 = ARK: Survival Evolved (the base game -- what AMP's current official ARK template, ark-seminapi.kvp, actually reports as DisplayImageSource). 376030 = the Dedicated Server tool's AppID, kept for any instance still on AMP's older/legacy ARK ADS module.
 
 
 class AMPArk(AMP.AMPInstance):
