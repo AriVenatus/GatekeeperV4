@@ -74,7 +74,7 @@
   "embeds.server_display.player_limit": "**Spielerlimit**:",
   "embeds.server_display.players_online": "**Spieler online**:",
   "embeds.server_status.description": "Instanz-Server-Status: **{instance_status}**",
-  "embeds.server_status.host": "Host: ",
+  "embeds.server_status.host": "IP: ",
   "embeds.server_status.map": "Map",
   "embeds.server_status.tps": "TPS",
   "embeds.server_status.player_count": "Spieleranzahl",
