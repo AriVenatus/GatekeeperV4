@@ -84,10 +84,11 @@ class AMPArk(AMP.AMPInstance):
 
     def getMap(self) -> str | None:
         """Returns the human-readable Map name currently configured for this Instance (eg. `Crystal Isles`),
-        or `None` if the setting couldn't be found. Sourced from `Core/GetSettingsSpec`, confirmed live against
-        a real ARK Instance -- its `Map` setting lives under a category named `ARK SE:<something>` where the
-        part after the colon is presumably Instance-specific, so this matches on the `ARK SE:` prefix rather
-        than hardcoding the full category name."""
+        or `None` if the setting couldn't be found. Sourced from `Core/GetSettingsSpec`. The `Map` setting's
+        category name is unverified against this specific Instance/template version -- rather than assume a
+        prefix, this scans every category for a `Name == 'Map'` entry. On a miss it logs the actual category
+        and setting names it saw, so the real structure can be confirmed from the log instead of guessing at
+        another hardcoded name/prefix."""
         self.Login()
         result = self.CallAPI('Core/GetSettingsSpec', {})
         if not isinstance(result, dict):
@@ -95,8 +96,6 @@ class AMPArk(AMP.AMPInstance):
             return None
 
         for category, settings in result.items():
-            if not isinstance(category, str) or not category.startswith('ARK SE:'):
-                continue
             if not isinstance(settings, list):
                 continue
             for setting in settings:
@@ -106,7 +105,11 @@ class AMPArk(AMP.AMPInstance):
                 enum_values = setting.get('EnumValues') or {}
                 return enum_values.get(current_value, current_value)
 
-        self.logger.error(f"Unable to find the Map setting for {self.FriendlyName} in Core/GetSettingsSpec (no 'ARK SE:*' category with a 'Map' entry).")
+        seen = {
+            category: [s.get('Name') for s in settings if isinstance(s, dict)]
+            for category, settings in result.items() if isinstance(settings, list)
+        }
+        self.logger.error(f"Unable to find a 'Map' setting for {self.FriendlyName} in Core/GetSettingsSpec. Categories and setting names seen: {seen!r}")
         return None
 
     def check_Whitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None):
