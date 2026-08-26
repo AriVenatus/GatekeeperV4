@@ -82,34 +82,31 @@ class AMPArk(AMP.AMPInstance):
 
         return []
 
+    # Attribute name substrings that must never be logged by getMap()'s diagnostic dump below --
+    # AMPInstance carries live auth state (eg. self.SessionID, used as a Bearer token) as plain attributes.
+    _SENSITIVE_ATTR_SUBSTRINGS = ('session', 'password', 'token', 'auth', 'key', 'cookie', 'secret')
+
     def getMap(self) -> str | None:
         """Returns the human-readable Map name currently configured for this Instance (eg. `Crystal Isles`),
-        or `None` if the setting couldn't be found. Sourced from `Core/GetSettingsSpec`. The `Map` setting's
-        category name is unverified against this specific Instance/template version -- rather than assume a
-        prefix, this scans every category for a `Name == 'Map'` entry. On a miss it logs the actual category
-        and setting names it saw, so the real structure can be confirmed from the log instead of guessing at
-        another hardcoded name/prefix."""
-        self.Login()
-        result = self.CallAPI('Core/GetSettingsSpec', {})
-        if not isinstance(result, dict):
-            self.logger.error(f"Core/GetSettingsSpec returned unexpected payload for {self.FriendlyName} while looking up the Map: {result!r}")
-            return None
+        or `None` if it couldn't be found. `Core/GetSettingsSpec` turned out NOT to carry ARK-specific settings
+        at all for a Generic-module-template Instance (confirmed live -- it only returned Core/AMP categories
+        like 'File Manager'/'System Settings', no ARK category whatsoever), so that approach is unusable here.
+        This instead checks a `Metadata` attribute -- `ADSModule/GetInstances`' per-Instance fields get applied
+        directly onto this object via `setattr()` in `AMP._updateInstanceAttributes()`, and AMP commonly surfaces
+        a one-line Metadata string per Instance, which is the next most likely place for this. On a miss it logs
+        every other short string/bool/int attribute already on this object (skipping anything that looks like
+        live auth state) so the real field can be found from the log instead of guessed at again."""
+        metadata = getattr(self, 'Metadata', None)
+        if isinstance(metadata, str) and metadata.strip():
+            return metadata.strip()
 
-        for category, settings in result.items():
-            if not isinstance(settings, list):
+        seen = {}
+        for name, value in vars(self).items():
+            if any(bad in name.lower() for bad in self._SENSITIVE_ATTR_SUBSTRINGS):
                 continue
-            for setting in settings:
-                if not isinstance(setting, dict) or setting.get('Name') != 'Map':
-                    continue
-                current_value = setting.get('CurrentValue')
-                enum_values = setting.get('EnumValues') or {}
-                return enum_values.get(current_value, current_value)
-
-        seen = {
-            category: [s.get('Name') for s in settings if isinstance(s, dict)]
-            for category, settings in result.items() if isinstance(settings, list)
-        }
-        self.logger.error(f"Unable to find a 'Map' setting for {self.FriendlyName} in Core/GetSettingsSpec. Categories and setting names seen: {seen!r}")
+            if isinstance(value, (str, int, float, bool)) and len(str(value)) <= 200:
+                seen[name] = value
+        self.logger.error(f"Unable to find a Map/Metadata attribute for {self.FriendlyName}. Other short attributes seen on this Instance: {seen!r}")
         return None
 
     def check_Whitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None):
