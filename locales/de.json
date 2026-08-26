@@ -425,7 +425,7 @@
   "commands.whitelist_sync.interval.description": "Legt fest, wie oft der Whitelist-Sync-Abgleich läuft, in Minuten.",
   "commands.whitelist_sync.interval.params.minutes.description": "Wie oft (in Minuten) der Whitelist-Sync-Abgleich laufen soll.",
   "messages.whitelist_sync.interval.result": "Der Whitelist-Sync-Abgleich läuft jetzt alle **{interval}**.",
-  "commands.whitelist_sync.channel.description": "Legt den Channel fest, in dem Gatekeeper Spieler anpingt, sobald sie per Role Sync automatisch gewhitelistet wurden.",
+  "commands.whitelist_sync.channel.description": "Legt den Channel fest, in dem Spieler nach Auto-Whitelisting per Role Sync gepingt werden.",
   "messages.whitelist_sync.channel.success": "Whitelist-Sync-Benachrichtigungs-Channel auf **{channel_name}** gesetzt",
   "messages.whitelist_sync.notify_whitelisted": "🎉 {mention} Alles bereit -- du wurdest auf **{server_name}** gewhitelistet!",
   "commands.server.settings.whitelist.description": "Setzt die Server-Whitelist auf Wahr, Falsch oder Deaktiviert",

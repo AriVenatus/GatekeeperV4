@@ -16,4 +16,6 @@ local.py
 # local only
 graphify-out/cost.json
 .DS_Store
+gatekeeper-deploy
+gatekeeper-deploy.pub
 
