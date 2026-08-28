@@ -178,6 +178,46 @@ def dump_api_methods(session: requests.Session, url: str, session_id: str) -> No
 
 
 
+def probe_remaining_read_paths(session: requests.Session, url: str, session_id: str) -> None:
+    """The read-only options still open after Core/GetConfig and Core/GetSettingsSpec came up
+    empty, per this build's own Core/GetAPISpec listing.
+
+    Deliberately excludes GenericModule/ReloadGenericConfig() -- it would very likely make the
+    template's settings appear, but it mutates state on a running production game server, so
+    that stays the user's call rather than something a diagnostic does on its own."""
+    print('    -- Core/GetProvisionSpec --')
+    spec = call_quiet(session, url, 'Core/GetProvisionSpec', {}, session_id)
+    if isinstance(spec, dict) and 'result' in spec:
+        spec = spec['result']
+    hits = find_maps(spec)
+    print(f'       Map-shaped values: {hits if hits else "NONE"}')
+    if isinstance(spec, list):
+        cats = sorted({s.get('Category') for s in spec if isinstance(s, dict)})
+        print(f'       entries: {len(spec)}, categories: {cats}')
+    elif isinstance(spec, dict):
+        print(f'       keys: {sorted(spec)[:40]}')
+
+    print('    -- Core/GetSettingValues(GenericModule.App.Map) --')
+    call(session, url, 'Core/GetSettingValues',
+         {'SettingNode': 'GenericModule.App.Map', 'WithRefresh': False}, session_id)
+
+    # File-based fallback. ARK names each save file after the map it belongs to, so listing the
+    # save directory names the active map without any settings API and without a new permission
+    # -- the bot already reads files this way in AMPArk.getWhitelist().
+    print('    -- FileManagerPlugin/GetDirectoryListing (save dirs name the map) --')
+    for path in ('ShooterGame/Saved/SavedArks', 'ShooterGame/Saved', 'ShooterGame/Saved/Config'):
+        print(f'       path={path!r}')
+        listing = call_quiet(session, url, 'FileManagerPlugin/GetDirectoryListing', {'Dir': path}, session_id)
+        if isinstance(listing, dict) and 'result' in listing:
+            listing = listing['result']
+        if isinstance(listing, list):
+            names = [e.get('Filename') for e in listing if isinstance(e, dict)]
+            print(f'         {names[:40]}')
+        else:
+            print(f'         {listing!r}')
+
+
+
 def call(session: requests.Session, url: str, endpoint: str, params: dict, session_id: str = '') -> object:
     """POSTs one AMP API call and prints the raw status + body. Returns the parsed JSON or None."""
     body = dict(params)
@@ -286,6 +326,9 @@ def main() -> int:
 
         print('\n  -- Core/GetAPISpec -- config/settings methods this build exposes --')
         dump_api_methods(session, inst_url, inst_session)
+
+        print('\n  -- Remaining read-only paths to the Map --')
+        probe_remaining_read_paths(session, inst_url, inst_session)
 
         # (2) Control call on a node we KNOW exists and is visible (it came back in the spec on
         # the first run). If this works while the Map node says "No such node", then GetConfig
