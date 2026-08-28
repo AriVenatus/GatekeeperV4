@@ -63,14 +63,28 @@ def perms_super():
         '-FileManager.FileManager.ConnectViaSFTP',
         '-FileManager.FileManager.ModifyAMPConfigFiles',
         '-FileManager.FileManager.DownloadFromURL',
-        # LocalFileBackup.* removed: not a recognized permission node on current AMP
-        # versions (renamed/restructured server-side) -- setting it always fails and
-        # blocked Gatekeeper role setup from ever completing. Revisit once the modern
-        # equivalent node name is confirmed against Configuration -> Role Management.
+        # The backup nodes deliberately do NOT live here -- see perms_instance_only() below.
         'Core.AppManagement.*',
         '-Core.AppManagement.UpdateApplication',
         '-Core.Special.*']
     return core
+
+
+def perms_instance_only():
+    """Permission nodes that exist ONLY on a game Instance's own AMP daemon, not on the ADS.
+
+    `perms_super()` is applied to both scopes, so a node that the ADS doesn't recognise logs a
+    CRITICAL on every startup there and shows up as "missing" in check_SessionPermissions().
+    That is exactly what happened to the old `LocalFileBackup.*` entry, which was removed
+    outright and never replaced -- leaving `/server backup` (`LocalFileBackupPlugin/TakeBackup`,
+    reached from cogs/amp_server_cog.py) with no permission behind it at all.
+
+    Confirmed against this AMP build (2.8.0.4) via `Core/GetPermissionsSpec` run per scope: the
+    ADS knows only `FileManager.FileManager.ChangeBackupExclusions`, while a game Instance
+    exposes the full `LocalFileBackup.Backup.*` tree. Only CreateBackup is granted -- it is the
+    single node `takeBackup()` needs; listing, restoring and deleting backups are not something
+    any code here does."""
+    return ['LocalFileBackup.Backup.CreateBackup']
 
 
 def perms_whitelist_only():

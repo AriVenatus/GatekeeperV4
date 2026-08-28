@@ -147,6 +147,37 @@ def dump_permission_nodes(session: requests.Session, url: str, session_id: str) 
 
 
 
+def dump_api_methods(session: requests.Session, url: str, session_id: str) -> None:
+    """Lists the config/settings-related methods this Instance's AMP build actually exposes.
+
+    Core/GetAPISpec is AMP's own machine-readable method list -- the same kind of declarative
+    source that settled the template question. Reading it beats another round of guessing at
+    endpoint names now that Core/GetConfig and Core/GetSettingsSpec are both known not to
+    surface the template's app settings."""
+    spec = call_quiet(session, url, 'Core/GetAPISpec', {}, session_id)
+    if isinstance(spec, dict) and 'result' in spec and isinstance(spec['result'], dict):
+        spec = spec['result']
+    if not isinstance(spec, dict):
+        print(f'    unexpected GetAPISpec response: {spec!r}')
+        return
+
+    interesting = ('config', 'setting', 'provision', 'spec', 'deploy', 'template', 'arg')
+    print(f'    modules exposed: {sorted(spec)}')
+    for module, methods in sorted(spec.items()):
+        if not isinstance(methods, dict):
+            continue
+        for name, info in sorted(methods.items()):
+            if not any(word in name.lower() for word in interesting):
+                continue
+            params = info.get('Parameters') if isinstance(info, dict) else None
+            if isinstance(params, list):
+                sig = ', '.join(f"{p.get('Name')}: {p.get('TypeName')}" for p in params if isinstance(p, dict))
+            else:
+                sig = ''
+            print(f'       {module}/{name}({sig})')
+
+
+
 def call(session: requests.Session, url: str, endpoint: str, params: dict, session_id: str = '') -> object:
     """POSTs one AMP API call and prints the raw status + body. Returns the parsed JSON or None."""
     body = dict(params)
@@ -252,6 +283,9 @@ def main() -> int:
 
         print('\n  -- Core/GetPermissionsSpec -- this Instance --')
         dump_permission_nodes(session, inst_url, inst_session)
+
+        print('\n  -- Core/GetAPISpec -- config/settings methods this build exposes --')
+        dump_api_methods(session, inst_url, inst_session)
 
         # (2) Control call on a node we KNOW exists and is visible (it came back in the spec on
         # the first run). If this works while the Map node says "No such node", then GetConfig

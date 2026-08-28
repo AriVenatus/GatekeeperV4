@@ -316,6 +316,11 @@ class AMPInstance:
         from core import amp_permissions as AMPPerms
 
         core = AMPPerms.perms_super()
+        # Nodes that only a game Instance's AMP daemon knows about -- applying them to the ADS
+        # too would fail there and log a CRITICAL on every startup. See perms_instance_only().
+        if self.InstanceID != 0:
+            core = core + AMPPerms.perms_instance_only()
+
         for perm in core:
             enabled = True
             if perm.startswith("-"):
