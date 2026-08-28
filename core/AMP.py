@@ -582,13 +582,13 @@ class AMPInstance:
 
         # Error catcher for API calls
         if post_req.status_code < 200 or post_req.status_code >= 300:
-            self.logger.error(f"AMP_API `{APICall}` status_code:  {post_req.status_code}")
-            self.logger.error(post_req.raw)
+            # `post_req.raw` is a urllib3 response object -- it prints as `<urllib3...object at 0x..>`
+            # and tells you nothing. AMP puts the actual reason in the body.
+            self.logger.error(f"AMP_API `{APICall}` status_code: {post_req.status_code}, body: {post_req.text!r}")
             return
 
         if res == None:
-            self.logger.debug(f"AMP_API {APICall} json() is `None`")
-            self.logger.debug(post_req.raw)
+            self.logger.debug(f"AMP_API {APICall} json() is `None`, body: {post_req.text!r}")
             return
 
         # {"result": Int or Bool} or dict[str, int] -> Int or Bool
@@ -622,6 +622,14 @@ class AMPInstance:
                 self.AMPHandler.SessionIDlist.pop(self.InstanceID)
                 self.SessionID = 0
                 return False
+
+            # Any OTHER `Title` response is AMP reporting an error object (unknown method,
+            # bad parameters, permission denied, an unhandled exception, ...). This used to
+            # fall out of the `if` and implicitly `return None` with nothing logged, which
+            # makes every such failure indistinguishable from "the call succeeded and there
+            # was nothing there" at the call site.
+            self.logger.error(f'The API Call {APICall} returned an error object: {res}')
+            return False
 
         else:
             return res
