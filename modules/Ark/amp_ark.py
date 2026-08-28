@@ -107,7 +107,8 @@ class AMPArk(AMP.AMPInstance):
     # and the template itself addresses app settings by their full node path -- its
     # `Meta.EndpointURIFormat` references `{GenericModule.App.Ports.$QueryPort}` -- which is where
     # `GenericModule.App.Map` comes from. The remaining entries cover the legacy dedicated ARK ADS
-    # module; asking for all of them costs nothing, `Core/GetConfigs` takes a node list in one call.
+    # module. Each is read with its own `Core/GetConfig` call -- see _get_map_configs() for why
+    # the plural `Core/GetConfigs` is unusable here.
     _MAP_CONFIG_NODES = ('GenericModule.App.Map', 'ARKSEModule.Game.Map', 'Map')
     # Selecting "Custom" in the Map dropdown stores the literal placeholder `{{CustomMap}}` as the
     # value; the real name then lives in this companion setting (`FieldName: "CustomMap"`).
@@ -135,31 +136,38 @@ class AMPArk(AMP.AMPInstance):
 
         return label.strip()
 
-    def _get_map_configs(self, nodes: tuple[str, ...]) -> tuple[dict, object]:
-        """Asks AMP for `nodes` in a single `Core/GetConfigs` call (unknown nodes are simply omitted
-        from the response) and returns `({key: setting_dict}, raw_response)`.
+    def _get_map_configs(self, nodes: tuple[str, ...]) -> tuple[dict, list]:
+        """Reads `nodes` from AMP and returns `({key: setting_dict}, raw_responses)`.
 
-        Settings are indexed under their `Node`, `Name` AND `FieldName` -- which of those AMP puts on
-        a `Core/GetConfigs` entry isn't verified against a live Instance, so keying on only one of
-        them would silently drop an otherwise perfectly good answer. The raw response is handed back
-        so a miss can log what actually came over the wire instead of an empty parsed dict."""
-        result = self.CallAPI('Core/GetConfigs', {'nodes': list(nodes)})
+        Uses `Core/GetConfig` (singular, one call per node) rather than `Core/GetConfigs`.
+        The plural form is never routed through to the Instance on this setup -- the ADS answers
+        it with `{"Title": "Instance Unavailable"}` regardless of permissions, while the singular
+        form resolves normally against the very same session (confirmed live: it returned
+        `FileManagerPlugin.FileManager.BasePath` in full while the plural failed). A handful of
+        extra calls every 5 minutes is a fine price for an endpoint that actually works.
 
-        settings = result
-        if isinstance(settings, dict):
-            settings = [settings]
-        if not isinstance(settings, list):
-            return {}, result
-
+        Settings are indexed under their `Node`, `Name` AND `FieldName`, since which of those AMP
+        puts on a response isn't guaranteed. Raw responses are returned so a miss can log what
+        actually came over the wire."""
         configs = {}
-        for setting in settings:
+        raw = []
+        for node in nodes:
+            setting = self.CallAPI('Core/GetConfig', {'node': node})
+            raw.append({node: setting})
             if not isinstance(setting, dict):
                 continue
-            for key in (setting.get('Node'), setting.get('Name'), setting.get('FieldName')):
+            # AMP reports an unknown/invisible node as an error object rather than an empty result.
+            if 'CurrentValue' not in setting:
+                continue
+            for key in (setting.get('Node'), setting.get('Name'), setting.get('FieldName'), node):
                 if isinstance(key, str) and key not in configs:
                     configs[key] = setting
 
-        return configs, result
+            # `nodes` is ordered most-likely-first and only one of them can be the Map, so stop
+            # at the first that resolved rather than spending calls on the legacy spellings.
+            break
+
+        return configs, raw
 
     def _getMap_from_settings_spec(self) -> str | None:
         """Legacy dedicated-ARK-ADS-module fallback: scan `Core/GetSettingsSpec` for a `Map` entry."""
@@ -183,7 +191,7 @@ class AMPArk(AMP.AMPInstance):
 
     def getMap(self) -> str | None:
         """Returns the human-readable Map name currently configured for this Instance (eg. `Crystal Isles`),
-        or `None` if it couldn't be found. Reads AMP's config node directly via `Core/GetConfigs` rather
+        or `None` if it couldn't be found. Reads AMP's config node directly via `Core/GetConfig` rather
         than hunting through `Core/GetSettingsSpec` -- see `_MAP_CONFIG_NODES` for where the node name is
         verified from, and for why the spec-scanning approach can't work on the current template. The result
         (including a miss) is cached for `_MAP_CACHE_SECONDS`, since the Banner Group loop calls this on
@@ -224,7 +232,7 @@ class AMPArk(AMP.AMPInstance):
 
                 self.logger.error(
                     f'{self.FriendlyName} has a Custom Map selected but no Custom Map Name is set; '
-                    f'`Core/GetConfigs` for {list(self._CUSTOM_MAP_CONFIG_NODES)} returned {custom_raw!r}'
+                    f'`Core/GetConfig` for {list(self._CUSTOM_MAP_CONFIG_NODES)} returned {custom_raw!r}'
                 )
                 return None
 
@@ -237,7 +245,7 @@ class AMPArk(AMP.AMPInstance):
             return self._map_cache_value
 
         self.logger.error(
-            f'Unable to find the Map setting for {self.FriendlyName}. `Core/GetConfigs` for '
+            f'Unable to find the Map setting for {self.FriendlyName}. `Core/GetConfig` for '
             f'{list(self._MAP_CONFIG_NODES)} returned {raw!r}, and no `Map` entry was found under a '
             f'{self._MAP_SPEC_CATEGORY_PREFIX!r} category in `Core/GetSettingsSpec` either.'
         )
