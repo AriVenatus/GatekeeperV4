@@ -14,7 +14,25 @@ DisplayImageSources = ['steam:346110', 'steam:376030']  # 346110 = ARK: Survival
 
 class AMPArk(AMP.AMPInstance):
     def __init__(self, instanceID: int = 0, serverdata: dict = {}, default_console: bool = False, Handler=None, TargetName: str | None = None):
-        self.perms = []
+        # NOT an empty list. `self.perms` is what BOTH check_SessionPermissions() and
+        # check_GatekeeperRole_Permissions() iterate over, so an empty one makes them verify
+        # nothing and report success -- which is how an ARK Instance whose `Gatekeeper` role was
+        # never provisioned still logged "We have proper permissions" on every startup while its
+        # delegate session actually held only `Instances.*` (no FileManager, no Settings). AMP
+        # named the gap itself once a file listing was attempted: "This method requires the
+        # FileManager.FileManager.BrowseFiles permission."
+        #
+        # These strings must match VERBATIM what setup_Gatekeeper_Permissions() grants -- ARK
+        # doesn't override it, so that's perms_super() plus perms_instance_only(), and
+        # check_GatekeeperRole_Permissions() compares by exact string membership, not by
+        # wildcard expansion. Listing a subset is fine (and deliberate: the ADS-only nodes in
+        # perms_super() have nothing to verify on a game Instance); inventing a narrower spelling
+        # of one is not, it would warn about a permission that is in fact granted.
+        self.perms = [
+            'FileManager.*',            # getWhitelist() browses/reads PlayersJoinNoCheckList.txt
+            'Core.AppManagement.*',     # addWhitelist()/removeWhitelist() send RCON console commands
+            'LocalFileBackup.Backup.CreateBackup',  # /server backup -> takeBackup()
+        ]
         self.APIModule = 'Ark'
 
         super().__init__(instanceID, serverdata, Handler=Handler, TargetName=TargetName)
