@@ -647,29 +647,39 @@ class AMPInstance:
         if self.Last_Update_Time_Mutex.acquire(blocking=False) == False:
             return
 
-        self.Login()
-        parameters = {}
-        result = self.CallAPI("ADSModule/GetInstances", parameters)
+        # Everything below runs while holding the mutex, so it MUST release on every exit path.
+        # It used to `return` early -- without releasing -- when the API call came back a bool,
+        # which permanently wedged the lock: every later call bailed at the `acquire()` above and
+        # no Instance attribute (Map/Running/Metrics/...) was ever refreshed again for the life
+        # of the process, with no error after the first one.
+        try:
+            self.Login()
+            parameters = {}
+            result = self.CallAPI("ADSModule/GetInstances", parameters)
 
-        if type(result) == bool:
-            self.logger.error(f"Failed to update {self.FriendlyName} attributes, API Call returned {result}")
-            return
+            if not isinstance(result, list) or len(result) == 0:
+                self.logger.error(f"Failed to update {self.FriendlyName} attributes, API Call returned {result}")
+                return
 
-        if len(result[0]["AvailableInstances"]) != 0:
-            for Target in result:
-                for instance in Target[
-                    "AvailableInstances"
-                ]:  # entry = name['result']['AvailableInstances'][0]['InstanceIDs']
-                    # This should be a list of my AMP Servers [{'InstanceID': '<AMP Instance Object>'}]
-                    for amp_instance in list(self.AMPHandler.AMP_Instances):
-                        # This should be the <AMP Instance Object> comparing to the Instance Objects we got from `getInstances()`
-                        if self.AMPHandler.AMP_Instances[amp_instance].InstanceID == instance["InstanceID"]:
-                            for entry in instance:
-                                setattr(self.AMPHandler.AMP_Instances[amp_instance], entry, instance[entry])
-                            break
+            if len(result[0]["AvailableInstances"]) != 0:
+                for Target in result:
+                    for instance in Target[
+                        "AvailableInstances"
+                    ]:  # entry = name['result']['AvailableInstances'][0]['InstanceIDs']
+                        # This should be a list of my AMP Servers [{'InstanceID': '<AMP Instance Object>'}]
+                        for amp_instance in list(self.AMPHandler.AMP_Instances):
+                            # This should be the <AMP Instance Object> comparing to the Instance Objects we got from `getInstances()`
+                            if self.AMPHandler.AMP_Instances[amp_instance].InstanceID == instance["InstanceID"]:
+                                for entry in instance:
+                                    setattr(self.AMPHandler.AMP_Instances[amp_instance], entry, instance[entry])
+                                break
 
-        self.Last_Update_Time = time.time()
-        self.Last_Update_Time_Mutex.release()
+        finally:
+            # Stamped even on the failure path above, so a persistently failing API call gets
+            # throttled by the same 5s window as a successful one instead of firing a fresh
+            # `ADSModule/GetInstances` on literally every attribute read.
+            self.Last_Update_Time = time.time()
+            self.Last_Update_Time_Mutex.release()
 
     def _instance_ThreadManager(self):
         """AMP Instance(s) Thread Manager"""

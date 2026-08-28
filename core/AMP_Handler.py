@@ -303,11 +303,22 @@ class AMPHandler:
                 if amp_instance['DisplayImageSource'] in self.AMP_Modules:
                     name = str(self.AMP_Modules[amp_instance["DisplayImageSource"]]).split("'")[1]
                     image_source = amp_instance['DisplayImageSource']
+                    self.logger.info(
+                        f'Loaded AMP Module **{name}** for {amp_instance["FriendlyName"]} (DisplayImageSource: {image_source})'
+                    )
                 else:
                     name = "Generic"
                     image_source = "Generic"
-
-                self.logger.dev(f'Loaded __{name}__ for {amp_instance["FriendlyName"]}')
+                    # Logged at WARNING, with the value that failed to match, because this is the
+                    # single most common "why is my game-specific feature missing?" cause and it is
+                    # otherwise completely silent -- see CLAUDE.md's `DisplayImageSources` section.
+                    # Matching is exact string equality against each module's `DisplayImageSources`
+                    # list, so the fix is to add the value below to the right module.
+                    self.logger.warning(
+                        f'No AMP Module matches {amp_instance["FriendlyName"]}\'s DisplayImageSource '
+                        f'{amp_instance["DisplayImageSource"]!r} -- falling back to **Generic**. Known values: '
+                        f'{sorted(self.AMP_Modules)}'
+                    )
                 try:
                     server = self.AMP_Modules[image_source](instanceID=amp_instance['InstanceID'], serverdata=amp_instance, Handler=self)
                 except AMP.AMPInitError as e:

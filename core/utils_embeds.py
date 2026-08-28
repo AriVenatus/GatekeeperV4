@@ -122,17 +122,25 @@ class botEmbeds:
         """Used for Banner Groups and Display"""
         embed_list = []
         for db_server in server_list:
+            # A `None` entry has no `.InstanceID` to clean up by -- the old code dereferenced it
+            # anyway (AttributeError) and then fell through into the AMP lookup below.
             if db_server == None:
-                self.DB.Remove_Server_from_BannerGroup(banner_groupname=banner_name, instanceID=db_server.InstanceID)
-
-            try:
-                server = self.AMPInstances[db_server.InstanceID]
-            except:
-                self.DB.Remove_Server_from_BannerGroup(banner_groupname=banner_name, instanceID=db_server.InstanceID)
-
-            # If no DB Server or the Server is Hidden; skip.
-            if db_server == None or db_server.Hidden == 1:
                 continue
+
+            # If the Server is Hidden; skip.
+            if db_server.Hidden == 1:
+                continue
+
+            # No matching live AMP Instance (eg. the Instance was deleted in AMP) -- drop it from
+            # the Group and move on. Without the `continue` this fell through to build an embed
+            # out of `server`, which is either unbound (NameError, killing the whole Banner loop)
+            # or, worse, still holding the PREVIOUS iteration's Instance -- rendering one server's
+            # live data under another server's name.
+            if db_server.InstanceID not in self.AMPInstances:
+                self.DB.Remove_Server_from_BannerGroup(banner_groupname=banner_name, instanceID=db_server.InstanceID)
+                continue
+
+            server = self.AMPInstances[db_server.InstanceID]
 
             instance_status = i18n.t('embeds.server_display.status_offline_icon')
             dedicated_status = i18n.t('embeds.server_display.status_offline_icon')

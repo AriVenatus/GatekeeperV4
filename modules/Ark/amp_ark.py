@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import time
 
 from core import AMP
 from core import AMP_Console
@@ -82,31 +83,146 @@ class AMPArk(AMP.AMPInstance):
 
         return []
 
-    # Attribute name substrings that must never be logged by getMap()'s diagnostic dump below --
-    # AMPInstance carries live auth state (eg. self.SessionID, used as a Bearer token) as plain attributes.
-    _SENSITIVE_ATTR_SUBSTRINGS = ('session', 'password', 'token', 'auth', 'key', 'cookie', 'secret')
+    # AMP config nodes that may hold the currently selected Map, most likely first. Verified against
+    # AMP's own official ARK template in CubeCoders/AMPTemplates (`ark-seminapi.kvp` +
+    # `ark-seminapiconfig.json`): the Map is a Generic-module *app setting* with `FieldName: "Map"`,
+    # and the template itself addresses app settings by their full node path -- its
+    # `Meta.EndpointURIFormat` references `{GenericModule.App.Ports.$QueryPort}` -- which is where
+    # `GenericModule.App.Map` comes from. The remaining entries cover the legacy dedicated ARK ADS
+    # module; asking for all of them costs nothing, `Core/GetConfigs` takes a node list in one call.
+    _MAP_CONFIG_NODES = ('GenericModule.App.Map', 'ARKSEModule.Game.Map', 'Map')
+    # Selecting "Custom" in the Map dropdown stores the literal placeholder `{{CustomMap}}` as the
+    # value; the real name then lives in this companion setting (`FieldName: "CustomMap"`).
+    _CUSTOM_MAP_CONFIG_NODES = ('GenericModule.App.CustomMap', 'CustomMap')
+    # `Core/GetSettingsSpec` fallback: the Map setting's category on the current template is
+    # `"ARK SE:stadia_controller"` -- the part after the colon is just an icon name, so match the
+    # prefix only. NOTE this whole path is known NOT to work on a Generic-module-template Instance
+    # (confirmed live 2026-08-26: the spec came back with Core/AMP categories only, no ARK category
+    # at all), it's kept purely for the legacy dedicated ARK ADS module.
+    _MAP_SPEC_CATEGORY_PREFIX = 'ARK SE:'
+    # Cache both hits and misses for this long. getMap() is called from the Banner Group loop on
+    # every tick, per ARK Instance -- without this, a miss would also re-log its diagnostic every
+    # tick, and the Map realistically only changes on an Instance restart.
+    _MAP_CACHE_SECONDS = 300
+
+    def _map_display_name(self, value: str, enum_values: dict | None) -> str:
+        """Maps a raw AMP setting value (eg. `TheIsland`) to the label AMP shows for it
+        (eg. `The Island`), falling back to the raw value when there's no enum entry."""
+        label = value
+        if isinstance(enum_values, dict) and value in enum_values and isinstance(enum_values[value], str):
+            label = enum_values[value]
+        # AMP marks the template default as eg. `The Island (default)`; that suffix is noise in an embed.
+        if label.endswith(' (default)'):
+            label = label[:-len(' (default)')]
+
+        return label.strip()
+
+    def _get_map_configs(self, nodes: tuple[str, ...]) -> tuple[dict, object]:
+        """Asks AMP for `nodes` in a single `Core/GetConfigs` call (unknown nodes are simply omitted
+        from the response) and returns `({key: setting_dict}, raw_response)`.
+
+        Settings are indexed under their `Node`, `Name` AND `FieldName` -- which of those AMP puts on
+        a `Core/GetConfigs` entry isn't verified against a live Instance, so keying on only one of
+        them would silently drop an otherwise perfectly good answer. The raw response is handed back
+        so a miss can log what actually came over the wire instead of an empty parsed dict."""
+        result = self.CallAPI('Core/GetConfigs', {'nodes': list(nodes)})
+
+        settings = result
+        if isinstance(settings, dict):
+            settings = [settings]
+        if not isinstance(settings, list):
+            return {}, result
+
+        configs = {}
+        for setting in settings:
+            if not isinstance(setting, dict):
+                continue
+            for key in (setting.get('Node'), setting.get('Name'), setting.get('FieldName')):
+                if isinstance(key, str) and key not in configs:
+                    configs[key] = setting
+
+        return configs, result
+
+    def _getMap_from_settings_spec(self) -> str | None:
+        """Legacy dedicated-ARK-ADS-module fallback: scan `Core/GetSettingsSpec` for a `Map` entry."""
+        result = self.CallAPI('Core/GetSettingsSpec', {})
+        if not isinstance(result, dict):
+            return None
+
+        for category, settings in result.items():
+            if not isinstance(settings, list):
+                continue
+            if isinstance(category, str) and not category.startswith(self._MAP_SPEC_CATEGORY_PREFIX):
+                continue
+            for setting in settings:
+                if not isinstance(setting, dict) or setting.get('Name') != 'Map':
+                    continue
+                value = setting.get('CurrentValue')
+                if isinstance(value, str) and value.strip():
+                    return self._map_display_name(value.strip(), setting.get('EnumValues'))
+
+        return None
 
     def getMap(self) -> str | None:
         """Returns the human-readable Map name currently configured for this Instance (eg. `Crystal Isles`),
-        or `None` if it couldn't be found. `Core/GetSettingsSpec` turned out NOT to carry ARK-specific settings
-        at all for a Generic-module-template Instance (confirmed live -- it only returned Core/AMP categories
-        like 'File Manager'/'System Settings', no ARK category whatsoever), so that approach is unusable here.
-        This instead checks a `Metadata` attribute -- `ADSModule/GetInstances`' per-Instance fields get applied
-        directly onto this object via `setattr()` in `AMP._updateInstanceAttributes()`, and AMP commonly surfaces
-        a one-line Metadata string per Instance, which is the next most likely place for this. On a miss it logs
-        every other short string/bool/int attribute already on this object (skipping anything that looks like
-        live auth state) so the real field can be found from the log instead of guessed at again."""
-        metadata = getattr(self, 'Metadata', None)
-        if isinstance(metadata, str) and metadata.strip():
-            return metadata.strip()
+        or `None` if it couldn't be found. Reads AMP's config node directly via `Core/GetConfigs` rather
+        than hunting through `Core/GetSettingsSpec` -- see `_MAP_CONFIG_NODES` for where the node name is
+        verified from, and for why the spec-scanning approach can't work on the current template. The result
+        (including a miss) is cached for `_MAP_CACHE_SECONDS`, since the Banner Group loop calls this on
+        every tick."""
+        now = time.time()
+        if now - getattr(self, '_map_cache_time', 0) < self._MAP_CACHE_SECONDS:
+            return getattr(self, '_map_cache_value', None)
 
-        seen = {}
-        for name, value in vars(self).items():
-            if any(bad in name.lower() for bad in self._SENSITIVE_ATTR_SUBSTRINGS):
+        self._map_cache_time = now
+        self._map_cache_value = None
+
+        self.Login()
+        configs, raw = self._get_map_configs(self._MAP_CONFIG_NODES)
+
+        map_value = None
+        enum_values = None
+        # `'Map'` is both the last entry in _MAP_CONFIG_NODES and the `Name`/`FieldName` every
+        # candidate node resolves to, so this covers the `Node`-less response shape too.
+        for node in self._MAP_CONFIG_NODES:
+            setting = configs.get(node)
+            if not isinstance(setting, dict):
                 continue
-            if isinstance(value, (str, int, float, bool)) and len(str(value)) <= 200:
-                seen[name] = value
-        self.logger.error(f"Unable to find a Map/Metadata attribute for {self.FriendlyName}. Other short attributes seen on this Instance: {seen!r}")
+            value = setting.get('CurrentValue')
+            if isinstance(value, str) and value.strip():
+                map_value = value.strip()
+                enum_values = setting.get('EnumValues')
+                break
+
+        if map_value is not None:
+            # `{{CustomMap}}` (or any other unresolved placeholder) means "Custom" is selected.
+            if '{{' in map_value:
+                custom, custom_raw = self._get_map_configs(self._CUSTOM_MAP_CONFIG_NODES)
+                for setting in custom.values():
+                    value = setting.get('CurrentValue')
+                    if isinstance(value, str) and value.strip():
+                        self._map_cache_value = value.strip()
+                        return self._map_cache_value
+
+                self.logger.error(
+                    f'{self.FriendlyName} has a Custom Map selected but no Custom Map Name is set; '
+                    f'`Core/GetConfigs` for {list(self._CUSTOM_MAP_CONFIG_NODES)} returned {custom_raw!r}'
+                )
+                return None
+
+            self._map_cache_value = self._map_display_name(map_value, enum_values)
+            return self._map_cache_value
+
+        spec_map = self._getMap_from_settings_spec()
+        if spec_map is not None:
+            self._map_cache_value = spec_map
+            return self._map_cache_value
+
+        self.logger.error(
+            f'Unable to find the Map setting for {self.FriendlyName}. `Core/GetConfigs` for '
+            f'{list(self._MAP_CONFIG_NODES)} returned {raw!r}, and no `Map` entry was found under a '
+            f'{self._MAP_SPEC_CATEGORY_PREFIX!r} category in `Core/GetSettingsSpec` either.'
+        )
         return None
 
     def check_Whitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None):

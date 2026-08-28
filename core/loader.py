@@ -37,11 +37,19 @@ class Handler:
         """This loads all the required Cogs/Scripts for each unique AMPInstance.Module type"""
         try:
             dir_list = self._cwd.joinpath('modules').iterdir()
+        except Exception:
+            dir_list = []
+            self.logger.error(f'**ERROR** {self.name} Finding Server Cog Module ** - File Not Found {traceback.format_exc()}')
 
-            for folder in dir_list:
-                file_list = folder.glob('cog_*.py')
+        for folder in dir_list:
+            file_list = folder.glob('cog_*.py')
 
-                for script in file_list:
+            for script in file_list:
+                # Per-script, deliberately: this used to be one `try` around the entire nested loop,
+                # so a single cog module that raised on import aborted discovery for every module
+                # after it -- silently, and dependent on filesystem iteration order. Those modules
+                # then fell back to Generic with nothing in the log tying it to the real cause.
+                try:
                     module_name = script.name[4:-3].capitalize()
                     spec = importlib.util.spec_from_file_location(module_name, script)
                     class_module = importlib.util.module_from_spec(spec)
@@ -52,8 +60,9 @@ class Handler:
 
                     self.logger.dev(f'**SUCCESS** {self.name} Found Server Cog Module **{module_name}**')
 
-        except Exception:
-            self.logger.error(f'**ERROR** {self.name} Finding Server Cog Module ** - File Not Found {traceback.format_exc()}')
+                except Exception:
+                    self.logger.error(f'**ERROR** {self.name} Finding Server Cog Module **{script.name}** - {traceback.format_exc()}')
+                    continue
 
         #Just to make it easier; always load the Generic Module as a base.
         await self._client.load_extension('modules.Generic.generic')
@@ -63,18 +72,24 @@ class Handler:
         #This loads the Cog Module if it finds a Instance that requires said Module.
         for instance in list(self.AMPInstances):
             DisplayImageSource = self.AMPInstances[instance].DisplayImageSource
-            if DisplayImageSource in self.Cog_Modules:
-                path = self.Cog_Modules[DisplayImageSource]
-                cog = (".").join(path.as_posix().split("/")[-3:])[:-3]
-                try:
-                    await self._client.load_extension(cog)
-                    self.logger.info(f'**SUCCESS** {self.name} Loading Server Cog Module **{path.stem}**')
+            if DisplayImageSource not in self.Cog_Modules:
+                self.logger.warning(
+                    f'No Server Cog Module matches {self.AMPInstances[instance].FriendlyName}\'s DisplayImageSource '
+                    f'{DisplayImageSource!r} -- only the Generic Cog applies to it. Known values: {sorted(self.Cog_Modules)}'
+                )
+                continue
 
-                except discord.ext.commands.errors.ExtensionAlreadyLoaded:
-                    continue
+            path = self.Cog_Modules[DisplayImageSource]
+            cog = (".").join(path.as_posix().split("/")[-3:])[:-3]
+            try:
+                await self._client.load_extension(cog)
+                self.logger.info(f'**SUCCESS** {self.name} Loading Server Cog Module **{path.stem}**')
 
-                except Exception:
-                    self.logger.error(f'**ERROR** {self.name} Loading Server Cog Module **{path.stem}** - {traceback.format_exc()}')
+            except discord.ext.commands.errors.ExtensionAlreadyLoaded:
+                continue
+
+            except Exception:
+                self.logger.error(f'**ERROR** {self.name} Loading Server Cog Module **{path.stem}** - {traceback.format_exc()}')
 
         self.logger.info('**All Server Modules Loaded**')
 
