@@ -90,6 +90,28 @@ def call_quiet(session: requests.Session, url: str, endpoint: str, params: dict,
 
 
 
+def collect_permission_nodes(obj, prefix='') -> list[str]:
+    """Flattens Core/GetPermissionsSpec into dotted node strings. The response is a tree whose
+    shape differs between AMP versions (Node/Name + Children, or plain nested dicts), so this
+    handles both rather than assuming one."""
+    nodes = []
+    if isinstance(obj, dict):
+        name = obj.get('Node') or obj.get('Name')
+        here = f'{prefix}.{name}' if prefix and name else (name or prefix)
+        if isinstance(name, str):
+            nodes.append(here)
+        for key, value in obj.items():
+            if key in ('Node', 'Name', 'Description'):
+                continue
+            nodes.extend(collect_permission_nodes(value, here))
+    elif isinstance(obj, list):
+        for value in obj:
+            nodes.extend(collect_permission_nodes(value, prefix))
+
+    return [n for n in nodes if n]
+
+
+
 def call(session: requests.Session, url: str, endpoint: str, params: dict, session_id: str = '') -> object:
     """POSTs one AMP API call and prints the raw status + body. Returns the parsed JSON or None."""
     body = dict(params)
@@ -150,6 +172,25 @@ def main() -> int:
     session_id = login(session, main_url, user, password, auth_secret)
     if session_id is None:
         return 1
+
+    # AMP's own list of every valid permission node. Two open questions ride on it: the
+    # narrowest `Settings.*` subtree that would let getMap() read the Map (core/amp_permissions.py
+    # denies `Settings.*` wholesale), and the current name of the backup node -- `LocalFileBackup.*`
+    # was dropped from perms_super() because AMP no longer recognises it, and nothing replaced it,
+    # so `/server backup` has had no permission behind it since.
+    print('\n== Core/GetPermissionsSpec (Settings + backup nodes) ==')
+    spec = call_quiet(session, main_url, 'Core/GetPermissionsSpec', {}, session_id)
+    if isinstance(spec, dict) and 'result' in spec:
+        spec = spec['result']
+    nodes = collect_permission_nodes(spec)
+    print(f'    total permission nodes: {len(nodes)}')
+    for label, needle in (('Settings', 'settings'), ('Backup', 'backup')):
+        matches = sorted(n for n in nodes if needle in n.lower())
+        print(f'    -- {label} nodes ({len(matches)}) --')
+        for node in matches[:60]:
+            print(f'       {node}')
+        if len(matches) > 60:
+            print(f'       ... {len(matches) - 60} more')
 
     print('\n== ADSModule/GetInstances ==')
     instances = call(session, main_url, 'ADSModule/GetInstances', {}, session_id)
