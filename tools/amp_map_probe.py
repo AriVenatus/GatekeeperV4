@@ -46,6 +46,50 @@ PERMISSION_NODES = ['Settings.*', 'Settings.GenericModule.*', 'Core.*', 'Core.Ap
 MAX_BODY = 1500
 
 
+# Values AMP stores for the stock ARK maps, plus the labels it shows for them. Used to spot the
+# Map in an arbitrary JSON blob without knowing which key it hides under.
+KNOWN_MAP_VALUES = (
+    'TheIsland', 'TheCenter', 'Ragnarok', 'Aberration_P', 'ScorchedEarth_P', 'Extinction',
+    'Valguero_P', 'Genesis', 'Gen2', 'CrystalIsles', 'LostIsland', 'Fjordur', 'Aquatica',
+)
+
+
+def find_maps(obj, path='') -> list[str]:
+    """Recursively reports `path = value` for anything that looks like a Map setting --
+    either a key named Map, or a value matching a known ARK map name."""
+    hits = []
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            here = f'{path}.{key}' if path else str(key)
+            if 'map' in str(key).lower() and isinstance(value, (str, int, float, bool)):
+                hits.append(f'{here} = {value!r}')
+            hits.extend(find_maps(value, here))
+    elif isinstance(obj, list):
+        for i, value in enumerate(obj):
+            hits.extend(find_maps(value, f'{path}[{i}]'))
+    elif isinstance(obj, str) and obj in KNOWN_MAP_VALUES:
+        hits.append(f'{path} = {obj!r}')
+
+    return hits
+
+
+def call_quiet(session: requests.Session, url: str, endpoint: str, params: dict, session_id: str = '') -> object:
+    """Like `call()` but without printing the body -- for responses we summarise ourselves."""
+    body = dict(params)
+    body['SESSIONID'] = session_id
+    headers = dict(HEADERS)
+    if session_id:
+        headers['Authorization'] = f'Bearer {session_id}'
+
+    resp = session.post(url + endpoint, headers=headers, data=json.dumps(body))
+    print(f'    HTTP {resp.status_code}  ({len(resp.text)} chars)')
+    try:
+        return resp.json()
+    except ValueError:
+        return None
+
+
+
 def call(session: requests.Session, url: str, endpoint: str, params: dict, session_id: str = '') -> object:
     """POSTs one AMP API call and prints the raw status + body. Returns the parsed JSON or None."""
     body = dict(params)
@@ -133,39 +177,63 @@ def main() -> int:
         inst_url = f"{base}/API/ADSModule/Servers/{inst.get('InstanceID')}/API/"
         print(f'\n\n======== {friendly} ========')
 
-        print('  -- Core/Login (Instance-scoped session) --')
+        # (1) Does the Map already come back from ADSModule/GetInstances, with no extra
+        # permission and no extra API call? The per-Instance object is large and was truncated
+        # on the first run, so dump it whole and scan it for anything Map-shaped.
+        print('  -- Full Instance object from ADSModule/GetInstances --')
+        print(json.dumps(inst, indent=2, default=str))
+        hits = find_maps(inst)
+        print(f'  >> Map-shaped values found in the Instance object: {hits if hits else "NONE"}')
+
+        print('\n  -- Core/Login (Instance-scoped session) --')
         inst_session = login(session, inst_url, user, password, auth_secret)
         if inst_session is None:
             continue
 
-        print('\n  -- Core/CurrentSessionHasPermission --')
-        for node in PERMISSION_NODES:
-            print(f'    node={node!r}')
-            call(session, inst_url, 'Core/CurrentSessionHasPermission', {'PermissionNode': node}, inst_session)
+        # (2) Control call on a node we KNOW exists and is visible (it came back in the spec on
+        # the first run). If this works while the Map node says "No such node", then GetConfig
+        # itself is fine and the Map node is either named differently or filtered out.
+        print('\n  -- Core/GetConfig control node (known to exist and be readable) --')
+        call(session, inst_url, 'Core/GetConfig', {'node': 'FileManagerPlugin.FileManager.BasePath'}, inst_session)
 
-        print('\n  -- Core/GetConfig (one node at a time; an error body names the real reason) --')
+        print('\n  -- Core/GetConfig candidate Map nodes --')
         for node in MAP_NODES:
             print(f'    node={node!r}')
             call(session, inst_url, 'Core/GetConfig', {'node': node}, inst_session)
 
-        print('\n  -- Core/GetConfigs (all candidate nodes at once) --')
-        call(session, inst_url, 'Core/GetConfigs', {'nodes': MAP_NODES}, inst_session)
-
-        print('\n  -- Core/GetSettingsSpec (category names only) --')
-        spec = call(session, inst_url, 'Core/GetSettingsSpec', {}, inst_session)
+        # (3) The decisive test for the permission theory: if EVERY setting the spec returns is
+        # marked AlwaysAllowRead, the spec is being filtered by permission, not by what exists.
+        print('\n  -- Core/GetSettingsSpec (permission-filter analysis) --')
+        spec = call_quiet(session, inst_url, 'Core/GetSettingsSpec', {}, inst_session)
         if isinstance(spec, dict) and 'result' in spec and isinstance(spec['result'], dict):
             spec = spec['result']
-        if isinstance(spec, dict):
-            print(f'    categories: {sorted(spec)}')
-            for category, settings in spec.items():
-                if not isinstance(settings, list):
+        if not isinstance(spec, dict):
+            print(f'    unexpected spec response: {spec!r}')
+            continue
+
+        always, gated, nodes = 0, [], []
+        for category, settings in spec.items():
+            if not isinstance(settings, list):
+                continue
+            for setting in settings:
+                if not isinstance(setting, dict):
                     continue
-                names = [s.get('Name') or s.get('FieldName') for s in settings if isinstance(s, dict)]
-                if any(n == 'Map' for n in names):
-                    print(f'    !! category {category!r} DOES contain a Map entry')
-                    for s in settings:
-                        if isinstance(s, dict) and (s.get('Name') == 'Map' or s.get('FieldName') == 'Map'):
-                            print(f'       {s}')
+                nodes.append(setting.get('Node'))
+                if setting.get('AlwaysAllowRead') is True:
+                    always += 1
+                else:
+                    gated.append(setting.get('Node'))
+                if setting.get('Name') == 'Map' or setting.get('FieldName') == 'Map':
+                    print(f'    !! Map entry found: {setting}')
+
+        print(f'    categories: {sorted(spec)}')
+        print(f'    settings returned: {len(nodes)}  |  AlwaysAllowRead=True: {always}  |  gated: {len(gated)}')
+        if gated:
+            print(f'    gated nodes returned anyway (permission theory WEAKENED): {gated[:20]}')
+        else:
+            print('    >> Every returned setting is AlwaysAllowRead -- the spec is being filtered')
+            print('       by permission. `-Settings.*` in core/amp_permissions.py is the cause.')
+        print(f'    node prefixes seen: {sorted({str(n).split(".")[0] for n in nodes if n})}')
 
     return 0
 
