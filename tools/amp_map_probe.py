@@ -90,25 +90,28 @@ def call_quiet(session: requests.Session, url: str, endpoint: str, params: dict,
 
 
 
-def collect_permission_nodes(obj, prefix='') -> list[str]:
-    """Flattens Core/GetPermissionsSpec into dotted node strings. The response is a tree whose
-    shape differs between AMP versions (Node/Name + Children, or plain nested dicts), so this
-    handles both rather than assuming one."""
+def collect_permission_nodes(obj) -> list[str]:
+    """Collects every permission node string out of Core/GetPermissionsSpec.
+
+    AMP's nodes are ALREADY fully qualified at every level of the tree (`Settings`,
+    `Settings.ADSModule`, `Settings.ADSModule.ADS`, `Settings.ADSModule.ADS.AlertMessage`),
+    so this must NOT prepend the parent's path -- doing so produced unreadable garbage like
+    `Settings.Settings.ADSModule.Settings.ADSModule.ADS....` on the first run, which then hit
+    the output cap before any GenericModule branch became visible."""
     nodes = []
     if isinstance(obj, dict):
         name = obj.get('Node') or obj.get('Name')
-        here = f'{prefix}.{name}' if prefix and name else (name or prefix)
-        if isinstance(name, str):
-            nodes.append(here)
+        if isinstance(name, str) and name:
+            nodes.append(name)
         for key, value in obj.items():
             if key in ('Node', 'Name', 'Description'):
                 continue
-            nodes.extend(collect_permission_nodes(value, here))
+            nodes.extend(collect_permission_nodes(value))
     elif isinstance(obj, list):
         for value in obj:
-            nodes.extend(collect_permission_nodes(value, prefix))
+            nodes.extend(collect_permission_nodes(value))
 
-    return [n for n in nodes if n]
+    return nodes
 
 
 
@@ -182,15 +185,19 @@ def main() -> int:
     spec = call_quiet(session, main_url, 'Core/GetPermissionsSpec', {}, session_id)
     if isinstance(spec, dict) and 'result' in spec:
         spec = spec['result']
-    nodes = collect_permission_nodes(spec)
+    nodes = sorted(set(collect_permission_nodes(spec)))
     print(f'    total permission nodes: {len(nodes)}')
-    for label, needle in (('Settings', 'settings'), ('Backup', 'backup')):
-        matches = sorted(n for n in nodes if needle in n.lower())
-        print(f'    -- {label} nodes ({len(matches)}) --')
-        for node in matches[:60]:
-            print(f'       {node}')
-        if len(matches) > 60:
-            print(f'       ... {len(matches) - 60} more')
+    # The `Settings.` subtree in full, deliberately uncapped: the open question is whether a
+    # GenericModule branch exists to grant, so nothing here may be truncated away.
+    settings_nodes = [n for n in nodes if n.split('.')[0] == 'Settings']
+    print(f'    -- Settings subtree ({len(settings_nodes)}) --')
+    for node in settings_nodes:
+        print(f'       {node}')
+    other = [n for n in nodes if n.split('.')[0] != 'Settings'
+             and ('backup' in n.lower() or 'generic' in n.lower())]
+    print(f'    -- backup / GenericModule nodes outside Settings ({len(other)}) --')
+    for node in other:
+        print(f'       {node}')
 
     print('\n== ADSModule/GetInstances ==')
     instances = call(session, main_url, 'ADSModule/GetInstances', {}, session_id)
