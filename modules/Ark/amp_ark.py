@@ -40,8 +40,7 @@ class AMPArk(AMP.AMPInstance):
 
         self.default_background_banner_path = 'resources/banners/Ark_Banner.png'
 
-        if self.Avatar_url == None:
-            self.DB_Server.Avatar_url = 'https://github.com/AriVenatus/GatekeeperV4/blob/main/resources/avatars/ark_avatar.png?raw=true'
+        self._apply_default_avatar('https://github.com/AriVenatus/GatekeeperV4/blob/main/resources/avatars/ark_avatar.png?raw=true')
 
     def _is_valid_steamid64(self, value: str | None) -> bool:
         """Validates that `value` looks like a well-formed SteamID64 before it's interpolated into a console command."""

@@ -473,6 +473,44 @@ class AMPInstance:
 
         return super().__getattribute__(__name)
 
+    # Every module's default avatar is a file in this repo's own avatars folder. A stored URL
+    # matching this is therefore something Gatekeeper picked, not something a user chose, which
+    # is what makes it safe to replace when the module changes.
+    _DEFAULT_AVATAR_MARKER = "/resources/avatars/"
+
+    def _apply_default_avatar(self, url: str) -> None:
+        """Sets this Instance's avatar to its module's default, unless a user picked their own.
+
+        Modules used to do this with a bare `if self.Avatar_url == None`, which only ever fires
+        once -- on the very first startup that sees the Instance. If that first startup resolved
+        the Instance to a DIFFERENT module, the other module's default is written to the DB and
+        then sticks forever, even after detection is fixed. That is exactly what happened to an
+        ARK Instance that briefly fell back to Generic: it kept showing the generic AMP avatar in
+        every embed long after it was correctly loading as ARK.
+
+        A stored URL is replaced when it is empty, or when it is one of this project's own
+        default avatars but not this module's. Anything else is treated as a deliberate choice
+        (see `/server settings avatar`) and left alone. The one thing this gets wrong is a user
+        who deliberately picked another module's stock avatar for their server -- it will be
+        reset on the next startup.
+        """
+        current = self.DB_Server.Avatar_url
+        if current == url:
+            return
+
+        if current in (None, ""):
+            self.DB_Server.Avatar_url = url
+            self.Avatar_url = url
+            return
+
+        if self._DEFAULT_AVATAR_MARKER in current:
+            self.logger.info(
+                f"{self.FriendlyName}'s avatar was still another module's default ({current}); "
+                f"updating it to the {self.APIModule} default."
+            )
+            self.DB_Server.Avatar_url = url
+            self.Avatar_url = url
+
     def _setDBattr(self):
         """This is used to set/update the DB attributes for the AMP server"""
         self.DB_Server = self.DB.GetServer(InstanceID=self.InstanceID)

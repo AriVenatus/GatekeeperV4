@@ -27,8 +27,7 @@ class AMPMinecraft(AMP.AMPInstance):
 
         self.default_background_banner_path = 'resources/banners/Minecraft_banner.png'
 
-        if self.Avatar_url == None:
-            self.DB_Server.Avatar_url = 'https://github.com/AriVenatus/GatekeeperV4/blob/main/resources/avatars/mc_avatar.png?raw=true'
+        self._apply_default_avatar('https://github.com/AriVenatus/GatekeeperV4/blob/main/resources/avatars/mc_avatar.png?raw=true')
 
     def setup_Gatekeeper_Permissions(self):
         """Sets the Permissions for Minecraft Modules"""
