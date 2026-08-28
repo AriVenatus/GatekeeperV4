@@ -115,6 +115,38 @@ def collect_permission_nodes(obj) -> list[str]:
 
 
 
+def dump_permission_nodes(session: requests.Session, url: str, session_id: str) -> list[str]:
+    """Dumps AMP's own permission-node list for whichever scope `url` points at.
+
+    Scope matters and is easy to get wrong: the MAIN ADS instance runs no game module, so its
+    spec can never contain a `Settings.GenericModule` branch no matter what the game Instance
+    supports. The branch that decides whether Gatekeeper may read the ARK settings only exists
+    in the game Instance's OWN spec, which is why this runs against both."""
+    spec = call_quiet(session, url, 'Core/GetPermissionsSpec', {}, session_id)
+    if isinstance(spec, dict) and 'result' in spec:
+        spec = spec['result']
+
+    nodes = sorted(set(collect_permission_nodes(spec)))
+    print(f'    total permission nodes: {len(nodes)}')
+
+    settings_nodes = [n for n in nodes if n.split('.')[0] == 'Settings']
+    module_nodes = [n for n in settings_nodes if n.split('.')[1:2] == ['GenericModule']]
+    print(f'    Settings subtree: {len(settings_nodes)} nodes, '
+          f'top-level branches: {sorted({n.split(".")[1] for n in settings_nodes if "." in n})}')
+    if module_nodes:
+        print(f'    >> Settings.GenericModule branch EXISTS here ({len(module_nodes)} nodes):')
+        for node in module_nodes:
+            print(f'       {node}')
+    else:
+        print('    >> No Settings.GenericModule branch in this scope.')
+
+    backup = [n for n in nodes if 'backup' in n.lower()]
+    print(f'    backup-related nodes: {backup if backup else "NONE"}')
+
+    return nodes
+
+
+
 def call(session: requests.Session, url: str, endpoint: str, params: dict, session_id: str = '') -> object:
     """POSTs one AMP API call and prints the raw status + body. Returns the parsed JSON or None."""
     body = dict(params)
@@ -176,28 +208,8 @@ def main() -> int:
     if session_id is None:
         return 1
 
-    # AMP's own list of every valid permission node. Two open questions ride on it: the
-    # narrowest `Settings.*` subtree that would let getMap() read the Map (core/amp_permissions.py
-    # denies `Settings.*` wholesale), and the current name of the backup node -- `LocalFileBackup.*`
-    # was dropped from perms_super() because AMP no longer recognises it, and nothing replaced it,
-    # so `/server backup` has had no permission behind it since.
-    print('\n== Core/GetPermissionsSpec (Settings + backup nodes) ==')
-    spec = call_quiet(session, main_url, 'Core/GetPermissionsSpec', {}, session_id)
-    if isinstance(spec, dict) and 'result' in spec:
-        spec = spec['result']
-    nodes = sorted(set(collect_permission_nodes(spec)))
-    print(f'    total permission nodes: {len(nodes)}')
-    # The `Settings.` subtree in full, deliberately uncapped: the open question is whether a
-    # GenericModule branch exists to grant, so nothing here may be truncated away.
-    settings_nodes = [n for n in nodes if n.split('.')[0] == 'Settings']
-    print(f'    -- Settings subtree ({len(settings_nodes)}) --')
-    for node in settings_nodes:
-        print(f'       {node}')
-    other = [n for n in nodes if n.split('.')[0] != 'Settings'
-             and ('backup' in n.lower() or 'generic' in n.lower())]
-    print(f'    -- backup / GenericModule nodes outside Settings ({len(other)}) --')
-    for node in other:
-        print(f'       {node}')
+    print('\n== Core/GetPermissionsSpec -- MAIN ADS instance ==')
+    dump_permission_nodes(session, main_url, session_id)
 
     print('\n== ADSModule/GetInstances ==')
     instances = call(session, main_url, 'ADSModule/GetInstances', {}, session_id)
@@ -237,6 +249,9 @@ def main() -> int:
         inst_session = login(session, inst_url, user, password, auth_secret)
         if inst_session is None:
             continue
+
+        print('\n  -- Core/GetPermissionsSpec -- this Instance --')
+        dump_permission_nodes(session, inst_url, inst_session)
 
         # (2) Control call on a node we KNOW exists and is visible (it came back in the spec on
         # the first run). If this works while the Map node says "No such node", then GetConfig
