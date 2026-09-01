@@ -112,12 +112,6 @@ class AMPArk(AMP.AMPInstance):
     # Selecting "Custom" in the Map dropdown stores the literal placeholder `{{CustomMap}}` as the
     # value; the real name then lives in this companion setting (`FieldName: "CustomMap"`).
     _CUSTOM_MAP_CONFIG_NODES = ('GenericModule.App.CustomMap', 'CustomMap')
-    # `Core/GetSettingsSpec` fallback: the Map setting's category on the current template is
-    # `"ARK SE:stadia_controller"` -- the part after the colon is just an icon name, so match the
-    # prefix only. NOTE this whole path is known NOT to work on a Generic-module-template Instance
-    # (confirmed live 2026-08-26: the spec came back with Core/AMP categories only, no ARK category
-    # at all), it's kept purely for the legacy dedicated ARK ADS module.
-    _MAP_SPEC_CATEGORY_PREFIX = 'ARK SE:'
     # Cache both hits and misses for this long. getMap() is called from the Banner Group loop on
     # every tick, per ARK Instance -- without this, a miss would also re-log its diagnostic every
     # tick, and the Map realistically only changes on an Instance restart.
@@ -169,7 +163,15 @@ class AMPArk(AMP.AMPInstance):
         return configs, raw
 
     def _getMap_from_settings_spec(self) -> str | None:
-        """Legacy dedicated-ARK-ADS-module fallback: scan `Core/GetSettingsSpec` for a `Map` entry."""
+        """Fallback: scan every category returned by `Core/GetSettingsSpec` for a `Map` entry.
+
+        Deliberately not scoped to any one category name -- an earlier version of this method
+        only looked under `"ARK SE:..."`, which was confirmed against a single template/AMP
+        version on a single live Instance. This one (2026-09-01) proved that category doesn't
+        exist for it at all, meaning the Map setting's category is not stable across ARK
+        templates/AMP versions and has to be discovered by scanning everything. A hit is logged
+        with its category and node so `_MAP_CONFIG_NODES` can be extended with the exact node,
+        letting `getMap()` skip this full-spec scan on future calls."""
         result = self.CallAPI('Core/GetSettingsSpec', {})
         if not isinstance(result, dict):
             return None
@@ -177,24 +179,27 @@ class AMPArk(AMP.AMPInstance):
         for category, settings in result.items():
             if not isinstance(settings, list):
                 continue
-            if isinstance(category, str) and not category.startswith(self._MAP_SPEC_CATEGORY_PREFIX):
-                continue
             for setting in settings:
                 if not isinstance(setting, dict) or setting.get('Name') != 'Map':
                     continue
                 value = setting.get('CurrentValue')
                 if isinstance(value, str) and value.strip():
+                    self.logger.info(
+                        f"{self.FriendlyName}'s Map setting was found via Core/GetSettingsSpec under category "
+                        f"{category!r}, node {setting.get('Node')!r} -- consider adding this node to "
+                        f"_MAP_CONFIG_NODES in modules/Ark/amp_ark.py so getMap() can skip this full-spec scan."
+                    )
                     return self._map_display_name(value.strip(), setting.get('EnumValues'))
 
         return None
 
     def getMap(self) -> str | None:
         """Returns the human-readable Map name currently configured for this Instance (eg. `Crystal Isles`),
-        or `None` if it couldn't be found. Reads AMP's config node directly via `Core/GetConfig` rather
-        than hunting through `Core/GetSettingsSpec` -- see `_MAP_CONFIG_NODES` for where the node name is
-        verified from, and for why the spec-scanning approach can't work on the current template. The result
-        (including a miss) is cached for `_MAP_CACHE_SECONDS`, since the Banner Group loop calls this on
-        every tick."""
+        or `None` if it couldn't be found. Tries the known `Core/GetConfig` node names first (see
+        `_MAP_CONFIG_NODES`), then falls back to a full `Core/GetSettingsSpec` scan (see
+        `_getMap_from_settings_spec`) for templates/AMP versions where none of those nodes exist. The
+        result (including a miss) is cached for `_MAP_CACHE_SECONDS`, since the Banner Group loop calls
+        this on every tick."""
         now = time.time()
         if now - getattr(self, '_map_cache_time', 0) < self._MAP_CACHE_SECONDS:
             return getattr(self, '_map_cache_value', None)
@@ -245,8 +250,8 @@ class AMPArk(AMP.AMPInstance):
 
         self.logger.error(
             f'Unable to find the Map setting for {self.FriendlyName}. `Core/GetConfig` for '
-            f'{list(self._MAP_CONFIG_NODES)} returned {raw!r}, and no `Map` entry was found under a '
-            f'{self._MAP_SPEC_CATEGORY_PREFIX!r} category in `Core/GetSettingsSpec` either.'
+            f'{list(self._MAP_CONFIG_NODES)} returned {raw!r}, and no `Map` entry was found in any category '
+            f'of `Core/GetSettingsSpec` either.'
         )
         return None
 
