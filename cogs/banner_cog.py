@@ -383,6 +383,7 @@ class Banner(commands.Cog):
 
     @banner_group_group.command(name='create_group', description=i18n.t('commands.bot.bannergroup.create_group.description'))
     @utils_permissions.role_check()
+    @app_commands.describe(group_name=i18n.t('commands.bot.bannergroup.create_group.params.group_name.description'))
     async def banner_group_create(self, context: commands.Context, group_name: str):
         try:
             self.DB.Add_BannerGroup(name=group_name)
@@ -393,6 +394,7 @@ class Banner(commands.Cog):
 
     @banner_group_group.command(name='info', description=i18n.t('commands.bot.bannergroup.info.description'))
     @app_commands.autocomplete(group_name=autocomplete_bannergroups)
+    @app_commands.describe(group_name=i18n.t('commands.bot.bannergroup.info.params.group_name.description'))
     async def banner_group_info(self, context: commands.Context, group_name: str):
         banner_info = self.DB.Get_one_BannerGroup_info(name=group_name)
 
@@ -423,6 +425,8 @@ class Banner(commands.Cog):
 
     @banner_group_group.command(name='rename', description=i18n.t('commands.bot.bannergroup.rename.description'))
     @app_commands.autocomplete(group_name=autocomplete_bannergroups)
+    @app_commands.describe(group_name=i18n.t('commands.bot.bannergroup.rename.params.group_name.description'))
+    @app_commands.describe(new_groupname=i18n.t('commands.bot.bannergroup.rename.params.new_groupname.description'))
     async def banner_group_rename(self, context: commands.Context, group_name: str, new_groupname: str):
         try:
             self.DB.Update_BannerGroup(new_name=new_groupname, name=group_name)
@@ -435,6 +439,9 @@ class Banner(commands.Cog):
     @banner_group_group.command(name='add', description=i18n.t('commands.bot.bannergroup.add.description'))
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.autocomplete(group_name=autocomplete_bannergroups)
+    @app_commands.describe(group_name=i18n.t('commands.bot.bannergroup.add.params.group_name.description'))
+    @app_commands.describe(server=i18n.t('commands.bot.bannergroup.add.params.server.description'))
+    @app_commands.describe(channel=i18n.t('commands.bot.bannergroup.add.params.channel.description'))
     async def banner_group_add(self, context: commands.Context, group_name: str, server: str | None = None, channel: discord.abc.GuildChannel | None = None):
         c_status = True
         s_status = True
@@ -468,6 +475,9 @@ class Banner(commands.Cog):
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.autocomplete(channel=autocomplete_bannergroups_channels)
     @app_commands.autocomplete(group_name=autocomplete_bannergroups)
+    @app_commands.describe(group_name=i18n.t('commands.bot.bannergroup.remove.params.group_name.description'))
+    @app_commands.describe(server=i18n.t('commands.bot.bannergroup.remove.params.server.description'))
+    @app_commands.describe(channel=i18n.t('commands.bot.bannergroup.remove.params.channel.description'))
     async def banner_group_remove(self, context: commands.Context, group_name, server: str | None = None, channel: str | None = None):
         if server == None and channel == None:
             return await context.send(content=i18n.t('messages.banner.group.remove.need_selection'), ephemeral=True, delete_after=self._client.Message_Timeout)
@@ -505,6 +515,7 @@ class Banner(commands.Cog):
 
     @banner_group_group.command(name='delete_group', description=i18n.t('commands.bot.bannergroup.delete_group.description'))
     @app_commands.autocomplete(group_name=autocomplete_bannergroups)
+    @app_commands.describe(group_name=i18n.t('commands.bot.bannergroup.delete_group.params.group_name.description'))
     async def banner_group_delete(self, context: commands.Context, group_name: str):
         banner_info = self.DB.Get_Messages_for_BannerGroup(banner_groupname=group_name)
         for key, value in banner_info.items():
@@ -530,6 +541,8 @@ class Banner(commands.Cog):
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.autocomplete(image=autocomplete_banners)
     @utils_permissions.role_check()
+    @app_commands.describe(server=i18n.t('commands.server.banner.background.params.server.description'))
+    @app_commands.describe(image=i18n.t('commands.server.banner.background.params.image.description'))
     async def amp_banner_background(self, context: commands.Context, server, image):
         amp_server = self.uBot.serverparse(server, context, context.guild.id)
         if amp_server == None:
@@ -546,6 +559,7 @@ class Banner(commands.Cog):
     @amp_banner.command(name='settings', description=i18n.t('commands.server.banner.settings.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.banner.settings.params.server.description'))
     async def amp_banner_settings(self, context: commands.Context, server):
         self.logger.command(f'{context.author.name} used Server Banner Settings Editor...')
         amp_server = self.uBot.serverparse(server, context, context.guild.id)
@@ -562,6 +576,7 @@ class Banner(commands.Cog):
     @banner_settings.command(name='auto_update', description=i18n.t('commands.bot.banner_settings.auto_update.description'))
     @utils_permissions.role_check()
     @app_commands.choices(flag=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
+    @app_commands.describe(flag=i18n.t('commands.bot.banner_settings.auto_update.params.flag.description'))
     async def banner_autoupdate(self, context: commands.Context, flag: Choice[int] = 1):
         self.logger.command(f'{context.author.name} used Bot Display Banners Auto Update...')
 
@@ -589,6 +604,7 @@ class Banner(commands.Cog):
     @banner_settings.command(name='type', description=i18n.t('commands.bot.banner_settings.type.description'))
     @utils_permissions.role_check()
     @app_commands.choices(type=[Choice(name=i18n.t('embeds.bot_settings.banner_type_images'), value=1), Choice(name=i18n.t('embeds.bot_settings.banner_type_embeds'), value=0)])
+    @app_commands.describe(type=i18n.t('commands.bot.banner_settings.type.params.type.description'))
     async def banner_type(self, context: commands.Context, type: Choice[int] = 0):
         self.logger.command(f'{context.author.name} used Bot Banners Type...')
 
@@ -603,6 +619,7 @@ class Banner(commands.Cog):
     @banner_settings.command(name='auto_remove', description=i18n.t('commands.bot.banner_settings.auto_remove.description'))
     @utils_permissions.role_check()
     @app_commands.choices(flag=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
+    @app_commands.describe(flag=i18n.t('commands.bot.banner_settings.auto_remove.params.flag.description'))
     async def banner_auto_remove(self, context: commands.Context, flag: Choice[int] = 1):
         self.logger.command(f'{context.author.name} used Bot Banners Auto Remove...')
 
@@ -617,6 +634,7 @@ class Banner(commands.Cog):
     @banner_settings.command(name='timeformat', description=i18n.t('commands.bot.banner_settings.timeformat.description'))
     @utils_permissions.role_check()
     @app_commands.choices(format=[Choice(name=i18n.t('commands.bot.banner_settings.timeformat.params.format.choices.1'), value=1), Choice(name=i18n.t('commands.bot.banner_settings.timeformat.params.format.choices.0'), value=0)])
+    @app_commands.describe(format=i18n.t('commands.bot.banner_settings.timeformat.params.format.description'))
     async def banner_timeformat(self, context: commands.Context, format: Choice[int]):
         self.logger.command(f'{context.author.name} changed banner time format to {"12h" if format.value == 1 else "24h"}')
 
@@ -635,6 +653,7 @@ class Banner(commands.Cog):
     @banner_settings.command(name='timezone', description=i18n.t('commands.bot.banner_settings.timezone.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(timezone=autocomplete_timezones)
+    @app_commands.describe(timezone=i18n.t('commands.bot.banner_settings.timezone.params.timezone.description'))
     async def banner_timezone(self, context: commands.Context, timezone: str):
         self.logger.command(f'{context.author.name} changed banner timezone to {timezone}')
 

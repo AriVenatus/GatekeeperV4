@@ -82,6 +82,7 @@ class Regex(commands.Cog):
     @regex_pattern.command(name='delete', description=i18n.t('commands.bot.regex_pattern.delete.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(name=autocomplete_regex)
+    @app_commands.describe(name=i18n.t('commands.bot.regex_pattern.delete.params.name.description'))
     async def regex_pattern_remove(self, context: commands.Context, name: str):
         self.logger.command(f'{context.author.name} used Regex Pattern Delete')
         if self.DB.DelRegexPattern(Name=name):
@@ -96,6 +97,10 @@ class Regex(commands.Cog):
         Choice(name=i18n.t('commands.bot.regex_pattern.update.params.filter_type.choices.0'), value=0),
         Choice(name=i18n.t('commands.bot.regex_pattern.update.params.filter_type.choices.1'), value=1),
     ])
+    @app_commands.describe(name=i18n.t('commands.bot.regex_pattern.update.params.name.description'))
+    @app_commands.describe(new_name=i18n.t('commands.bot.regex_pattern.update.params.new_name.description'))
+    @app_commands.describe(filter_type=i18n.t('commands.bot.regex_pattern.update.params.filter_type.description'))
+    @app_commands.describe(pattern=i18n.t('commands.bot.regex_pattern.update.params.pattern.description'))
     async def regex_pattern_update(self, context: commands.Context, name: str, new_name: str | None = None, filter_type: Choice[int] = None, pattern: str | None = None):
         self.logger.command(f'{context.author.name} used Regex Pattern Update')
 

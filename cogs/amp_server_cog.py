@@ -91,6 +91,8 @@ class AMP_Server(commands.Cog):
     @server.command(name='broadcast', description=i18n.t('commands.server.broadcast.description'))
     @utils_permissions.role_check()
     @app_commands.choices(prefix=[Choice(name=i18n.t(f'commands.server.broadcast.params.prefix.choices.{x}'), value=x) for x in ['Announcement', 'Broadcast', 'Maintenance', 'Info', 'Warning']])
+    @app_commands.describe(prefix=i18n.t('commands.server.broadcast.params.prefix.description'))
+    @app_commands.describe(message=i18n.t('commands.server.broadcast.params.message.description'))
     async def amp_server_broadcast(self, context: commands.Context, prefix: Choice[str], message: str):
         self.logger.command(f'{context.author.name} used AMP Server Broadcast')
         discord_message = await context.send(i18n.t('messages.amp_server.broadcast.sending'), ephemeral=True)
@@ -109,6 +111,7 @@ class AMP_Server(commands.Cog):
     @server.command(name='start', description=i18n.t('commands.server.start.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.start.params.server.description'))
     async def amp_server_start(self, context: commands.Context, server):
         self.logger.command(f'{context.author.name} used AMP Server Started...')
         await context.defer(ephemeral=True)
@@ -125,6 +128,7 @@ class AMP_Server(commands.Cog):
     @server.command(name='stop', description=i18n.t('commands.server.stop.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.stop.params.server.description'))
     async def amp_server_stop(self, context: commands.Context, server):
         self.logger.command(f'{context.author.name} used AMP Server Stopped...')
         await context.defer(ephemeral=True)
@@ -138,6 +142,7 @@ class AMP_Server(commands.Cog):
     @server.command(name='restart', description=i18n.t('commands.server.restart.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.restart.params.server.description'))
     async def amp_server_restart(self, context: commands.Context, server):
         self.logger.command(f'{context.author.name} used AMP Server Restart...')
         await context.defer(ephemeral=True)
@@ -151,6 +156,7 @@ class AMP_Server(commands.Cog):
     @server.command(name='kill', description=i18n.t('commands.server.kill.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.kill.params.server.description'))
     async def amp_server_kill(self, context: commands.Context, server):
         self.logger.command(f'{context.author.name} used AMP Server Kill...')
         await context.defer(ephemeral=True)
@@ -164,6 +170,8 @@ class AMP_Server(commands.Cog):
     @server.command(name='msg', description=i18n.t('commands.server.msg.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.msg.params.server.description'))
+    @app_commands.describe(message=i18n.t('commands.server.msg.params.message.description'))
     async def amp_server_message(self, context: commands.Context, server, message: str):
         self.logger.command(f'{context.author.name} used AMP Server Message...')
 
@@ -175,6 +183,7 @@ class AMP_Server(commands.Cog):
     @server.command(name='backup', description=i18n.t('commands.server.backup.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.backup.params.server.description'))
     async def amp_server_backup(self, context: commands.Context, server):
         self.logger.command(f'{context.author.name} used AMP Server Backup...')
 
@@ -190,6 +199,7 @@ class AMP_Server(commands.Cog):
     @server.command(name='status', description=i18n.t('commands.server.status.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.status.params.server.description'))
     async def amp_server_status(self, context: commands.Context, server):
         self.logger.command(f'{context.author.name} used AMP Server Status...')
         await context.defer(ephemeral=True)
@@ -226,6 +236,7 @@ class AMP_Server(commands.Cog):
     @server.command(name='users', description=i18n.t('commands.server.users.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.users.params.server.description'))
     async def amp_server_users_list(self, context: commands.Context, server):
         self.logger.command(f'{context.author.name} used AMP Server Connected Users...')
 
@@ -247,6 +258,7 @@ class AMP_Server(commands.Cog):
     @amp_server_settings.command(name='info', description=i18n.t('commands.server.settings.info.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.settings.info.params.server.description'))
     async def amp_server_settings_info(self, context: commands.Context, server):
         self.logger.command(f'{context.author.name} used AMP Server Info')
         await context.defer(ephemeral=True)
@@ -259,6 +271,8 @@ class AMP_Server(commands.Cog):
     @amp_server_settings.command(name='avatar', description=i18n.t('commands.server.settings.avatar.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.settings.avatar.params.server.description'))
+    @app_commands.describe(url=i18n.t('commands.server.settings.avatar.params.url.description'))
     async def amp_server_avatar(self, context: commands.Context, server, url: str):
         self.logger.command(f'{context.author.name} used Database Server Avatar Set')
         await context.defer()
@@ -283,6 +297,8 @@ class AMP_Server(commands.Cog):
     @amp_server_settings.command(name='displayname', description=i18n.t('commands.server.settings.displayname.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.settings.displayname.params.server.description'))
+    @app_commands.describe(name=i18n.t('commands.server.settings.displayname.params.name.description'))
     async def amp_server_displayname(self, context: commands.Context, server, name: str):
         self.logger.command(f'{context.author.name} used Database Server Display Name')
 
@@ -298,6 +314,8 @@ class AMP_Server(commands.Cog):
     @amp_server_settings.command(name='host', description=i18n.t('commands.server.settings.host.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.settings.host.params.server.description'))
+    @app_commands.describe(hostname=i18n.t('commands.server.settings.host.params.hostname.description'))
     async def amp_server_host(self, context: commands.Context, server, hostname: str):
         self.logger.command(f'{context.author.name} used Database Server Host')
 
@@ -312,6 +330,8 @@ class AMP_Server(commands.Cog):
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.choices(flag=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
+    @app_commands.describe(server=i18n.t('commands.server.settings.donator.params.server.description'))
+    @app_commands.describe(flag=i18n.t('commands.server.settings.donator.params.flag.description'))
     async def amp_server_donator(self, context: commands.Context, server, flag: Choice[int] = 0):
         self.logger.command(f'{context.author.name} used Database Donator Flag')
 
@@ -324,6 +344,8 @@ class AMP_Server(commands.Cog):
     @amp_server_settings.command(name='role', description=i18n.t('commands.server.settings.role.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.settings.role.params.server.description'))
+    @app_commands.describe(role=i18n.t('commands.server.settings.role.params.role.description'))
     async def amp_server_discord_role_set(self, context: commands.Context, server, role: discord.Role):
         self.logger.command(f'{context.author.name} used Database Server Discord Role')
 
@@ -336,6 +358,8 @@ class AMP_Server(commands.Cog):
     @amp_server_settings.command(name='prefix', description=i18n.t('commands.server.settings.prefix.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.settings.prefix.params.server.description'))
+    @app_commands.describe(server_prefix=i18n.t('commands.server.settings.prefix.params.server_prefix.description'))
     async def amp_server_discord_prefix_set(self, context: commands.Context, server, server_prefix: str):
         self.logger.command(f'{context.author.name} used Database Server Discord Chat Prefix')
 
@@ -349,6 +373,8 @@ class AMP_Server(commands.Cog):
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.choices(flag=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
+    @app_commands.describe(server=i18n.t('commands.server.settings.hidden.params.server.description'))
+    @app_commands.describe(flag=i18n.t('commands.server.settings.hidden.params.flag.description'))
     async def amp_server_hidden(self, context: commands.Context, server, flag: Choice[int]):
         self.logger.command(f'{context.author.name} used Database Server Hidden')
 
@@ -369,6 +395,8 @@ class AMP_Server(commands.Cog):
     @amp_server_console_settings.command(name='channel', description=i18n.t('commands.server.console.channel.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.console.channel.params.server.description'))
+    @app_commands.describe(channel=i18n.t('commands.server.console.channel.params.channel.description'))
     async def amp_server_console_channel(self, context: commands.Context, server, channel: discord.abc.GuildChannel | None):
         self.logger.command(f'{context.author.name} used Database Server Console Channel')
 
@@ -391,6 +419,9 @@ class AMP_Server(commands.Cog):
         Choice(name=i18n.t('commands.server.console.filter.params.filter_type.choices.0'), value=0),
         Choice(name=i18n.t('commands.server.console.filter.params.filter_type.choices.1'), value=1),
     ])
+    @app_commands.describe(server=i18n.t('commands.server.console.filter.params.server.description'))
+    @app_commands.describe(flag=i18n.t('commands.server.console.filter.params.flag.description'))
+    @app_commands.describe(filter_type=i18n.t('commands.server.console.filter.params.filter_type.description'))
     async def amp_server_console_filter(self, context: commands.Context, server, flag: Choice[int], filter_type: Choice[int]):
         self.logger.command(f'{context.author.name} used Database Server Console Filtered True...')
 
@@ -412,6 +443,8 @@ class AMP_Server(commands.Cog):
     @amp_server_chat_settings.command(name='channel', description=i18n.t('commands.server.chat.channel.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.chat.channel.params.server.description'))
+    @app_commands.describe(channel=i18n.t('commands.server.chat.channel.params.channel.description'))
     async def amp_server_chat_channel(self, context: commands.Context, server, channel: discord.abc.GuildChannel):
         self.logger.command(f'{context.author.name} used Database Server Chat Channel')
 
@@ -436,6 +469,8 @@ class AMP_Server(commands.Cog):
     @amp_server_event_settings.command(name='channel', description=i18n.t('commands.server.event.channel.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.event.channel.params.server.description'))
+    @app_commands.describe(channel=i18n.t('commands.server.event.channel.params.channel.description'))
     async def amp_server_event_channel_set(self, context: commands.Context, server, channel: discord.abc.GuildChannel):
         self.logger.command(f'{context.author.name} used Database Server Event Channel')
 
@@ -461,6 +496,8 @@ class AMP_Server(commands.Cog):
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.autocomplete(name=autocomplete_regex)
+    @app_commands.describe(server=i18n.t('commands.server.regex.add.params.server.description'))
+    @app_commands.describe(name=i18n.t('commands.server.regex.add.params.name.description'))
     async def server_regex_add(self, context: commands.Context, server, name: str):
         self.logger.command(f'{context.author.name} used Server Regex Pattern Add')
 
@@ -483,6 +520,8 @@ class AMP_Server(commands.Cog):
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.autocomplete(name=autocomplete_server_regex)
+    @app_commands.describe(server=i18n.t('commands.server.regex.delete.params.server.description'))
+    @app_commands.describe(name=i18n.t('commands.server.regex.delete.params.name.description'))
     async def server_regex_delete(self, context: commands.Context, server: str, name: str):
         self.logger.command(f'{context.author.name} used Server Regex Pattern Delete.')
 
@@ -503,6 +542,7 @@ class AMP_Server(commands.Cog):
     @server_regex_settings.command(name='list', description=i18n.t('commands.server.regex.list.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.regex.list.params.server.description'))
     async def server_regex_list(self, context: commands.Context, server: str):
         self.logger.command(f'{context.author.name} used Server Regex List')
 

@@ -46,6 +46,8 @@ class Permissions(commands.Cog):
     @commands.hybrid_command(name='role', description=i18n.t('commands.user.role.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(role=autocomplete_permission_roles)
+    @app_commands.describe(user=i18n.t('commands.user.role.params.user.description'))
+    @app_commands.describe(role=i18n.t('commands.user.role.params.role.description'))
     async def user_role(self, context: commands.Context, user: Union[discord.User, discord.Member], role: str):
         self.logger.command(f'{context.author.name} used User Role Function')
 

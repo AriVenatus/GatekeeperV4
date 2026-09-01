@@ -111,6 +111,10 @@ class DB_User(commands.Cog):
 
     @user.command(name='add', description=i18n.t('commands.user.add.description'))
     @utils_permissions.role_check()
+    @app_commands.describe(user=i18n.t('commands.user.add.params.user.description'))
+    @app_commands.describe(mc_ign=i18n.t('commands.user.add.params.mc_ign.description'))
+    @app_commands.describe(mc_uuid=i18n.t('commands.user.add.params.mc_uuid.description'))
+    @app_commands.describe(steamid=i18n.t('commands.user.add.params.steamid.description'))
     async def user_add(self, context: commands.Context, user: Union[discord.Member, discord.User], mc_ign: str | None = None, mc_uuid: str | None = None, steamid: str | None = None):
         self.logger.command(f'{context.author.name} used User Add Function')
 
@@ -126,6 +130,9 @@ class DB_User(commands.Cog):
 
     @user.command(name='update', description=i18n.t('commands.user.update.description'))
     @utils_permissions.role_check()
+    @app_commands.describe(user=i18n.t('commands.user.update.params.user.description'))
+    @app_commands.describe(mc_ign=i18n.t('commands.user.update.params.mc_ign.description'))
+    @app_commands.describe(steamid=i18n.t('commands.user.update.params.steamid.description'))
     async def user_update(self, context: commands.Context, user: Union[discord.Member, discord.User], mc_ign: str | None = None, steamid: str | None = None):
         self.logger.command(f'{context.author.name} used User Update Function')
 

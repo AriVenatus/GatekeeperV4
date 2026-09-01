@@ -142,6 +142,8 @@ class Whitelist(commands.Cog):
         Choice(name=i18n.t('common.bool.true'), value=1),
         Choice(name=i18n.t('commands.server.settings.whitelist.params.flag.choices.2'), value=2),
     ])
+    @app_commands.describe(server=i18n.t('commands.server.settings.whitelist.params.server.description'))
+    @app_commands.describe(flag=i18n.t('commands.server.settings.whitelist.params.flag.description'))
     async def server_settings_whitelist_set(self, context: commands.Context, server: str, flag: Choice[int]):
         self.logger.command(f'{context.author.name} used {context.command.name}')
 
@@ -166,6 +168,8 @@ class Whitelist(commands.Cog):
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.choices(flag=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
+    @app_commands.describe(server=i18n.t('commands.server.settings.whitelist_auto.params.server.description'))
+    @app_commands.describe(flag=i18n.t('commands.server.settings.whitelist_auto.params.flag.description'))
     async def server_settings_whitelist_auto(self, context: commands.Context, server: str, flag: Choice[int]):
         self.logger.command(f'{context.author.name} used Server Whitelist Auto...')
 
@@ -189,6 +193,7 @@ class Whitelist(commands.Cog):
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
     @app_commands.describe(time=i18n.t('commands.server.settings.whitelist_wait_time.params.time.description'))
+    @app_commands.describe(server=i18n.t('commands.server.settings.whitelist_wait_time.params.server.description'))
     async def server_settings_whitelist_wait_time(self, context: commands.Context, server: str, time: app_commands.Range[int, 0, 60] = 5):
         self.logger.command(f'{context.author.name} used Server Whitelist Wait Time...')
 
@@ -210,6 +215,8 @@ class Whitelist(commands.Cog):
     @server_whitelist.command(name='add', description=i18n.t('commands.server.whitelist.add.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.whitelist.add.params.server.description'))
+    @app_commands.describe(name=i18n.t('commands.server.whitelist.add.params.name.description'))
     async def amp_server_whitelist_add(self, context: commands.Context, server, name):
         self.logger.command(f'{context.author.name} used AMP Server Whitelist Add...')
         # check_Whitelist()/addWhitelist() make several sequential blocking HTTP calls (Mojang
@@ -236,6 +243,8 @@ class Whitelist(commands.Cog):
     @server_whitelist.command(name='remove', description=i18n.t('commands.server.whitelist.remove.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers)
+    @app_commands.describe(server=i18n.t('commands.server.whitelist.remove.params.server.description'))
+    @app_commands.describe(name=i18n.t('commands.server.whitelist.remove.params.name.description'))
     async def amp_server_whitelist_remove(self, context: commands.Context, server, name):
         self.logger.command(f'{context.author.name} used AMP Server Whitelist Remove...')
         # Same reasoning as amp_server_whitelist_add: check_Whitelist() alone can involve
@@ -267,6 +276,7 @@ class Whitelist(commands.Cog):
 
     @db_bot_whitelist_reply.command(name='add', description=i18n.t('commands.bot.whitelist_reply.add.description'))
     @utils_permissions.role_check()
+    @app_commands.describe(message=i18n.t('commands.bot.whitelist_reply.add.params.message.description'))
     async def db_bot_whitelist_reply_add(self, context: commands.Context, message: str):
         self.logger.command(f'{context.author.name} used Database Bot Whitelist Reply Add...')
 
@@ -278,6 +288,7 @@ class Whitelist(commands.Cog):
     @db_bot_whitelist_reply.command(name='remove', description=i18n.t('commands.bot.whitelist_reply.remove.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(message=autocomplete_whitelist_replies)
+    @app_commands.describe(message=i18n.t('commands.bot.whitelist_reply.remove.params.message.description'))
     async def db_bot_whitelist_reply_remove(self, context: commands.Context, message: str):
         self.logger.command(f'{context.author.name} used Database Bot Whitelist Reply Remove...')
         reply_list = self.DB.GetAllWhitelistReplies()
@@ -307,6 +318,7 @@ class Whitelist(commands.Cog):
 
     @db_bot_whitelist.command(name='request_channel', description=i18n.t('commands.bot.whitelist.request_channel.description'))
     @utils_permissions.role_check()
+    @app_commands.describe(channel=i18n.t('commands.bot.whitelist.request_channel.params.channel.description'))
     async def db_bot_whitelist_request_channel_set(self, context: commands.Context, channel: discord.abc.GuildChannel):
         self.logger.command(f'{context.author.name} used Bot Whitelist Channel Set...')
 
@@ -315,6 +327,8 @@ class Whitelist(commands.Cog):
 
     @commands.hybrid_command(name='whitelist_request', description=i18n.t('commands.whitelist_request.description'))
     @app_commands.autocomplete(server=utils_discord.autocomplete_servers_public)
+    @app_commands.describe(server=i18n.t('commands.whitelist_request.params.server.description'))
+    @app_commands.describe(ign=i18n.t('commands.whitelist_request.params.ign.description'))
     async def whitelist_request(self, context: commands.Context, server: str, ign: str | None = None):
         self.logger.command(f'{context.author.name} used Bot Whitelist Request...')
         amp_server = await self.uBot._serverCheck(context, server)

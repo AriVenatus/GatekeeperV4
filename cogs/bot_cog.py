@@ -56,6 +56,7 @@ class Bot(commands.Cog):
 
     @main_bot.command(name='moderator', description=i18n.t('commands.bot.moderator.description'))
     @commands.has_guild_permissions(administrator=True)
+    @app_commands.describe(role=i18n.t('commands.bot.moderator.params.role.description'))
     async def moderator(self, context: commands.Context, role: discord.Role):
         self.logger.command(f'{context.author.name} used Bot Moderator...')
 
@@ -68,6 +69,7 @@ class Bot(commands.Cog):
         Choice(name=i18n.t('commands.bot.permissions.params.permission.choices.0'), value=0),
         Choice(name=i18n.t('commands.bot.permissions.params.permission.choices.1'), value=1),
     ])
+    @app_commands.describe(permission=i18n.t('commands.bot.permissions.params.permission.description'))
     async def permissions(self, context: commands.Context, permission: Choice[int]):
         self.logger.command(f'{context.author.name} used Bot Permissions...')
 
@@ -128,6 +130,7 @@ class Bot(commands.Cog):
     @app_commands.choices(all=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
     @app_commands.describe(all=i18n.t('commands.bot.utils.clear.params.all.description'))
     @app_commands.describe(channel=i18n.t('commands.bot.utils.clear.params.channel.description'))
+    @app_commands.describe(amount=i18n.t('commands.bot.utils.clear.params.amount.description'))
     @utils_permissions.role_check()
     async def utils_clear(self, context: commands.Context, channel: discord.abc.GuildChannel = None, amount: app_commands.Range[int, 0, 100] = 50, all: Choice[int] = 0):
         self.logger.info(f'{context.author.name} used {context.command.name}...')
@@ -151,6 +154,7 @@ class Bot(commands.Cog):
 
     @utils_group.command(name='roleid', description=i18n.t('commands.bot.utils.roleid.description'))
     @utils_permissions.role_check()
+    @app_commands.describe(role=i18n.t('commands.bot.utils.roleid.params.role.description'))
     async def utils_roleid(self, context: commands.Context, role: discord.Role):
         self.logger.command(f'{context.author.name} used Bot Utils Role ID...')
 
@@ -158,6 +162,7 @@ class Bot(commands.Cog):
 
     @utils_group.command(name='channelid', description=i18n.t('commands.bot.utils.channelid.description'))
     @utils_permissions.role_check()
+    @app_commands.describe(channel=i18n.t('commands.bot.utils.channelid.params.channel.description'))
     async def utils_channelid(self, context: commands.Context, channel: discord.abc.GuildChannel):
         self.logger.command(f'{context.author.name} used Bot Utils Channel ID...')
 
@@ -165,6 +170,7 @@ class Bot(commands.Cog):
 
     @utils_group.command(name='userid', description=i18n.t('commands.bot.utils.userid.description'))
     @utils_permissions.role_check()
+    @app_commands.describe(user=i18n.t('commands.bot.utils.userid.params.user.description'))
     async def utils_userid(self, context: commands.Context, user: Union[discord.User, discord.Member]):
         self.logger.command(f'{context.author.name} used Bot Utils User ID...')
 
@@ -172,6 +178,7 @@ class Bot(commands.Cog):
 
     @utils_group.command(name='uuid', description=i18n.t('commands.bot.utils.uuid.description'))
     @utils_permissions.role_check()
+    @app_commands.describe(mc_ign=i18n.t('commands.bot.utils.uuid.params.mc_ign.description'))
     async def utils_uuid(self, context: commands.Context, mc_ign: str):
         self.logger.command(f'{context.author.name} used Bot Utils UUID...')
 
@@ -231,6 +238,8 @@ class Bot(commands.Cog):
     @utils_permissions.role_check()
     @app_commands.choices(local=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
     @app_commands.choices(reset=[Choice(name=i18n.t('common.bool.true'), value=1), Choice(name=i18n.t('common.bool.false'), value=0)])
+    @app_commands.describe(local=i18n.t('commands.bot.utils.sync.params.local.description'))
+    @app_commands.describe(reset=i18n.t('commands.bot.utils.sync.params.reset.description'))
     async def utils_sync(self, context: commands.Context, local: Choice[int] = True, reset: Choice[int] = False):
         self.logger.command(f'{context.author.name} used Bot Sync Function...')
         await context.defer()
@@ -273,6 +282,7 @@ class Bot(commands.Cog):
 
     @cogs_group.command(name='load', description=i18n.t('commands.bot.cog.load.description'))
     @utils_permissions.role_check()
+    @app_commands.describe(cog=i18n.t('commands.bot.cog.load.params.cog.description'))
     async def cogs_load(self, context: commands.Context, cog: str):
         self.logger.command(f'{context.author.name} used Bot Cog Load Function...')
 
@@ -286,6 +296,7 @@ class Bot(commands.Cog):
     @cogs_group.command(name='unload', description=i18n.t('commands.bot.cog.unload.description'))
     @utils_permissions.role_check()
     @app_commands.autocomplete(cog=autocomplete_loadedcogs)
+    @app_commands.describe(cog=i18n.t('commands.bot.cog.unload.params.cog.description'))
     async def cogs_unload(self, context: commands.Context, cog: str):
         self.logger.command(f'{context.author.name} used Bot Cog Unload Function...')
 
