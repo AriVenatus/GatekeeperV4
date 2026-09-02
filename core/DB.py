@@ -25,7 +25,7 @@ def dump_to_json(data):
 
 Handler = None
 #!DB Version
-DB_Version = 3.2
+DB_Version = 3.3
 
 
 class DBHandler:
@@ -76,6 +76,7 @@ _SERVERS_ALLOWED_COLUMNS = frozenset({
 })
 _USERS_ALLOWED_COLUMNS = frozenset({
     "DiscordID", "DiscordName", "MC_IngameName", "MC_UUID", "SteamID", "Role",
+    "PZ_Username", "PZ_Password", "PZ_Whitelisted",
 })
 
 
@@ -166,6 +167,9 @@ class Database:
                         MC_IngameName text unique collate nocase,
                         MC_UUID text unique collate nocase,
                         SteamID text unique collate nocase,
+                        PZ_Username text unique collate nocase,
+                        PZ_Password text,
+                        PZ_Whitelisted integer not null default 0,
                         Role text collate nocase
                         )""")
 
@@ -348,11 +352,11 @@ class Database:
         return serverlist
 
     def GetUser(self, value: str):
-        """Finds a User using either DiscordID, DiscordName, MC_InGameName, MC_UUID, or SteamID."""
+        """Finds a User using either DiscordID, DiscordName, MC_InGameName, MC_UUID, SteamID, or PZ_Username."""
         # find the user
         (row, cur) = self._fetchone(
-            "select ID from Users where DiscordID=? or DiscordName=? or MC_IngameName=? or MC_UUID=? or SteamID=?",
-            (value, value, value, value, value),
+            "select ID from Users where DiscordID=? or DiscordName=? or MC_IngameName=? or MC_UUID=? or SteamID=? or PZ_Username=?",
+            (value, value, value, value, value, value),
         )
         if not row:
             cur.close()
@@ -371,6 +375,8 @@ class Database:
         MC_IngameName: str | None = None,
         MC_UUID: str | None = None,
         SteamID: str | None = None,
+        PZ_Username: str | None = None,
+        PZ_Password: str | None = None,
     ):
         try:
             return DBUser(
@@ -380,6 +386,8 @@ class Database:
                 MC_IngameName=MC_IngameName,
                 MC_UUID=MC_UUID,
                 SteamID=SteamID,
+                PZ_Username=PZ_Username,
+                PZ_Password=PZ_Password,
             )
         except Exception as e:
             print("DBUser error", e)
@@ -829,6 +837,9 @@ class DBUser:
     MC_IngameName: str
     MC_UUID: str
     SteamID: str
+    PZ_Username: str
+    PZ_Password: str
+    PZ_Whitelisted: bool
     Role: str
 
     def __init__(
@@ -840,6 +851,9 @@ class DBUser:
         MC_IngameName: str | None = None,
         MC_UUID: str | None = None,
         SteamID: str | None = None,
+        PZ_Username: str | None = None,
+        PZ_Password: str | None = None,
+        PZ_Whitelisted: bool = False,
         Role: str | None = None,
     ):
         # set defaults

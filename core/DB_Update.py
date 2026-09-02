@@ -168,6 +168,15 @@ class DB_Update:
             self.DBConfig.DeleteSetting('Whitelist_Wait_Time')
             self.DBConfig.SetSetting('DB_Version', '3.2')
 
+        if Version < 3.3:
+            """Adds Project Zomboid whitelist support. Unlike Minecraft (IGN/UUID) or ARK
+            (SteamID64), PZ whitelists via a server-side login account, so there's no existing
+            external identity to key off of -- Gatekeeper generates and owns the username/password
+            itself and stores it on the User."""
+            self.logger.info('**ATTENTION** Updating DB to Version 3.3')
+            self.user_pz_credentials_columns()
+            self.DBConfig.SetSetting('DB_Version', '3.3')
+
 
     def user_roles(self):
         try:
@@ -207,6 +216,23 @@ class DB_Update:
             self.DB._execute(SQL, ())
         except Exception as e:
             self.logger.critical(f'server_Discord_Chat_prefix {e}')
+            sys.exit(-1)
+
+    def user_pz_credentials_columns(self):
+        # SQLite's ALTER TABLE can't add a UNIQUE constraint (same limitation noted on the
+        # disabled nicknames_unique()/server_ip_constraint_update() migrations above) -- PZ_Username
+        # is only unique-constrained on fresh installs via _InitializeDatabase. Upgraded DBs rely on
+        # AMPProjectzomboid's own collision check against existing Users before generating one.
+        # PZ_Whitelisted tracks whether the account is CURRENTLY enabled, separately from whether
+        # one exists (PZ_Username) -- removeWhitelist() deliberately keeps PZ_Username so the same
+        # login can be re-enabled later, so account-existence alone can't answer "is this User
+        # whitelisted right now".
+        try:
+            self.DB._execute("alter table users add column PZ_Username text collate nocase", ())
+            self.DB._execute("alter table users add column PZ_Password text", ())
+            self.DB._execute("alter table users add column PZ_Whitelisted integer not null default 0", ())
+        except Exception as e:
+            self.logger.critical(f'user_pz_credentials_columns {e}')
             sys.exit(-1)
 
     def server_Discord_event_channel(self):

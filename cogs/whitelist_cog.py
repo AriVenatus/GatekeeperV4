@@ -131,6 +131,10 @@ class Whitelist(commands.Cog):
                     self.logger.info(f"Removing {db_user.SteamID} from {amp_instance.FriendlyName} Whitelist.")
                     if not amp_instance.removeWhitelist(in_gamename=db_user.SteamID):
                         self.logger.error(f"Failed to remove {db_user.SteamID} from {amp_instance.FriendlyName} Whitelist -- the AMP Console command did not go through.")
+                elif getattr(amp_instance, 'APIModule', None) == 'Project Zomboid' and db_user.PZ_Username != None:
+                    self.logger.info(f"Removing {db_user.PZ_Username} from {amp_instance.FriendlyName} Whitelist.")
+                    if not amp_instance.removeWhitelist(db_user=db_user):
+                        self.logger.error(f"Failed to remove {db_user.PZ_Username} from {amp_instance.FriendlyName} Whitelist -- the AMP Console command did not go through.")
 
     # Server Whitelist Commands ------------------------------------------------------------
 
@@ -226,6 +230,12 @@ class Whitelist(commands.Cog):
 
         amp_server = await self.uBot._serverCheck(context, server)
         if amp_server:
+            # PZ has no free-text identity to whitelist by (see check_Whitelist()'s docstring) --
+            # `name` is instead a Discord user reference, resolved to the DBUser Gatekeeper itself
+            # generates a login for.
+            if getattr(amp_server, 'APIModule', None) == 'Project Zomboid':
+                return await self._pz_whitelist_add(context, amp_server, name)
+
             whitelist = amp_server.check_Whitelist(in_gamename=name)
             server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
             if whitelist:
@@ -253,6 +263,9 @@ class Whitelist(commands.Cog):
 
         amp_server = await self.uBot._serverCheck(context, server)
         if amp_server:
+            if getattr(amp_server, 'APIModule', None) == 'Project Zomboid':
+                return await self._pz_whitelist_remove(context, amp_server, name)
+
             whitelist = amp_server.check_Whitelist(in_gamename=name)
             server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
             if whitelist:
@@ -266,6 +279,58 @@ class Whitelist(commands.Cog):
                     await context.send(i18n.t('messages.whitelist.remove.success', server_name=server_name, name=canonical_name), ephemeral=True, delete_after=self._client.Message_Timeout)
                 else:
                     await context.send(i18n.t('messages.whitelist.remove.console_failed', server_name=server_name, name=canonical_name), ephemeral=True, delete_after=self._client.Message_Timeout)
+
+    async def _pz_whitelist_add(self, context: commands.Context, amp_server, name: str):
+        """PZ-specific `/server whitelist add` path -- `name` is a Discord user reference (mention,
+        ID, or username), not an IGN/SteamID, since PZ whitelisting mints a Gatekeeper-owned login
+        rather than validating an identity the player already has."""
+        server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
+        # user_parse() dereferences `.display_name` on some no-match branches (eg. a numeric ID
+        # that isn't an actual guild Member) instead of returning None cleanly -- every existing
+        # caller only ever passes an ID already known to belong to a real Member, so this never
+        # surfaced before. Ours is the first caller to take arbitrary staff-typed input, so it can.
+        try:
+            member = self.uBot.user_parse(name, context, context.guild.id)
+        except AttributeError:
+            member = None
+        if member is None:
+            return await context.send(i18n.t('messages.whitelist.pz.member_not_found', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
+
+        db_user = self.DB.GetUser(member.id)
+        if db_user is None:
+            db_user = self.DB.AddUser(DiscordID=member.id, DiscordName=member.name)
+
+        whitelisted = amp_server.check_Whitelist(db_user)
+        if whitelisted is None:
+            return await context.send(i18n.t('messages.whitelist.add.already', name=member.name), ephemeral=True, delete_after=self._client.Message_Timeout)
+
+        if amp_server.addWhitelist(db_user=db_user):
+            await context.send(i18n.t('messages.whitelist.pz.add.success', server_name=server_name, name=member.name), ephemeral=True, delete_after=self._client.Message_Timeout)
+        else:
+            await context.send(i18n.t('messages.whitelist.add.console_failed', server_name=server_name, name=member.name), ephemeral=True, delete_after=self._client.Message_Timeout)
+
+    async def _pz_whitelist_remove(self, context: commands.Context, amp_server, name: str):
+        """PZ-specific `/server whitelist remove` path -- see `_pz_whitelist_add`'s docstring."""
+        server_name = amp_server.FriendlyName if amp_server.FriendlyName != None else amp_server.InstanceName
+        # user_parse() dereferences `.display_name` on some no-match branches (eg. a numeric ID
+        # that isn't an actual guild Member) instead of returning None cleanly -- every existing
+        # caller only ever passes an ID already known to belong to a real Member, so this never
+        # surfaced before. Ours is the first caller to take arbitrary staff-typed input, so it can.
+        try:
+            member = self.uBot.user_parse(name, context, context.guild.id)
+        except AttributeError:
+            member = None
+        if member is None:
+            return await context.send(i18n.t('messages.whitelist.pz.member_not_found', name=name), ephemeral=True, delete_after=self._client.Message_Timeout)
+
+        db_user = self.DB.GetUser(member.id)
+        if db_user is None or amp_server.check_Whitelist(db_user):
+            return await context.send(i18n.t('messages.whitelist.remove.not_whitelisted', name=member.name), ephemeral=True, delete_after=self._client.Message_Timeout)
+
+        if amp_server.removeWhitelist(db_user=db_user):
+            await context.send(i18n.t('messages.whitelist.remove.success', server_name=server_name, name=member.name), ephemeral=True, delete_after=self._client.Message_Timeout)
+        else:
+            await context.send(i18n.t('messages.whitelist.remove.console_failed', server_name=server_name, name=member.name), ephemeral=True, delete_after=self._client.Message_Timeout)
 
     # All DBConfig Whitelist Specific function settings --------------------------------------------------------------
     @commands.hybrid_group(name='whitelist_reply', description=i18n.t('commands.bot.whitelist_reply.description'))
