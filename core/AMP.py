@@ -782,10 +782,14 @@ class AMPInstance:
         return update
 
     def ConsoleMessage(self, msg: str):
-        """Basic Console Message. Returns `CallAPI()`'s result (falsy on failure -- e.g. a
-        missing Core.AppManagement.SendConsoleInput permission) so callers that need to know
-        whether the command actually reached the server can check it, instead of assuming
-        success just because the call was made."""
+        """Basic Console Message. `Core/SendConsoleMessage` is fire-and-forget -- AMP relays the
+        line to the process's stdin and has no way to know whether the game itself accepted or
+        rejected it, so a normal successful relay returns `None` (no truthy "it worked" signal),
+        not just on failure. Callers must check `result is False` (the literal value `CallAPI()`
+        returns on a genuine AMP-side rejection, eg. a missing permission), never `bool(result)`
+        -- the latter misreads every successful relay as a failure (confirmed live: addWhitelist()
+        in modules/ProjectZomboid and modules/Ark both had this bug, causing an endless retry loop
+        that silently discarded a newly-generated PZ password on every reconciliation tick)."""
         self.Login()
         parameters = {"message": msg}
         return self.CallAPI("Core/SendConsoleMessage", parameters)

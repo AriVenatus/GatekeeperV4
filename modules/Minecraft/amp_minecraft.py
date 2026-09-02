@@ -75,19 +75,23 @@ class AMPMinecraft(AMP.AMPInstance):
         return minecraft_user[0]['name']
 
     def addWhitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None) -> bool:
-        """Adds a User to the Whitelist File *Supports IGN*. Returns `True` only if the
-        Console command actually reached the server (eg. `False` on a missing
-        Core.AppManagement.SendConsoleInput permission)."""
+        """Adds a User to the Whitelist File *Supports IGN*. Returns `True` unless the Console
+        command was actively rejected (eg. a missing Core.AppManagement.SendConsoleInput permission).
+        Checking `result is False`, not `bool(result)`, matters here: `Core/SendConsoleMessage` is
+        fire-and-forget, so a normal successful relay has nothing truthy to report (its "result" is
+        `None`) -- `CallAPI()` only ever returns the literal `False` on a genuine AMP-side rejection,
+        so treating any other falsy value as failure misreads every successful relay as one (confirmed
+        live via the identical bug in `AMPProjectzomboid.addWhitelist()`)."""
         self.Login()
         result = self.ConsoleMessage(f'whitelist add {in_gamename if db_user == None else db_user.MC_IngameName}')
-        return bool(result)
+        return result is not False
 
     def removeWhitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None) -> bool:
-        """Removes a User from the Whitelist File *Supports IGN*. Returns `True` only if the
-        Console command actually reached the server."""
+        """Removes a User from the Whitelist File *Supports IGN*. Returns `True` unless the Console
+        command was actively rejected (see `addWhitelist()`'s docstring for why)."""
         self.Login()
         result = self.ConsoleMessage(f'whitelist remove {in_gamename if db_user == None else db_user.MC_IngameName}')
-        return bool(result)
+        return result is not False
 
     def getWhitelist(self) -> dict[str, str]:
         """Checks the Whitelist File for Minecraft Users"""

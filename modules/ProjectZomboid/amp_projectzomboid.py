@@ -107,15 +107,23 @@ class AMPProjectzomboid(AMP.AMPInstance):
     def addWhitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None) -> bool:
         """Grants `db_user` access -- creates a new PZ login account on first call (`adduser`), or
         re-enables a previously-removed one on any later call (`addusertowhitelist`), since
-        `removeWhitelist()` only un-whitelists, it doesn't delete the account. Returns `True` only if
-        the Console command actually reached the server."""
+        `removeWhitelist()` only un-whitelists, it doesn't delete the account. Returns `True` unless
+        the Console command was actively rejected (eg. a missing permission) -- `Core/SendConsoleMessage`
+        is fire-and-forget, so a normal successful relay has nothing truthy to report (its "result" is
+        `None`), and PZ's own accept/reject of the command (eg. "A user with this name already exists")
+        is only ever visible in the game's own console log, never in this return value. Checking
+        `result is False` instead of `bool(result)` -- `CallAPI()` only ever returns the literal `False`
+        on a genuine AMP-side rejection -- avoids misreading every successful relay as a failure, which
+        previously caused an endless `adduser` retry loop (a fresh random password generated and
+        discarded every reconciliation tick, forever) because `PZ_Username`/`PZ_Password` never got
+        saved past the first, actually-successful call."""
         if db_user is None:
             return False
 
         self.Login()
         if db_user.PZ_Username:
             result = self.ConsoleMessage(f'addusertowhitelist "{db_user.PZ_Username}"')
-            if not bool(result):
+            if result is False:
                 return False
             db_user.PZ_Whitelisted = True
             return True
@@ -123,7 +131,7 @@ class AMPProjectzomboid(AMP.AMPInstance):
         username = self._generate_username(db_user)
         password = secrets.token_urlsafe(9)
         result = self.ConsoleMessage(f'adduser "{username}" "{password}"')
-        if not bool(result):
+        if result is False:
             return False
 
         db_user.PZ_Username = username
@@ -132,15 +140,16 @@ class AMPProjectzomboid(AMP.AMPInstance):
         return True
 
     def removeWhitelist(self, db_user: DBUser | None = None, in_gamename: str | None = None) -> bool:
-        """Un-whitelists `db_user`'s PZ login account. Returns `True` only if the Console command
-        actually reached the server. Does NOT delete the account or clear `PZ_Username`/`PZ_Password`
+        """Un-whitelists `db_user`'s PZ login account. Returns `True` unless the Console command was
+        actively rejected (see `addWhitelist()`'s docstring for why `result is False`, not `bool(result)`,
+        is the right check here). Does NOT delete the account or clear `PZ_Username`/`PZ_Password`
         -- a later `addWhitelist()` re-enables the same login rather than minting a new one."""
         if db_user is None or not db_user.PZ_Username:
             return False
 
         self.Login()
         result = self.ConsoleMessage(f'removeuserfromwhitelist "{db_user.PZ_Username}"')
-        if not bool(result):
+        if result is False:
             return False
 
         db_user.PZ_Whitelisted = False
