@@ -434,6 +434,11 @@ class WhitelistSync(commands.Cog):
     @app_commands.describe(role=i18n.t('commands.server.settings.whitelist_role_add.params.role.description'))
     async def whitelist_role_add(self, context: commands.Context, server: str, role: discord.Role):
         self.logger.command(f'{context.author.name} used Whitelist Role Add')
+        # _sync_role_members_now() makes a blocking AMP login + Console command call per existing
+        # Role member -- easily over Discord's 3s ack window, which would otherwise expire the
+        # interaction before we can reply (see whitelist_cog.py's amp_server_whitelist_add for the
+        # same pattern).
+        await context.defer(ephemeral=True)
 
         amp_server = await self.uBot._serverCheck(context, server, False)
         if amp_server:
@@ -506,6 +511,9 @@ class WhitelistSync(commands.Cog):
     @app_commands.describe(role=i18n.t('commands.server.settings.donator_role_add.params.role.description'))
     async def donator_role_add(self, context: commands.Context, server: str, role: discord.Role):
         self.logger.command(f'{context.author.name} used Donator Role Add')
+        # Same rationale as whitelist_role_add() above: _sync_role_members_now() can block past
+        # Discord's 3s ack window.
+        await context.defer(ephemeral=True)
 
         amp_server = await self.uBot._serverCheck(context, server, False)
         if amp_server:
